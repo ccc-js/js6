@@ -25,19 +25,19 @@ json(o)= {"pi":3.1416,"e":2.7183}
 
 ```
 
-## nu6 -- Numerical Library 6
+## gd6 -- Numerical Library 6
 
 Code
 
 ```js
-const nu6 = require('js6/nu6')
+const gd6 = require('js6/gd6')
 
 function f(p) {
   let {x,y} = p
   return x*x+y*y
 }
 
-nu6.gradientDescendent(f, {x:1, y:1})
+gd6.gradientDescendent(f, {x:1, y:1})
 ```
 
 Run
@@ -63,7 +63,7 @@ File
 
 ```js
 const js6 = require('js6')
-const {nu6, cn6} = js6
+const {gd6, cn6} = js6
 
 let net = new cn6.Net()
 let x = net.variable(2)
@@ -76,7 +76,7 @@ net.watch({x,y,x2,y2,o})
 
 let fnet = new cn6.FNet(net, {x:x, y:y})
 
-nu6.gradientDescendent(fnet, {x:1, y:2})
+gd6.gradientDescendent(fnet, {x:1, y:2})
 
 ```
 

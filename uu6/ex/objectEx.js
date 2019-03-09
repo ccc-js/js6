@@ -1,4 +1,4 @@
-const uu6 = require('../')
+const uu6 = require('..')
 
 let o = {pi:Math.PI, e:Math.E }
 

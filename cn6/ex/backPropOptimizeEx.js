@@ -1,4 +1,5 @@
-const nu6 = require('../../nu6')
+const gd6 = require('../../gd6')
 const f = require('./fnet4')
 
-nu6.gradientDescendent(f, {x:1, y:2})
+let p0 = new gd6.Point({x:1, y:2})
+gd6.gradientDescendent(f, p0)
