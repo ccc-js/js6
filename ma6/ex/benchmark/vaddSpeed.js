@@ -78,6 +78,10 @@ function vaddIn(a, b) {
   return c
 }
 
+function vaddMap(a) {
+  return a.map((x)=>x+x)
+}
+
 function randn(n) {
   let a = []
   for (let i=0; i<n; i++) a.push(Math.random()*100)
@@ -105,6 +109,7 @@ function main() {
   let a = randn(size)
   let b = randn(size)
 
+  loops(1000, vaddMap,   a, b, 'vaddMap')
   loops(1000, vaddNumjs, na, nb, 'vaddNumjs')
   loops(1000, vaddDirect,a, b, 'vaddDirect')
   loops(1000, vaddTemplate, a, b, 'vaddTemplate')
@@ -114,7 +119,6 @@ function main() {
   loops(1000, vaddCall3, a, b, 'vaddCall3')
   loops(1000, vaddCall4, a, b, 'vaddCall4')
   loops(1000, vaddIn,    a, b, 'vaddIn')
-
 }
 
 main()

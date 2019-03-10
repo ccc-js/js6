@@ -12,7 +12,3 @@ U.randomInt = function (min, max) {
 U.randomChoose = function (a) {
   return a[U.randomInt(0, a.length)]
 }
-
-U.runif = function (n, min, max) {
-  return C.repeats(n, ()=>U.random(min, max))
-}
