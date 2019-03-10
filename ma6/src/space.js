@@ -35,11 +35,12 @@ S.T2 = HausdorffSpace
 // https://en.wikipedia.org/wiki/Metric_space
 class MetricSpace extends TopologicalSpace { // distances between all members are defined
   d(p1,p2) {}
-  test(x,y,z) {
-    be(d(x,y)>=0)
-    be(d(x,x)===0)
-    be(d(x,y)===d(y,x))
-    be(d(x,z)<=d(x,y)+d(y,z))
+  static test() {
+    be(this, 3, (x,y,z)=>{
+      d(x,y)>=0&&
+      d(x,x)===0&&
+      d(x,y)===d(y,x)&&
+      d(x,z)<=d(x,y)+d(y,z)})
   }
 }
 
@@ -69,16 +70,13 @@ Identity element of scalar multiplication	1v = v, where 1 denotes the multiplica
 Distributivity of scalar multiplication with respect to vector addition  	a(u + v) = au + av
 Distributivity of scalar multiplication with respect to field addition	(a + b)v = av + bv */
 class VectorSpace extends Space {
-  test(a,b,u,v,w) {
-    const {zero, one} = this
-    be(u.add(v).add(w).eq(u.add(v.add(w)))) // u + (v + w) = (u + v) + w
-    be(u.add(v).eq(v.add(u)))               // u + v = v + u
-    be(v.add(zero).eq(v))                   // v + 0 = v for all v ∈ V.
-    be(v.add(v.neg()).eq(zero))             // v + (−v) = 0.
-    be(a.mul(b.mul(v)).eq(a.mul(b).mul(v))) // a(bv) = (ab)v
-    be(one.mul(v).eq(v))                    // 1v = v
-    be(a.mul(u.add(v)).eq(a.mul(u).add(a.mul(v)))) // a(u + v) = au + av
-    be(a.add(b).mul(v).eq(a.mul(v).add(b.mul(v)))) // (a + b)v = av + bv
+  constructor(V, C) {}
+
+  static test(vs) {
+    Group.test(vs.gadd)
+    Group.test(vs.gmul)
+    distr(a,u,v)
+    ldistr(a,b,v)
   }
 }
 

@@ -1,8 +1,10 @@
-const S = module.exports = {}
-
-class Set {
-  isMember(a) { throw Error('Set.isMember() not defined!') }
+module.exports = class Set {
+  contain(a) { throw Error('Set.isMember() not defined!') }
   generate() { throw Error('Set.generate() not defined!') }
-}
 
-Object.assign(S)
+  static test(set) {
+    let a = set.generate()
+    be(set.contain(a))
+    be(a.eq(a))
+  }
+}

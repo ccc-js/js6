@@ -1,5 +1,5 @@
 const U = module.exports = {
-  V: require('./src/vector')
+  V: require('../nu6/bak/Vector')
 }
 
 Object.assign(U, 
