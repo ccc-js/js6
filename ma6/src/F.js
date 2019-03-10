@@ -1,0 +1,2 @@
+const F = module.exports = {}
+
