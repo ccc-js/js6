@@ -3,4 +3,5 @@ module.exports = {
   F: require('./F'),
   Vector: require('./Vector'),
   Point: require('./Point'),
+  // PointFunction: require('./PointFunction'),
 }
