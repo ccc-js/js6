@@ -18,4 +18,19 @@ U.omap2 = function (o1, o2, f) {
   return o
 }
 
+U.array2map = function (a) {
+  let map = {}
+  for (let i in a) {
+    map[i] = a[i]
+  }
+  return map
+}
 
+U.key2value = function (o) {
+  let r = {}
+  for (let k in o) {
+    let v = o[k]
+    r[v] = k 
+  }
+  return r
+}

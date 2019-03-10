@@ -1,42 +1,37 @@
-const gd6 = require('../../gd6')
 module.exports = class FNet {
 
-  constructor(net, vars) {
+  constructor(net, args) {
     this.net = net
-    this.vars = vars
+    this.args = args
   }
 
-  setValues(p) {
-    for (let k in p) {
-      this.vars[k].v = p[k]
+  setValues(vars) {
+    for (let k in vars) {
+      this.args[k].v = vars[k]
     }
   }
 
   getGrads() {
-    let grads = {}
-    for (let k in this.vars) {
-      grads[k] = this.vars[k].g
+    let grads = []
+    for (let k in this.args) {
+      grads.push(this.args[k].g)
     }
     return grads
   }
 
-  call(point) {
-    this.setValues(point.p)
+  call(vars) {
+    this.setValues(vars)
     let o = this.net.forward()
     return o.v
   }
 
-  grad(point) {
-    this.call(point.p)
+  grad(vars) {
+    this.call(vars)
     this.net.backward()
-    return new gd6.Point(this.getGrads())
+    return this.getGrads()
   }
 
-  isBetter(g, p, gap=0.00001) {
-    return (g.norm() > gap)  // 梯度是否大於門檻值呢？
-  }
-  
-  json() {
-    return uu6.json(this.net.dump())
+  dump() {
+    return this.net.dump()
   }
 }
