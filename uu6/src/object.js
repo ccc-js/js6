@@ -34,3 +34,5 @@ U.key2value = function (o) {
   }
   return r
 }
+
+U.mixin = Object.assign

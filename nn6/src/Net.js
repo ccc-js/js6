@@ -3,6 +3,10 @@ const G = require('./gate')
 const F = require('./func')
 
 module.exports = class Net {
+  static call(net, p) ...
+
+  static grad(net, p) ...
+
   constructor () {
     this.gates = []
   }

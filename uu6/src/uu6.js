@@ -1,6 +1,6 @@
-const uu6 = module.exports = {}
+const uu6 = module.exports = require('./object')
 
-Object.assign(uu6, 
+uu6.mixin(uu6, 
   require('./array'),
   require('./error'),
   require('./object'),
