@@ -5,9 +5,9 @@ U.random = function (min=0, max=1) {
 }
 
 U.randomInt = function (min, max) {
-  return Math.floow(P.random(min, max))
+  return Math.floor(U.random(min, max))
 }
 
 U.randomChoose = function (a) {
-  return a[P.randomInt(0, a.length)]
+  return a[U.randomInt(0, a.length)]
 }

@@ -3,57 +3,73 @@ const T = module.exports = {}
 const uu6 = require('../../uu6')
 const V   = require('./vector')
 
-T.size = function (shape) {
+T.shapeSize = function (shape) {
   return V.product(shape)
 }
 
-T.offset = function (shape, idx, lo) {
+T.offset = function (shape, idx, lo, hi) {
+  lo = lo || V.array(shape.length)
+  hi = hi || shape
   let len = shape.length
-  lo = lo || V.array(len)
-  let offset = idx[0]+lo[0]
+  let offset = idx[0] + lo[0]
   for (let i=1; i<len; i++) {
     offset = offset*shape[i] + idx[i] + lo[i]
   }
   return offset
 }
 
-T.sliceNdarray = function (v, shape, lo, hi) {
+T.slice = function (v, shape, lo, hi) {
   let dim = shape.length
-  let [wi,wj,wk] = shape
-  let [wi2,wj2,wk2] = [hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]]
-  if (dim === 1) {
-    let rv = new Array(wi2)
-    for (let ri = 0, i=lo[0]; i<hi[0]; ri++, i++) rv[ri++] = v[i]
-    return rv
+  
+  uu6.be(dim <= 3)
+  if (dim == 1) {
+    v = 
   }
-  if (dim === 2) {
-    let rv = new Array(wi2)
-    for (let ri=0, i=lo[0]; i<hi[0]; ri++, i++) {
-      let rvi = rv[ri] = new Array(wj2)
-      for (let rj=0, j=lo[1]; j<hi[1]; rj++, j++) {
-        rvi[rj] = v[i*wj+j]
-      }
-    }
-    return rv
-  }
-  if (dim === 3) {
-    let rv = new Array(wi2)
-    for (let ri=0, i=lo[0]; i<hi[0]; ri++, i++) {
-      let rvi = rv[ri] = new Array(wj2)
-      for (let rj=0, j=lo[1]; j<hi[1]; rj++, j++) {
-        let rvj = rv[ri][rj] = new Array(wk2)
-        for (let rk=0, k=lo[2]; k<hi[2]; rk++, k++) {
-          rvj[rk] = v[(i*wj+j)*wk+k]
-        }
-      }
-    }
-    return rv
-  }
-  throw Error('sliceNdarray():dim > 3')
 }
 
+/*
+T.row = function (v, shape, i, lo, hi) {
+  lo = uu6.clone(lo) || V.array(shape.length)
+  hi = uu6.clone(hi) || uu6.clone(shape)
+  lo[0] = lo[0] + i; hi = lo[0] + i + 1
+  // let b = V.array(shape.length), e = V.array(shape.length)
+  // b[0] = i; e[0] = i+1
+  // let begin = T.offset(shape, b, lo, hi), end=T.offset(shape, e, lo, hi)
+  return { v: v.slice(begin, end), shape: shape.slice(1) }
+}
+*/
+/*
+
+T.offset = function (shape, idx) {
+  let len = shape.length
+  let offset = idx[0]
+  for (let i=1; i<len; i++) {
+    offset = offset*shape[i] + idx[i]
+  }
+  return offset
+}
+
+T.row = function (v, shape, i) {
+  let b = V.array(shape.length), e = V.array(shape.length)
+  b[0] = i; e[0] = i+1
+  let begin = T.offset(shape, b), end=T.offset(shape, e)
+  return { v: v.slice(begin, end), shape: shape.slice(1) }
+}
+*/
+
 T.tensor2ndarray = function (v, shape, lo, hi) {
-  return T.sliceNdarray(v, shape, V.array(shape.length), shape)
+  uu6.be(uu6.is(v, 'array') && uu6.is(shape, 'array'))
+  lo = lo || V.array(shape.length)
+  hi = hi || uu6.clone(shape)
+
+  if (shape.length === 1) return v.slice(lo[0], hi[0])
+  let rows = shape[0]
+  let nd = new Array(rows)
+  for (let i=0; i<rows; i++) {
+    let ti = T.row(v, shape, i)
+    nd[i] = T.tensor2ndarray(ti.v, ti.shape)
+  }
+  return nd
 } 
 
 T.ndarray2tensor = function (nd) {
@@ -85,14 +101,13 @@ class RealTensor extends Tensor {
     super()
     if (shape == null) { // from ndarray
       let nd = v
-      console.log('RealTensor:nd=', nd)
       let t = T.ndarray2tensor(nd)
       this.v = t.v
       this.shape = t.shape
     } else {
       this.v = v
       this.shape = shape
-      uu6.be(T.size(shape) === v.length)
+      uu6.be(T.shapeSize(shape) === v.length)
     }
   }
   get(...idx) {
@@ -102,8 +117,12 @@ class RealTensor extends Tensor {
     let o = idx.pop()
     this.v[T.offset(this.shape, idx)] = o
   }
+  row(i) {
+    let ti = T.row(this.v, this.shape, i)
+    return new RealTensor(ti.v, ti.shape)
+  }
   reshape(shape) {
-    uu6.be(uu6.is(shape, 'array') && T.size(shape) === this.v.length)
+    uu6.be(uu6.is(shape, 'array') && T.shapeSize(shape) === this.v.length)
     this.shape = shape
     return this
   }
@@ -134,6 +153,13 @@ class SliceTensor extends Tensor {
     let idx2 = V.add(idx, lo)
     this.v[T.offset(this.shape, idx2)] = o
   }
+  /*
+  row(i) { // ??
+    let i2 = i+lo[0]
+    let ti = T.row(this.v, this._shape, i2)
+    let begin = 
+    return new RealTensor(ti.v, ti.shape)
+  }*/
   reshape(shape) { throw Error('SliceTensor cannot be reshaped!')}
 }
 
@@ -142,3 +168,11 @@ T.SliceTensor = SliceTensor
 T.tensor = function (v, shape) {
   return new RealTensor(v, shape)
 }
+
+/*
+  slice (lo, hi) {
+    return new Tensor(T.slice(this.v, this.shape, lo, hi))
+  }
+*/
+
+
