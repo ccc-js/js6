@@ -6,6 +6,11 @@ U.eq = function (o1, o2) {
   return JSON.stringify(o1) === JSON.stringify(o2)
 }
 
+U.near = function (n1, n2, gap=0.01) {
+  let d = Math.abs(n1-n2)
+  return d < gap
+}
+
 U.clone = function (o) {
   let type = typeof o
   if (Array.isArray(o))

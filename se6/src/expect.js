@@ -11,8 +11,18 @@ class Expect {
     uu6.be((cond && !this.isNot) || (!cond && this.isNot))
   }
 
+  pass(f) {
+    let cond = f(this.o)
+    this.check(cond)
+  }
+
   equal(o) {
     this.check(uu6.eq(this.o, o))
+    return this
+  }
+
+  near(n, gap) {
+    this.check(uu6.near(this.o, n, gap))
     return this
   }
 

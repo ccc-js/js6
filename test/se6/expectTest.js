@@ -1,6 +1,6 @@
 var expect = require('../../se6').expect
 
-describe('expect', function() {
+describe('se6.expect', function() {
   it('number test', function() {
     expect(2).to.be.a('number')
   })
@@ -13,5 +13,9 @@ describe('expect', function() {
   it('object test', function() {
     let o = {name:'ccc'}
     expect(o).to.contain('name').that.is.a('ccc')
+  })
+  it('pass test', function() {
+    let o = {name:'ccc'}
+    expect(o).to.pass((o)=>o.name==='ccc')
   })
 })

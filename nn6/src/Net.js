@@ -1,17 +1,39 @@
 const N = require('./node')
 const G = require('./gate')
 const F = require('./func')
+const ma6 = require('../../ma6')
 
 module.exports = class Net {
-  static call(net, p) ...
+  static call(net, p) {
+    for (let i in p.v) {
+      net.vars[i].v = p.v[i]
+    }
+    let o = net.forward()
+    return o.v
+  }
 
-  static grad(net, p) ...
+  static grad(net, p) {
+    let g = new ma6.Vector(p.size())
+    Net.call(net, p)
+    net.backward()
+    for (let i in p.v) {
+      g.v[i] = net.vars[i].g
+    }
+    return g
+  }
 
   constructor () {
     this.gates = []
+    this.vars = []
+    this.watchNodes = []
   }
 
-  variable (v, g) { return new N.Variable(v, g) }
+  variable (v, g) {
+    let node = new N.Variable(v, g)
+    this.vars.push(node)
+    return node
+  }
+  
   constant (v) { return new N.Constant(v) }
 
   op1 (x, f, gfx) {
@@ -61,11 +83,11 @@ module.exports = class Net {
   }
 
   watch (nodes) {
-    this.nodes = nodes
+    this.watchNodes = nodes
   }
 
   dump() {
-    return this.nodes
+    return this.watchNodes
   }
 }
 

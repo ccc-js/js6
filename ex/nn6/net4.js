@@ -1,4 +1,4 @@
-const nn6 = require('..')
+const nn6 = require('../../nn6')
 const net = new nn6.Net()
 
 let x  = net.variable(2)
@@ -10,4 +10,4 @@ let o  = net.add(x2, y2)
 
 net.watch({x,y,x2,y2,o})
 
-module.exports = new nn6.FNet(net, [x, y])
+module.exports = net

@@ -6,4 +6,5 @@ uu6.mixin(uu6,
   require('./string'),
   require('./random'),
   require('./control'),
+  require('./args'),
 )

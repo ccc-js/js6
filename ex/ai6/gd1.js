@@ -1,4 +1,4 @@
-const ai6 = require('..')
+const ai6 = require('../../ai6')
 
 function f(v) {
   let [x,y] = v
