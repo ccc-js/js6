@@ -20,6 +20,7 @@ class Expect {
     this.check(uu6.type(this.o, type))
     return this
   }
+
   a(type) {
     this.check(uu6.type(this.o, type) || uu6.eq(this.o, type))
     return this
@@ -31,7 +32,9 @@ class Expect {
     this.o = m
     return this
   }
+
   property(member) { return this.contain(member) }
+  
   include(member) { return this.contain(member) }
 
   get not() {
