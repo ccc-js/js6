@@ -73,14 +73,8 @@ T.ndarray2tensor = function (nd) {
   t.shape.unshift(nd.length)
   return {v: v, shape: t.shape }
 }
-class Tensor extends V.Vector {
-  constructor(v, shape) {
-    super([])
-  }
-}
 
-T.Tensor = Tensor
-class RealTensor extends Tensor {
+class Tensor extends V.Vector {
   constructor(v, shape) {
     super()
     if (shape == null) { // from ndarray
@@ -102,6 +96,11 @@ class RealTensor extends Tensor {
     let o = idx.pop()
     this.v[T.offset(this.shape, idx)] = o
   }
+  slice(v, shape, lo, hi) {
+
+    this.lo = lo
+    this.hi = hi
+  }
   reshape(shape) {
     uu6.be(uu6.is(shape, 'array') && T.size(shape) === this.v.length)
     this.shape = shape
@@ -115,6 +114,13 @@ class RealTensor extends Tensor {
   }
 }
 
+T.Tensor = Tensor
+
+T.tensor = function (v, shape) {
+  return new Tensor(v, shape)
+}
+
+/*
 T.RealTensor = RealTensor
 class SliceTensor extends Tensor {
   constructor(v, shape, lo, hi) {
@@ -138,7 +144,13 @@ class SliceTensor extends Tensor {
 }
 
 T.SliceTensor = SliceTensor
+*/
 
-T.tensor = function (v, shape) {
-  return new RealTensor(v, shape)
+
+/*
+class Tensor extends V.Vector {
+  constructor(v, shape) {
+    super([])
+  }
 }
+*/ 
