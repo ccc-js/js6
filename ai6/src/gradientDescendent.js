@@ -2,10 +2,11 @@ const ma6 = require('../../ma6')
 const uu6 = require('../../uu6')
 
 // 使用梯度下降法尋找函數最低點
-const gradientDescendent = function (f, v0, args={}) {
+const gradientDescendent = function (f, p0, args={}) {
   let args2 = uu6.defaults(args, {call:ma6.Point.call, grad:ma6.Point.grad, step:ma6.Point.step, stepLen:0.01, gap:0.0001, debug:true})
   let {call, grad, step, stepLen, gap, debug} = args2
-  let p = new ma6.Point(v0)
+  // let p = new ma6.Point(v0)
+  let p = p0
   let e0 = Number.POSITIVE_INFINITY
   while (true) {
     let e = call(f, p)
