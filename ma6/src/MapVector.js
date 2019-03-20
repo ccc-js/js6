@@ -1,7 +1,7 @@
 const uu6 = require('../../uu6')
-const Vector = require('./Vector')
+const V = require('./vector')
 
-module.exports = class MapVector extends Vector {
+module.exports = class MapVector extends V.Vector {
   constructor(o={}) {
     super(null)
     this.o = {...o}

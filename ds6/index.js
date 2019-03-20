@@ -1,4 +1,3 @@
 module.exports = {
-  Vector: require('./src/Vector'),
-  MapVector: require('./src/MapVector'),
+  MapVector: require('../ma6/src/MapVector'),
 }

@@ -22,6 +22,10 @@ module.exports = class Net {
     return g
   }
 
+  static step(net, g) {
+    
+  }
+
   constructor () {
     this.gates = []
     this.vars = []

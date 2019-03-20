@@ -4,25 +4,30 @@
   "description": "6th Generation Framework for JavaScript",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "build": "browserify ./export.js -o ./dist/js6.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ccc-js/js6.git"
   },
   "keywords": [
-    "numeric",
-    "util",
+    "AI",
+    "math",
+    "utility",
+    "tensor",
+    "UI",
     "neural",
-    "network"
+    "debug",
+    "bdd",
+    "data structure",
+    "database",
+    "system"
   ],
   "author": "ccckmit",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ccc-js/js6/issues"
   },
-  "homepage": "https://github.com/ccc-js/js6#readme",
-  "dependencies": {
-    "numjs": "^0.16.0"
-  }
+  "homepage": "https://github.com/ccc-js/js6#readme"
 }

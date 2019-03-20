@@ -19,6 +19,15 @@ class Point extends V.Vector {
     }
     return new V.Vector(g)
   }
+  static distance(x, y) {
+    return x.sub(y).norm()
+  }
+  // be(d(x,y)>=0);
+  // be(d(x,x)==0);
+  // be(d(x,y)==d(y,x));
+  distance(y) {
+    return Point.distance(this, y)
+  }
 
   clone(v) { return new Point(v||this.v) }
 }
