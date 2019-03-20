@@ -1,26 +1,17 @@
 const N = require('./node')
 const G = require('./gate')
 const F = require('./func')
-const ma6 = require('../../ma6')
+// const ma6 = require('../../ma6')
+const uu6 = require('../../uu6')
 
 module.exports = class Net {
   static call(net, p) {
-    /*
-    for (let i in p.v) {
-      net.vars[i].v = p.v[i]
-    }
-    */
     let o = net.forward()
     return o.v
   }
 
   static grad(net, p) {
-    // let g = new ma6.Vector(p.size())
-    // Net.call(net, p)
     net.backward()
-    //for (let i in p.v) {
-    //   g.v[i] = net.vars[i].g
-    //}
     return net
   }
 
@@ -28,10 +19,6 @@ module.exports = class Net {
     for (let node of gnet.vars) {
       node.v += stepLen * node.g
     }
-    // g.v[i] = net.vars[i].g
-    //}
-    // let d = g.mulc(stepLen)
-    // return  p.add(d)
     return gnet
   }
 
@@ -100,6 +87,6 @@ module.exports = class Net {
   }
 
   toString() {
-    return JSON.stringify(this.watchNodes)
+    return uu6.json(this.watchNodes)
   }
 }
