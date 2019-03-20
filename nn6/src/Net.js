@@ -5,25 +5,34 @@ const ma6 = require('../../ma6')
 
 module.exports = class Net {
   static call(net, p) {
+    /*
     for (let i in p.v) {
       net.vars[i].v = p.v[i]
     }
+    */
     let o = net.forward()
     return o.v
   }
 
   static grad(net, p) {
-    let g = new ma6.Vector(p.size())
-    Net.call(net, p)
+    // let g = new ma6.Vector(p.size())
+    // Net.call(net, p)
     net.backward()
-    for (let i in p.v) {
-      g.v[i] = net.vars[i].g
-    }
-    return g
+    //for (let i in p.v) {
+    //   g.v[i] = net.vars[i].g
+    //}
+    return net
   }
 
-  static step(net, g) {
-    
+  static step(p, gnet, stepLen) {
+    for (let node of gnet.vars) {
+      node.v += stepLen * node.g
+    }
+    // g.v[i] = net.vars[i].g
+    //}
+    // let d = g.mulc(stepLen)
+    // return  p.add(d)
+    return gnet
   }
 
   constructor () {
@@ -90,10 +99,7 @@ module.exports = class Net {
     this.watchNodes = nodes
   }
 
-  dump() {
-    return this.watchNodes
+  toString() {
+    return JSON.stringify(this.watchNodes)
   }
 }
-
-
-

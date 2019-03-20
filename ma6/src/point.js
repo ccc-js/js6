@@ -19,6 +19,12 @@ class Point extends V.Vector {
     }
     return new V.Vector(g)
   }
+
+  static step(p, g, stepLen) {
+    let d = g.mulc(stepLen)
+    return  p.add(d)
+  }
+
   static distance(x, y) {
     return x.sub(y).norm()
   }

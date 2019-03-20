@@ -40,12 +40,12 @@ S.normalize = function (a) {
   var sum = S.T.sum(a)
   return a.map(function (x) { return x / sum })
 }
-
+/*
 S.max = S.T.max
 S.min = S.T.min
 S.sum = S.T.sum
 S.product = S.T.product
-
+*/
 // graphics
 S.curve = function (f, from = -10, to = 10, step = 0.1) {
   var x = S.steps(from, to, step)
