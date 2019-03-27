@@ -31,11 +31,11 @@ F.dexp = function (x) {
 // 問題是，當所有的輸出值都小於 0，就會都被 Relu 截掉，於是變成 [0,0,0....]
 // 所以 relu 通常要加上 leaky 成為 leakyRelu
 // 即使小於 0 也會給一個很小的梯度。
-F.relu = function (x, leaky=0.05) {
+F.relu = function (x, leaky=0) {
   return x > 0 ? x : leaky * x
 }
 
-F.drelu = function (x, leaky=0.05) {
+F.drelu = function (x, leaky=0) {
   return x > 0 ? 1 : leaky
 }
 
@@ -109,36 +109,27 @@ F.ddivy = function (x, y) {
   return -x / (y * y)
 }
 
-F.max = function (a) {
+F.max = function (list) {
   let r = Number.MIN_VALUE
-  let len = a.length
-  for (let i=0; i<len; i++) {
-    if (a[i] > r) r = a[i]
+  for (let x of list) {
+    if (x > r) r = x
   }
   return r
 }
 
 // 這版的 softmax 會有 overflow, underflow 的危險 (只要總和超過幾百，或者小於幾百，就會爆了)，改一下！
 // 參考： http://freemind.pluskid.org/machine-learning/softmax-vs-softmax-loss-numerical-stability/
-F.softmax = function (x) {
-  let len = x.length, r = new Array(len), e = new Array(len)
-  let max = F.max(x), sum = 0
-  for (let i=0; i<x.length; i++) {
-    e[i] = Math.exp(x[i]-max)
+F.softmax = function (list) {
+  let sum = 0, r = [], e = []
+  let max = F.max(list)
+  for (let i=0; i<list.length; i++) {
+    e[i] = Math.exp(list[i]-max)
     sum += e[i]
   }
-  for (let i=0; i<x.length; i++) {
-    r[i] = e[i] / sum
+  for (let i=0; i<list.length; i++) {
+    r.push(e[i]/sum)
   }
-  // console.log('Softmax: x=%j r=%j', x, r)
+  // console.log('Softmax: list=%j r=%j', list, r)
   return r
-}
-
-// Softmax 的梯度計算是 x.g = o.v * (1 - o.v) * o.g
-F.dsoftmax = function (x, o) {
-  let len = x.length
-  for (let i=0; i<len; i++) {
-    x.g[i] += o.v[i] * (1-o.v[i]) * o.g[i]
-  }
 }
 

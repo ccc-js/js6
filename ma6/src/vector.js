@@ -3,86 +3,109 @@ const V = module.exports = {}
 
 V.array = uu6.array
 
-V.add = function (a, b) {
-  let len = a.length
-  let r = new Array(len)
-  for (var i = 0; i < len; i++) {
-    r[i] = a[i] + b[i]
+V.oassign = function (r, o) {
+  let isC = (typeof o === 'number')
+  if (!isC) uu6.be(r.length === o.length)
+  let len = r.length
+  for (let i=0; i<len; i++) {
+    r[i] = isC ? c : o[i]
   }
   return r
 }
 
-V.sub = function (a, b) {
+V.oadd = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] + b[i]
+}
+
+V.osub = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] - b[i]
+}
+
+V.omul = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] * b[i]
+}
+
+V.odiv = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] / b[i]
+}
+
+V.omod = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] % b[i]
+}
+
+V.opow = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = Math.pow(a[i], b[i])
+}
+
+V.op2 = function (a, b, f2) {
+  uu6.be(a.length === b.length)
   let len = a.length
   let r = new Array(len)
-  for (var i = 0; i < len; i++) {
-    r[i] = a[i] - b[i]
-  }
+  f2(r, a, b, len)
   return r
 }
 
-V.mul = function (a, b) {
-  let len = a.length
-  let r = new Array(len)
-  for (var i = 0; i < len; i++) {
-    r[i] = a[i] * b[i]
-  }
-  return r
-}
-
-V.div = function (a, b) {
-  let len = a.length
-  let r = new Array(len)
-  for (var i = 0; i < len; i++) {
-    r[i] = a[i] / b[i]
-  }
-  return r
-}
-
-V.mod = function (a, b) {
-  let len = a.length
-  let r = new Array(len)
-  for (var i = 0; i < len; i++) {
-    r[i] = a[i] % b[i]
-  }
-  return r
-}
+V.add = function (a, b) { return V.op2(a, b, V.oadd) }
+V.sub = function (a, b) { return V.op2(a, b, V.osub) }
+V.mul = function (a, b) { return V.op2(a, b, V.omul) }
+V.div = function (a, b) { return V.op2(a, b, V.odiv) }
+V.mod = function (a, b) { return V.op2(a, b, V.omod) }
+V.pow = function (a, b) { return V.op2(a, b, V.opow) }
 
 // Constant Operation
-V.mulc = function (a, c) {
-  if (typeof a === 'number') [a,c]=[c,a]
+V.oaddc = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] + c
+}
+
+V.osubc = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] - c
+}
+
+V.omulc = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] * c
+}
+
+V.odivc = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] / c
+}
+
+V.omodc = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] % c
+}
+
+V.opowc = function (r, a, c, len) {
+  for (let i = 0; i < len; i++) r[i] = Math.pow(a[i], c)
+}
+
+V.opc = function (a, c, fc) {
   let len = a.length
   let r = new Array(len)
-  for (let i=0; i<len; i++) {
-    r[i] = a[i] *c
-  }
+  fc(r, a, c, len)
   return r
 }
 
-V.divc = function (a,c) { return V.mulc(a, 1/c) }
-
-V.addc = function (a, c) {
-  if (typeof a === 'number') [a,c]=[c,a]
-  let len = a.length
-  let r = new Array(len)
-  for (let i=0; i<len; i++) {
-    r[i] = a[i] + c
-  }
-  return r
-}
-
-V.subc = function (a,c) { return V.addc(a, -c) }
-
-V.powc = function (a, c) {
-  let len = a.length
-  let r = new Array(len)
-  for (let i=0; i<len; i++) {
-    r[i] = Math.pow(a[i], c)
-  }
-  return r
-}
+V.addc = function (a, c) { return V.opc(a, c, V.oaddc) }
+V.subc = function (a, c) { return V.opc(a, c, V.osubc) }
+V.mulc = function (a, c) { return V.opc(a, c, V.omulc) }
+V.divc = function (a, c) { return V.opc(a, c, V.odivc) }
+V.modc = function (a, c) { return V.opc(a, c, V.omodc) }
+V.powc = function (a, c) { return V.opc(a, c, V.opowc) }
 
 // Uniary Operation
+V.oneg = function (r, a, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = -a[i]
+}
+
+V.op1 = function (a, f1) {
+  let len = a.length
+  let r = new Array(len)
+  f1(r, a, len)
+  return r
+}
+
+V.neg = function (a) { return V.op1(a, V.oneg) }
+
+/*
 V.neg = function (a) {
   let len = a.length
   let r = new Array(len)
@@ -91,7 +114,7 @@ V.neg = function (a) {
   }
   return r
 }
-
+*/
 V.dot = function (a,b) {
   let len = a.length
   let r = 0
@@ -139,6 +162,8 @@ class Vector {
   constructor(o) { this.v = (Array.isArray(o))?o.slice(0):new Array(o) }
   static random(n, min, max) { return new Vector(V.random(n, min, max)) }
   static range(begin, end, step=1) { return new Vector(V.range(begin, end, step)) }
+  static zero(n) { return new Vector(n) }
+  assign(o) { let a=this.clone(); V.assign(a.v, o); return a }
   add(b) { let a=this; return a.clone(V.add(a.v,b.v)) }
   sub(b) { let a=this; return a.clone(V.sub(a.v,b.v)) } 
   mul(b) { let a=this; return a.clone(V.mul(a.v,b.v)) } 
@@ -157,7 +182,8 @@ class Vector {
   sd() { let a=this; return V.sd(a.v) }
   toString() { return this.v.toString() }
   clone(v) { return new Vector(v||this.v) }
-  size() { return this.v.length }
+  get length() { return this.v.length }
+  // size() { return this.v.length }
 }
 
 V.Vector = Vector

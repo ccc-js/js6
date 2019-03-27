@@ -2,7 +2,7 @@ module.exports = G = {}
 
 class Gate {}
 
-class Gate1 extends Gate {
+G.Gate1 = class Gate1 extends Gate {
   constructor(o, x, f, gfx) {
     super()
     this.p = {o:o, x:x, f:f, gfx:gfx}
@@ -20,7 +20,7 @@ class Gate1 extends Gate {
   }
 }
 
-class Gate2 extends Gate {
+G.Gate2 = class Gate2 extends Gate {
   constructor(o, x, y, f, gfx, gfy) {
     super()
     this.p = {o:o, x:x, y:y, f:f, gfx:gfx, gfy:gfy||gfx}
@@ -39,7 +39,41 @@ class Gate2 extends Gate {
   }
 }
 
-Object.assign(G, {Gate, Gate1, Gate2 })
+G.Layer1 = class Layer1 extends Gate1 {
+  constructor(o, x, f, gf) {
+    super()
+    this.p = {o:o, x:x, f:f, gf:gf}
+  }
+
+  forward() {
+    let {o, x, f} = this.p
+    o.v = f(x.v)
+    o.g = x.g = 0
+  }
+
+  backward() {
+    let {o, x, gf} = this.p
+    gf(o, x)
+  }
+}
+
+G.Layer2 = class Layer2 extends Gate1 {
+  constructor(o, x, y, f, gf) {
+    super()
+    this.p = {o:o, x:x, y:y, f:f, gf:gf}
+  }
+
+  forward() {
+    let {o, x, y, f} = this.p
+    o.v = f(x.v, y.v)
+    o.g = x.g = 0
+  }
+
+  backward() {
+    let {o, x, gf} = this.p
+    gf(o, x, y)
+  }
+}
 
 /*
 G.TensorGate1 = class TensorGate1 extends Gate1 {

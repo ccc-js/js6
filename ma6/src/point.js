@@ -8,9 +8,9 @@ class Point extends V.Vector {
     return f(p.v)
   }
   static grad(f, p, h=0.01) {
-    let len = p.size(), fp = f(p.v)
+    let len = p.length, fp = f(p.v)
     let p2= p.clone(), v2 = p2.v
-    let g = new Array(p.size())
+    let g = new Array(p.length)
     for (let i=0; i<len; i++) {
       let t = v2[i]
       v2[i] += h

@@ -83,7 +83,7 @@ class Tensor extends V.Vector {
       this.v = t.v
       this.shape = t.shape
     } else {
-      this.v = v
+      this.v = v || new Array(T.size(shape))
       this.shape = shape
       uu6.be(T.size(shape) === v.length)
     }
