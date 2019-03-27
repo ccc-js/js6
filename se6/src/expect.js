@@ -69,8 +69,6 @@ class Expect {
   get that() { return this }
   get and() { return this }
   get to() { return this }
-  get to() { return this }
-  get to() { return this }
 }
 
 // let p = Expect.prototype

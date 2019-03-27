@@ -58,7 +58,7 @@ T.tensor2ndarray = function (v, shape, lo, hi) {
 
 T.ndarray2tensor = function (nd) {
   let t = null
-  if (!uu6.is(nd, 'array')) {
+  if (!uu6.type(nd, 'array')) {
     t = { v: nd, shape:[] }
     return t
   }
@@ -79,7 +79,6 @@ class Tensor extends V.Vector {
     super()
     if (shape == null) { // from ndarray
       let nd = v
-      console.log('RealTensor:nd=', nd)
       let t = T.ndarray2tensor(nd)
       this.v = t.v
       this.shape = t.shape
@@ -102,7 +101,7 @@ class Tensor extends V.Vector {
     this.hi = hi
   }
   reshape(shape) {
-    uu6.be(uu6.is(shape, 'array') && T.size(shape) === this.v.length)
+    uu6.be(uu6.type(shape, 'array') && T.size(shape) === this.v.length)
     this.shape = shape
     return this
   }

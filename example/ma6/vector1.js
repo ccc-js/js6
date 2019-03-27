@@ -1,5 +1,5 @@
-const nu6 = require('..')
-const Vector = nu6.Vector
+const ma6 = require('../../ma6')
+const Vector = ma6.Vector
 
 let a = new Vector([2,4,6])
 let b = new Vector([1,2,3])

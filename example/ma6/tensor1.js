@@ -1,5 +1,5 @@
 const uu6 = require('../../uu6')
-const ma6 = require('..')
+const ma6 = require('../../ma6')
 const {T, V} = ma6
 
 let shape = [2,2,3], idx=[1,1,2]
