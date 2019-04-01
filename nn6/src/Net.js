@@ -1,7 +1,8 @@
 const N = require('./node')
 const G = require('./gate')
+const L = require('./layer')
 const F = require('./func')
-// const ma6 = require('../../ma6')
+const ma6 = require('../../ma6')
 const uu6 = require('../../uu6')
 
 module.exports = class Net {
@@ -36,13 +37,13 @@ module.exports = class Net {
   
   constant (v) { return new N.Constant(v) }
 
-  variables (n) {
-    let node = N.variables(n)
+  tensorVariable (shape) {
+    let node = N.tensorVariable(shape)
     this.vars.push(node)
     return node
   }
 
-  constants (a) { return N.constants(a) }
+  tensorConstant (a) { return N.tensorConstant(a) }
 
   op1 (x, f, gfx) {
     let o = new N.Variable()
@@ -75,18 +76,43 @@ module.exports = class Net {
   div (x, y) { return this.op2(x, y, (x,y)=>x/y, (x,y)=>1/y, (x,y)=>-x/(y*y)) }
   pow (x, y) { return this.op2(x, y, F.pow, F.dpowx, F.dpowy) }
 
+  // Layer
+  input(shape) {
+    let x = this.tensorVariable(shape)
+    let iLayer = new L.InputLayer(x)
+    this.gates.push(iLayer)
+    this.o = iLayer.o
+    return this.o
+  }
+
+  push(Layer, p) {
+    let lastLayer = this.gates[this.gates.length-1]
+    let x = lastLayer.o
+    let thisLayer = new Layer(x, p)
+    // console.log('thisLayer=', thisLayer)
+    this.gates.push(thisLayer)
+    this.o = thisLayer.o
+    // console.log('push: this.o=', this.o)
+    return thisLayer
+  }
+
   forward() { // 正向傳遞計算結果
     for (let gate of this.gates) {
+      console.log('gate.x=', gate.x.toString())
       gate.forward()
+      console.log('gate.o=', gate.o.toString())
     }
     return this.o
   }
 
   backward() { // 反向傳遞計算梯度
     this.o.g = 1 // 設定輸出節點 o 的梯度為 1
+    console.log('backward: this.o=', this.o.toString())
     for (let i=this.gates.length-1; i>=0; i--) { // 反向傳遞計算每個節點 Node 的梯度 g
       let gate = this.gates[i]
+      console.log('  gate.o=', gate.o.toString())
       gate.backward()
+      console.log('  gate.x=', gate.x.toString())
     }
   }
 
@@ -95,7 +121,14 @@ module.exports = class Net {
   }
 
   toString() {
-    return uu6.json(this.watchNodes)
+    // console.log('Net: watchNodes = ', this.watchNodes)
+    // return uu6.json(this.watchNodes, 2, 4)
+    let list=[]
+    for (let key in this.watchNodes) {
+      list.push(key+":"+this.watchNodes[key].toString())
+    }
+    return list.join("\n")
+    // return JSON.stringify(this.watchNodes, null, 2)
   }
 }
 

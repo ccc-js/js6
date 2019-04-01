@@ -1,4 +1,5 @@
 const ma6 = require('../../ma6')
+const uu6 = require('../../uu6')
 
 const N = {}
 
@@ -24,30 +25,41 @@ class Variable extends Node {
 }
 
 class TensorNode extends Node {
-  static set(t, o) {
-    if (o instanceof Tensor) {
+  static assign(t, o) {
+    if (o instanceof ma6.Tensor) {
       return o.clone()
     } else {
-      return t.set(o)
+      return t.assign(o)
     }
   }
   constructor(v, g) {
+    uu6.be(v instanceof ma6.Tensor)
     super()
     this._v = v // 輸出值 (f(x))
-    g = g || v.clone().set(0)
+    // console.log('TensorNode:v=', v)
+    g = g || v.clone().assign(0)
     this._g = g // 梯度值 (偏微分)
   }
   get v() { return this._v }
   set v(o) {
-    this._v = TensorNode.set(this._v, o)
+    this._v = TensorNode.assign(this._v, o)
   }
   get g() { return this._g }
   set g(o) {
-    this._g = TensorNode.set(this._v, o)
+    this._g = TensorNode.assign(this._g, o)
+  }
+  toString() {
+    return uu6.json({v:this.v, g:this.g})
   }
 }
 
-class TensorVariable extends TensorNode {}
+class TensorVariable extends TensorNode {
+  constructor(shape) {
+    let t = ma6.tensor(null, shape)
+    t.assign(0.8);
+    super(t)
+  }
+}
 
 class TensorConstant extends TensorNode {
   constructor(v) {
@@ -58,12 +70,13 @@ class TensorConstant extends TensorNode {
   set g(c) { } // 常數不能設定梯度
 }
 
-N.variables = function (n) {
-  let v = new ma6.Tensor(new Array(n))
-  return new TensorVariable(v)
+N.tensorVariable = function (shape) {
+  // console.log('N.tensor:shape =', shape)
+  // let v = new ma6.Tensor(null, shape)
+  return new TensorVariable(shape)
 }
 
-N.constants = function (a) {
+N.tensorConstant = function (a) {
   let v = new ma6.Tensor(a)
   return new TensorConstant(v)
 }

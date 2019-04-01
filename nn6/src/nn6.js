@@ -1,6 +1,8 @@
-module.exports = {
-  Node: require('./node'),
-  Gate: require('./Gate'),
+module.exports = nn6 = {
+  N: require('./node'),
+  G: require('./gate'),
+  L: require('./layer'),
   Net: require('./Net'),
-  // FNet: require('./FNet'),
 }
+
+Object.assign(nn6, nn6.N, nn6.G, nn6.L)

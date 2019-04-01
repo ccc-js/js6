@@ -3,12 +3,12 @@ const V = module.exports = {}
 
 V.array = uu6.array
 
-V.oassign = function (r, o) {
+V.assign = function (r, o) {
   let isC = (typeof o === 'number')
   if (!isC) uu6.be(r.length === o.length)
   let len = r.length
   for (let i=0; i<len; i++) {
-    r[i] = isC ? c : o[i]
+    r[i] = isC ? o : o[i]
   }
   return r
 }
@@ -160,10 +160,11 @@ V.sd = function (a) {
 
 class Vector {
   constructor(o) { this.v = (Array.isArray(o))?o.slice(0):new Array(o) }
-  static random(n, min, max) { return new Vector(V.random(n, min, max)) }
+  static random(n, min=0, max=1) { return new Vector(V.random(n, min, max)) }
   static range(begin, end, step=1) { return new Vector(V.range(begin, end, step)) }
   static zero(n) { return new Vector(n) }
-  assign(o) { let a=this.clone(); V.assign(a.v, o); return a }
+  assign(o) { let a=this; V.assign(a.v, o); return a }
+  random(min=0, max=1) { this.v = V.random(n, min, max) }
   add(b) { let a=this; return a.clone(V.add(a.v,b.v)) }
   sub(b) { let a=this; return a.clone(V.sub(a.v,b.v)) } 
   mul(b) { let a=this; return a.clone(V.mul(a.v,b.v)) } 

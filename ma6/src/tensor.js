@@ -77,15 +77,21 @@ T.ndarray2tensor = function (nd) {
 class Tensor extends V.Vector {
   constructor(v, shape) {
     super()
-    if (shape == null) { // from ndarray
-      let nd = v
-      let t = T.ndarray2tensor(nd)
-      this.v = t.v
-      this.shape = t.shape
+    uu6.be(v || shape)
+    if (v && !shape) {
+      // if (typeof v === 'number') { // v = 1d size
+      //   this.v = V.zeros(v)
+      // } else { // from ndarray
+        let nd = v
+        let t = T.ndarray2tensor(nd)
+        this.v = t.v
+        this.shape = t.shape  
+      // }
     } else {
-      this.v = v || new Array(T.size(shape))
-      this.shape = shape
-      uu6.be(T.size(shape) === v.length)
+      // console.log('Tensor():shape=', shape)
+      this.v = v || uu6.array(T.size(shape))
+      this.shape = shape || [this.v.length]
+      uu6.be(T.size(this.shape) === this.v.length)
     }
   }
   get(...idx) {
@@ -108,8 +114,11 @@ class Tensor extends V.Vector {
   ndarray() {
     return T.tensor2ndarray(this.v, this.shape)
   }
+  clone() {
+    return new Tensor(this.v.slice(0), this.shape)
+  }
   toString() {
-    return uu6.json({shape, v})
+    return uu6.json({shape:this.shape, v:this.v})
   }
 }
 
@@ -118,38 +127,3 @@ T.Tensor = Tensor
 T.tensor = function (v, shape) {
   return new Tensor(v, shape)
 }
-
-/*
-T.RealTensor = RealTensor
-class SliceTensor extends Tensor {
-  constructor(v, shape, lo, hi) {
-    super(v, shape)
-    this._shape = shape
-    this.lo = lo
-    this.hi = hi
-  }
-  get shape() { return V.sub(this.hi, this.lo) }
-  set shape(v) { throw Error('SliceTensor cannot be reshaped!') }
-  get(...idx) {
-    let idx2 = V.add(idx, lo)
-    return this.v[T.offset(this.shape, idx2)]
-  }
-  set(...idx) { // ...idx, o
-    let o = idx.pop()
-    let idx2 = V.add(idx, lo)
-    this.v[T.offset(this.shape, idx2)] = o
-  }
-  reshape(shape) { throw Error('SliceTensor cannot be reshaped!')}
-}
-
-T.SliceTensor = SliceTensor
-*/
-
-
-/*
-class Tensor extends V.Vector {
-  constructor(v, shape) {
-    super([])
-  }
-}
-*/ 

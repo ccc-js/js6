@@ -1,12 +1,11 @@
 const nn6 = require('../../../nn6')
 const net = new nn6.Net()
 
-let x  = net.variables(3)
-let w  = net.variables(3)
-let xw = net.tmul(x,w)
-let s  = net.tsum(xw)
-let o  = net.tsigmoid(s)
+let x = net.input([2])
+// console.log('x=', x)
+let p = net.push(nn6.PerceptronLayer, {n:1})
+net.watch({x, o:p.o})
 
-net.watch({x,w,o})
+/// net.watch({x, w:p.w, o:p.o})
 
 module.exports = net

@@ -1,90 +1,135 @@
 const L = module.exports = {}
-const G = require('./gate')
 const F = require('./func')
+const N = require('./node')
 const uu6 = require('../../uu6')
 
-class Layer1 extends G.Gate1 {
-  constructor(x, f, gf) {
-    super()
-    let o = x.clone()
-    this.p = {o:o, x:x, f:f, gf:gf}
+class Layer {
+  constructor(x, p = {}) {
+    this.x = x
+    this.p = uu6.clone(p)
   }
+  toString() {
+    return uu6.json({x:this.x, o:this.o})
+  }
+}
 
+class FLayer extends Layer {
+  constructor(x, p) {
+    super(x, p)
+    this.o = N.tensorVariable(x.v.shape)
+  }
   forward() {
-    let {o, x, f} = this.p
-    let len = x.length
+    let {o,x} = this, {f} = this.p
+    let vx = x.v, vo=o.v, len = vx.length
+    console.log("FLayer: vx=", vx.toString())
     for (let i=0; i<len; i++) {
-      o.v[i] = f(x.v[i])
+      console.log("  vx.v[i]=", vx.v[i])
+      vo.v[i] = f(vx.v[i])
+      console.log("  vo.v[i]=", vo.v[i])
     }
+    console.log("FLayer: vo=", vo.toString())
     o.g = x.g = 0
   }
 
   backward() {
-    let {o, x, f} = this.p
-    let len = x.length
+    let {o,x} = this, {gf} = this.p
+    let vx = x.v, vo=o.v, gx=x.g, go=o.g, len = vx.length
+    console.log("FLayer: go=", go.toString())
     for (let i=0; i<len; i++) {
-      x.g[i] += o.g[i] * gf(x.v[i], o.v[i])
+      console.log("  go: v[i]=", go.v[i])
+      gx.v[i] += go.v[i] * gf(vx.v[i], vo.v[i])
+      console.log("  gx: v[i]=", gx.v[i])
     }
-    o.g = x.g = 0
+    console.log("FLayer: gx=", gx.toString())
+    // o.g = x.g = 0
   }
 }
 
-class Layer2 extends G.Gate2 {
-  constructor(o, x, y, f, gf) {
-    super()
-    this.p = {o:o, x:x, y:y, f:f, gf:gf}
+class InputLayer extends Layer {
+  constructor(x, p) {
+    super(x, p)
+    uu6.be(x)
+    this.o = this.x // 單純把 x 傳給 o
+    // console.log('InputLayer: p=', p, '\nthis.o=', this.o)
   }
-
-  forward() {
-    let {o, x, y, f} = this.p
-    o.v = f(x.v, y.v)
-    o.g = x.g = 0
-  }
-
-  backward() {
-    let {o, x, gf} = this.p
-    gf(o, x, y)
-  }
+  forward() {}  // o = x
+  backward() {} // 輸入層不需反向傳遞
 }
 
-class FullyConnectLayer extends Layer2 {
+class FullyConnectLayer extends Layer {
+  constructor(x, p) {
+    super(x, p)
+    uu6.be(x)
+    // console.log('Fc:x=', x)
+    this.w = N.tensorVariable(x.v.shape)
+    this.o = N.tensorVariable([p.n])
+    this.bias = N.tensorVariable([p.n])
+  }
   forward() {
-    let {o, x, w} = this.p
-    let len = x.length, olen = o.length
+    let vx = this.x.v, vo =this.o.v, vw = this.w.v, vbias = this.bias.v
+    // console.log('FullyConnectLayer.forward: vx=', vx, 'vo=', vo)
+    let len = vx.length, olen = vo.length
     for (let oi=0; oi<olen; oi++) {
       let sum = 0
       for (let i=0; i<len; i++) {
-        sum += x.v[i] * w.v[i]
+        sum += vx.v[i] * vw.v[i]
       }
-      o.v[i] = sum
+      sum += -1 * vbias.v[oi]
+      vo.v[oi] = sum
     }
   }
 
   backward() {
-    let {o, x, w} = this.p
-    let len = x.length, olen = o.length
+    let vx = this.x.v, vo =this.o.v, vw = this.w.v, gw = this.w.g, gx = this.x.g, go = this.o.g, gbias = this.bias.g
+    let len = vx.length, olen = vo.length
     for (let oi=0; oi<olen; oi++) {
-      let oig = o.g[oi]
-      for (let i=0; i<len; i++) { // 注意: w[0] 是 bias ，x[0] 應該永遠是 -1
-        w.g[i] += x.v[i] * oig
+      let goi = go.v[oi]
+      for (let i=0; i<len; i++) { 
+        gw.v[i] += vx.v[i] * goi
+        gx.v[i] += vw.v[i] * goi
       }
+      gbias.v[oi] += -1 * goi
     }
+    console.log("  fcLayer: backward()\n  gw=", gw.toString(), "\n  gbias=", gbias.toString(), "\n  gx=", gx.toString())
   }
 }
 
-class SigmoidLayer extends Layer1 {
-  constructor(x) { super(x, F.sigmoid, F.dsigmoid) }
+class SigmoidLayer extends FLayer {
+  constructor(x) { super(x, {f:F.sigmoid, gf:F.dsigmoid}) }
 }
 
-class TanhLayer extends Layer1 {
-  constructor(x) { super(x, F.tanh, F.dtanh) }
+class PerceptronLayer extends Layer {
+  constructor(x, p) {
+    super(x, p)
+    this.fcLayer = new FullyConnectLayer(x, {n:p.n})
+    this.sigLayer = new SigmoidLayer(this.fcLayer.o)
+    this.o = this.sigLayer.o
+  }
+  forward() {
+    console.log('fcLayer.x=', this.fcLayer.x.toString())
+    console.log('fcLayer.w=', this.fcLayer.w.toString())
+    console.log('fcLayer.bias=', this.fcLayer.bias.toString())
+    this.fcLayer.forward()
+    console.log('fcLayer.o=', this.fcLayer.o.toString())
+    console.log('sigLayer.x=', this.sigLayer.x.toString())
+    this.sigLayer.forward()
+    console.log('sigLayer.o=', this.sigLayer.o.toString())
+  }
+  backward() {
+    this.sigLayer.backward()
+    this.fcLayer.backward()
+  }
 }
 
-class ReluLayer extends Layer1 {
-  constructor(x) { super(x, F.relu, F.drelu) }
+class TanhLayer extends FLayer {
+  constructor(x) { super(x, {f:F.tanh, gf:F.dtanh}) }
 }
 
-class SoftmaxLayer extends Layer1 {
+class ReluLayer extends FLayer {
+  constructor(x) { super(x, {f:F.relu, gf: F.drelu}) }
+}
+
+class SoftmaxLayer extends Layer {
   constructor(x) { super(x) }
 
   forward() {
@@ -108,7 +153,7 @@ class SoftmaxLayer extends Layer1 {
   }
 }
 
-class RegressionLayer extends Layer1 {
+class RegressionLayer extends Layer {
   forward() {} // 這層是輸出層，不用再向前傳遞了
   backward(y) { // y 是正確輸出值
     let len = x.length, loss = 0.0
@@ -121,7 +166,7 @@ class RegressionLayer extends Layer1 {
   }
 }
 
-class DropoutLayer extends Layer1 {
+class DropoutLayer extends Layer {
   constructor(x, pDrop) {
     super(x)
     this.dropped = new Array(x.length)
@@ -148,7 +193,7 @@ class DropoutLayer extends Layer1 {
   }
 }
 
-class PoolLayer extends Layer1 {
+class PoolLayer extends Layer {
   constructor(x, sx, sy, stride, pad) {
     super(null, x, null, null)
     let xw = x.shape[0], xh=x.shape[1], xd = x.shape[2]
@@ -207,6 +252,29 @@ class PoolLayer extends Layer1 {
 }
 
 Object.assign(L, {
-  Layer1, Layer2, SigmoidLayer, TanhLayer, ReluLayer, 
-  FullyConnectLayer, PoolLayer, DropoutLayer, RegressionLayer, SoftmaxLayer
+  Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, FullyConnectLayer, PerceptronLayer,
+  InputLayer, PoolLayer, DropoutLayer, RegressionLayer, SoftmaxLayer
 })
+
+
+/*
+
+Layer2, 
+class Layer2 extends G.Gate2 {
+  constructor(o, x, y, f, gf) {
+    super()
+    this.p = {o:o, x:x, y:y, f:f, gf:gf}
+  }
+
+  forward() {
+    let {o, x, y, f} = this.p
+    o.v = f(x.v, y.v)
+    o.g = x.g = 0
+  }
+
+  backward() {
+    let {o, x, gf} = this.p
+    gf(o, x, y)
+  }
+}
+*/
