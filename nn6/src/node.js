@@ -49,14 +49,14 @@ class TensorNode extends Node {
     this._g = TensorNode.assign(this._g, o)
   }
   toString() {
-    return uu6.json({v:this.v, g:this.g})
+    return uu6.json({v:this.v.toString(), g:this.g.toString()})
   }
 }
 
 class TensorVariable extends TensorNode {
-  constructor(shape) {
-    let t = ma6.tensor(null, shape)
-    t.assign(0.8);
+  constructor(v, shape) {
+    let t = ma6.tensor(v, shape)
+    // t.assign(0.8);
     super(t)
   }
 }
@@ -70,10 +70,10 @@ class TensorConstant extends TensorNode {
   set g(c) { } // 常數不能設定梯度
 }
 
-N.tensorVariable = function (shape) {
+N.tensorVariable = function (v, shape) {
   // console.log('N.tensor:shape =', shape)
   // let v = new ma6.Tensor(null, shape)
-  return new TensorVariable(shape)
+  return new TensorVariable(v, shape)
 }
 
 N.tensorConstant = function (a) {

@@ -8,7 +8,7 @@ F.neg = function (x) {
   return -x
 }
 
-F.dneg = function (x) {
+F.dneg = function (o) {
   return -1
 }
 
@@ -16,16 +16,16 @@ F.rev = function (x) {
   return 1.0 / x
 }
 
-F.drev = function (x) {
-  return -1 / (x*x)
+F.drev = function (o) {
+  return -1 / (o*o)
 }
 
 F.exp = function (x) {
   return Math.exp(x)
 }
 
-F.dexp = function (x) {
-  return Math.exp(x)
+F.dexp = function (o) {
+  return Math.exp(o)
 }
 
 // 問題是，當所有的輸出值都小於 0，就會都被 Relu 截掉，於是變成 [0,0,0....]
@@ -35,17 +35,17 @@ F.relu = function (x, leaky=0.05) {
   return x > 0 ? x : leaky * x
 }
 
-F.drelu = function (x, leaky=0.05) {
-  return x > 0 ? 1 : leaky
+F.drelu = function (o, leaky=0.05) {
+  return o > 0 ? 1 : leaky
 }
 
 F.sigmoid = function (x) {
   return 1 / (1 + Math.exp(-x))
 }
 
-F.dsigmoid = function (x) {
-  var s = F.sigmoid(x)
-  return s * (1 - s)
+F.dsigmoid = function (o) {
+  // let s = F.sigmoid(x)
+  return o * (1 - o)
 }
 
 F.tanh = function (x) {
@@ -53,8 +53,9 @@ F.tanh = function (x) {
   return Math.tanh(x)
 }
 
-F.dtanh = function (x) {
-  return 1.0 - x*x
+F.dtanh = function (o) {
+  // let t = F.tanh(x)
+  return 1.0 - o*o
 }
 
 F.pow = function (x, y) {

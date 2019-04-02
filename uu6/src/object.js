@@ -6,9 +6,21 @@ U.eq = function (o1, o2) {
   return JSON.stringify(o1) === JSON.stringify(o2)
 }
 
-U.near = function (n1, n2, gap=0.01) {
+U.nNear = function (n1, n2, gap=0.01) {
   let d = Math.abs(n1-n2)
   return d < gap
+}
+
+U.near = function (n1, n2, gap=0.01) {
+  if (Array.isArray(n1)) {
+    for (let i=0; i<n1.length; i++) {
+      if (!U.nNear(n1[i], n2[i], gap))
+        return false
+    }
+    return true
+  } else {
+    return U.nNear(n1, n2, gap)
+  }
 }
 
 U.clone = function (o) {

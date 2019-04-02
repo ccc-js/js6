@@ -13,6 +13,10 @@ U.repeats = function (n, f) {
   return r
 }
 
+U.last = function (a) {
+  return a[a.length-1]
+}
+
 U.push = function (a, o) {
   a.push(o)
 }

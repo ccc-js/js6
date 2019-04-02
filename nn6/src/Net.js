@@ -64,11 +64,12 @@ module.exports = class Net {
   // op1
   neg (x) { return this.op1(x, (x)=>-x, (x)=>-1) }
   rev (x) { return this.op1(x, (x)=>1/x, (x)=>-1/(x*x)) }
+  /* 這些要從輸出值 o 回饋 
   exp (x) { return this.op1(x, F.exp, F.dexp) }
   relu (x, leaky=0) { return this.op1(x, (x)=>F.relu(x, leaky), (x)=>F.drelu(x, leaky)) }
   sigmoid (x) { return this.op1(x, F.sigmoid, F.dsigmoid) }
   tanh (x) { return this.op1(x, F.tanh, F.dtanh) }
-
+  */
   // op2
   add (x, y) { return this.op2(x, y, (x,y)=>x+y, (x,y)=>1) }
   sub (x, y) { return this.op2(x, y, (x,y)=>x-y, (x,y)=>1, (x,y)=>-1) }
@@ -76,15 +77,15 @@ module.exports = class Net {
   div (x, y) { return this.op2(x, y, (x,y)=>x/y, (x,y)=>1/y, (x,y)=>-x/(y*y)) }
   pow (x, y) { return this.op2(x, y, F.pow, F.dpowx, F.dpowy) }
 
+  /*
   // Layer
   input(shape) {
-    let x = this.tensorVariable(shape)
-    let iLayer = new L.InputLayer(x)
+    let iLayer = new L.InputLayer(shape)
     this.gates.push(iLayer)
     this.o = iLayer.o
-    return this.o
+    return iLayer
   }
-
+  */
   push(Layer, p) {
     let lastLayer = this.gates[this.gates.length-1]
     let x = lastLayer.o
@@ -97,23 +98,42 @@ module.exports = class Net {
   }
 
   forward() { // 正向傳遞計算結果
-    for (let gate of this.gates) {
-      console.log('gate.x=', gate.x.toString())
-      gate.forward()
-      console.log('gate.o=', gate.o.toString())
+    let len = this.gates.length
+    for (let i=0; i<len; i++) {
+      this.gates[i].forward()
     }
     return this.o
   }
 
-  backward() { // 反向傳遞計算梯度
+  backward(outs) { // 反向傳遞計算梯度
     this.o.g = 1 // 設定輸出節點 o 的梯度為 1
-    console.log('backward: this.o=', this.o.toString())
-    for (let i=this.gates.length-1; i>=0; i--) { // 反向傳遞計算每個節點 Node 的梯度 g
+    let len = this.gates.length
+    for (let i=len-1; i>=0; i--) { // 反向傳遞計算每個節點 Node 的梯度 g
       let gate = this.gates[i]
-      console.log('  gate.o=', gate.o.toString())
-      gate.backward()
-      console.log('  gate.x=', gate.x.toString())
+      gate.backward(outs)
     }
+  }
+
+  getLoss() {
+    let loss = this.o.v[0]
+    return loss
+  }
+
+  adjust(step, moment) {
+    let len = this.gates.length
+    for (let i=0; i<len; i++) {
+      this.gates[i].adjust(step, moment)
+    }
+    return this.o
+  }
+
+  learn(inputs, outs) {
+    this.gates[0].setInput(inputs)
+    this.forward()
+    this.gates[this.gates.length-1].setOutput(outs)
+    this.backward()
+    this.adjust(this.step, this.moment)
+    return this.getLoss()
   }
 
   watch (nodes) {

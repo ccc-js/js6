@@ -21,9 +21,10 @@ T.sliceNdarray = function (v, shape, lo, hi) {
   let dim = shape.length
   let [wi,wj,wk] = shape
   let [wi2,wj2,wk2] = [hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]]
+
   if (dim === 1) {
     let rv = new Array(wi2)
-    for (let ri = 0, i=lo[0]; i<hi[0]; ri++, i++) rv[ri++] = v[i]
+    for (let ri = 0, i=lo[0]; i<hi[0]; ri++, i++) rv[ri] = v[i]
     return rv
   }
   if (dim === 2) {
@@ -36,12 +37,13 @@ T.sliceNdarray = function (v, shape, lo, hi) {
     }
     return rv
   }
+
   if (dim === 3) {
     let rv = new Array(wi2)
     for (let ri=0, i=lo[0]; i<hi[0]; ri++, i++) {
       let rvi = rv[ri] = new Array(wj2)
       for (let rj=0, j=lo[1]; j<hi[1]; rj++, j++) {
-        let rvj = rv[ri][rj] = new Array(wk2)
+        let rvj = rvi[rj] = new Array(wk2)
         for (let rk=0, k=lo[2]; k<hi[2]; rk++, k++) {
           rvj[rk] = v[(i*wj+j)*wk+k]
         }
@@ -118,7 +120,8 @@ class Tensor extends V.Vector {
     return new Tensor(this.v.slice(0), this.shape)
   }
   toString() {
-    return uu6.json({shape:this.shape, v:this.v})
+    // return uu6.json({shape:this.shape, v:this.v})
+    return uu6.json(this.ndarray())
   }
 }
 

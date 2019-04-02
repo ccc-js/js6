@@ -8,94 +8,129 @@ class Layer {
     this.x = x
     this.p = uu6.clone(p)
   }
+  forward() {
+    let {o,x} = this
+    o.g = x.g = 0
+    return o
+  }
+  backward() {}
   toString() {
-    return uu6.json({x:this.x, o:this.o})
+    let {o,x} = this
+    return this.constructor.name + ':\n  x:' + x.toString() + '\n  o:' + o.toString()
   }
 }
 
 class FLayer extends Layer {
   constructor(x, p) {
     super(x, p)
-    this.o = N.tensorVariable(x.v.shape)
+    this.o = N.tensorVariable(null, x.v.shape)
   }
   forward() {
-    let {o,x} = this, {f} = this.p
+    let {o, x} = this, {f} = this.p
     let vx = x.v, vo=o.v, len = vx.length
-    console.log("FLayer: vx=", vx.toString())
     for (let i=0; i<len; i++) {
-      console.log("  vx.v[i]=", vx.v[i])
       vo.v[i] = f(vx.v[i])
-      console.log("  vo.v[i]=", vo.v[i])
     }
-    console.log("FLayer: vo=", vo.toString())
-    o.g = x.g = 0
+    return super.forward()
   }
 
   backward() {
     let {o,x} = this, {gf} = this.p
     let vx = x.v, vo=o.v, gx=x.g, go=o.g, len = vx.length
-    console.log("FLayer: go=", go.toString())
     for (let i=0; i<len; i++) {
-      console.log("  go: v[i]=", go.v[i])
       gx.v[i] += go.v[i] * gf(vx.v[i], vo.v[i])
-      console.log("  gx: v[i]=", gx.v[i])
-    }
-    console.log("FLayer: gx=", gx.toString())
-    // o.g = x.g = 0
-  }
-}
-
-class InputLayer extends Layer {
-  constructor(x, p) {
-    super(x, p)
-    uu6.be(x)
-    this.o = this.x // 單純把 x 傳給 o
-    // console.log('InputLayer: p=', p, '\nthis.o=', this.o)
-  }
-  forward() {}  // o = x
-  backward() {} // 輸入層不需反向傳遞
-}
-
-class FullyConnectLayer extends Layer {
-  constructor(x, p) {
-    super(x, p)
-    uu6.be(x)
-    // console.log('Fc:x=', x)
-    this.w = N.tensorVariable(x.v.shape)
-    this.o = N.tensorVariable([p.n])
-    this.bias = N.tensorVariable([p.n])
-  }
-  forward() {
-    let vx = this.x.v, vo =this.o.v, vw = this.w.v, vbias = this.bias.v
-    // console.log('FullyConnectLayer.forward: vx=', vx, 'vo=', vo)
-    let len = vx.length, olen = vo.length
-    for (let oi=0; oi<olen; oi++) {
-      let sum = 0
-      for (let i=0; i<len; i++) {
-        sum += vx.v[i] * vw.v[i]
-      }
-      sum += -1 * vbias.v[oi]
-      vo.v[oi] = sum
     }
   }
 
-  backward() {
-    let vx = this.x.v, vo =this.o.v, vw = this.w.v, gw = this.w.g, gx = this.x.g, go = this.o.g, gbias = this.bias.g
-    let len = vx.length, olen = vo.length
-    for (let oi=0; oi<olen; oi++) {
-      let goi = go.v[oi]
-      for (let i=0; i<len; i++) { 
-        gw.v[i] += vx.v[i] * goi
-        gx.v[i] += vw.v[i] * goi
-      }
-      gbias.v[oi] += -1 * goi
+  adjust(step, moment) {
+    let {o,x} = this
+    let vx = x.v, vo=o.v, gx=x.g, go=o.g, len = vx.length
+    for (let i=0; i<len; i++) {
+      vx.v[i] += step * gx.v[i]
+      gx.v[i] = 0 // 調過後就設為 0，這樣才不會重複調整 ...
     }
-    console.log("  fcLayer: backward()\n  gw=", gw.toString(), "\n  gbias=", gbias.toString(), "\n  gx=", gx.toString())
   }
 }
 
 class SigmoidLayer extends FLayer {
-  constructor(x) { super(x, {f:F.sigmoid, gf:F.dsigmoid}) }
+  constructor(x) { super(x, {f:(vx)=>F.sigmoid(vx), gf:(vx,vo)=>F.dsigmoid(vo) }) }
+}
+
+class TanhLayer extends FLayer {
+  constructor(x) { super(x, {f:(vx)=>F.tanh(vx), gf:(vx,vo)=>F.dtanh(vo) }) }
+}
+
+class ReluLayer extends FLayer {
+  constructor(x, leaky) {
+    super(x, {f:(vx,l=leaky)=>F.relu(vx,l) , gf: (vx,vo,l=leaky)=>F.drelu(vo,l)})
+  }
+}
+
+// 參考 -- https://www.oreilly.com/library/view/tensorflow-for-deep/9781491980446/ch04.html
+class FullyConnectLayer extends Layer {
+  constructor(x, p) {
+    super(x, p)
+    uu6.be(x)
+    let wshape = uu6.clone(x.v.shape)
+    wshape.push(p.n)
+    // console.log('wshape=', wshape)
+    this.w = N.tensorVariable(null, wshape)
+    this.o = N.tensorVariable(null, [p.n])
+    this.bias = N.tensorVariable(null, [p.n])
+    this.w.v = 0.2
+    this.bias.v = 0.1
+  }
+  forward() {
+    let {o, x, w, bias} = this
+    let vx = x.v, vo =o.v, vw = w.v, vbias = bias.v
+    let xlen = vx.length, olen = vo.length
+    for (let oi=0; oi<olen; oi++) {
+      let sum = 0
+      for (let xi=0; xi<xlen; xi++) {
+        sum += vx.v[xi] * vw.v[oi*xlen+xi]
+      }
+      sum += -1 * vbias.v[oi]
+      vo.v[oi] = sum
+    }
+    return super.forward()
+  }
+
+  backward() {
+    let {o, x, w, bias} = this
+    let vx=x.v, vo=o.v, vw=w.v, gw=w.g, gx=x.g, go=o.g, gbias=bias.g
+    let xlen = vx.length, olen = vo.length
+    for (let oi=0; oi<olen; oi++) {
+      let goi = go.v[oi]
+      for (let xi=0; xi<xlen; xi++) { 
+        gw.v[oi*xlen+xi] += vx.v[xi] * goi
+        gx.v[xi] += vw.v[oi*xlen+xi] * goi
+      }
+      gbias.v[oi] += -1 * goi
+    }
+  }
+
+  adjust(step, moment) {
+    let {o, x, w, bias} = this
+    let vx=x.v, vo=o.v, vw=w.v, gw=w.g, gx=x.g, go=o.g, gbias=bias.g
+    let xlen = vx.length, olen = vo.length
+    for (let xi=0; xi<xlen; xi++) {
+      vx.v[xi] += step * gx.v[xi]
+      gx.v[xi] = 0
+    }
+    for (let oi=0; oi<olen; oi++) {
+      for (let xi=0; xi<xlen; xi++) {
+        vw.v[oi*xlen+xi] += step * gw.v[oi*xlen+xi]
+        gw.v[oi*xlen+xi] = 0
+      }
+      vbias.v[oi] += step * gbias.v[oi]
+      gbias.v[oi] = 0
+    }
+  }
+
+  toString() {
+    let {w, bias} = this
+    return super.toString() + '\n  w:'+w.toString()+'\n  bias:'+bias.toString()
+  }
 }
 
 class PerceptronLayer extends Layer {
@@ -106,14 +141,9 @@ class PerceptronLayer extends Layer {
     this.o = this.sigLayer.o
   }
   forward() {
-    console.log('fcLayer.x=', this.fcLayer.x.toString())
-    console.log('fcLayer.w=', this.fcLayer.w.toString())
-    console.log('fcLayer.bias=', this.fcLayer.bias.toString())
     this.fcLayer.forward()
-    console.log('fcLayer.o=', this.fcLayer.o.toString())
-    console.log('sigLayer.x=', this.sigLayer.x.toString())
     this.sigLayer.forward()
-    console.log('sigLayer.o=', this.sigLayer.o.toString())
+    return super.forward()
   }
   backward() {
     this.sigLayer.backward()
@@ -121,50 +151,62 @@ class PerceptronLayer extends Layer {
   }
 }
 
-class TanhLayer extends FLayer {
-  constructor(x) { super(x, {f:F.tanh, gf:F.dtanh}) }
-}
+class RegressionLayer extends Layer {
+  constructor(x, p) {
+    super(x, p)
+    this.o = N.tensorVariable(null, [1])
+  }
 
-class ReluLayer extends FLayer {
-  constructor(x) { super(x, {f:F.relu, gf: F.drelu}) }
-}
-
-class SoftmaxLayer extends Layer {
-  constructor(x) { super(x) }
+  setOutput(y) {
+    this.y = y
+  }
 
   forward() {
-    let len = x.length, e = new Array(len)
-    let max = F.max(x.v), sum = 0
+    super.forward() // 清除梯度 g
+    let {o, x, y} = this
+    let vx = x.v, gx = x.g, vo = o.v, go = o.g
+    let len = vx.length, loss = 0.0
     for (let i=0; i<len; i++) {
-      e[i] = Math.exp(x.v[i]-max)
-      sum += e[i]
+      let d = vx.v[i] - y[i]   // y 是正確輸出值 (正確答案)，d[i] 是第 i 個輸出的差異
+      gx.v[i] = d              // 梯度就是網路輸出 x 與答案 y 之間的差異
+      loss += 0.5 * d * d      // 誤差採用最小平方法 1/2 (x-y)^2，這樣得到的梯度才會是 (xi-yi)
     }
-    for (let i=0; i<x.length; i++) {
-      o.v[i] = e[i] / sum
-    }
+    vo.v[0] = loss             // 錯誤的數量 loss 就是想要最小化的能量函數 => loss = 1/2 (x-y)^2
+                               // 整體的能量函數應該是所有 loss 的加總，也就是 sum(loss(x, y)) for all (x,y)
+    return o
   }
+  backward() {} // 輸出層的反傳遞已經在正傳遞時順便計算掉了！
 
-  backward(y) { // y 是正確的那個輸出
+  toString() {
+    let {y} = this
+    return super.toString() + '\n  y:' + uu6.json(y)
+  }
+}
+
+class InputLayer extends Layer {
+  constructor(shape) {
+    super()
+    this.x = N.tensorVariable(null, shape)
+    this.o = this.x
+  }
+  setInput(inputs) {
+    this.x.v.assign(inputs)
+    /*
+    let {o, x} = this
+    let vx = x.v, gx = x.g, vo = o.v, go = o.g
     let len = x.length
     for (let i=0; i<len; i++) {
-      x.g[i] += o.v[i] * (1-o.v[i]) * o.g[i] // // Softmax 的梯度計算是 x.g = o.v * (1 - o.v) * o.g
+      vx.v[i] = inputs[i]
     }
-    return -Math.log(o.v[y]);
+    */
   }
+  forward() { // 輸出 o = 輸入 x
+    return super.forward()
+  }
+  backward() {}
 }
 
-class RegressionLayer extends Layer {
-  forward() {} // 這層是輸出層，不用再向前傳遞了
-  backward(y) { // y 是正確輸出值
-    let len = x.length, loss = 0.0
-    for(var i=0; i<len; i++) {
-      var d = x.v[i] - y[i] // 計算網路輸出 x.v[i] 與正確輸出 y[i] 之間的誤差
-      x.g[i] = d
-      loss += 0.5 * d * d
-    }
-    return loss
-  }
-}
+// ====================== 以下尚未完成，尚未測試 ==========================
 
 class DropoutLayer extends Layer {
   constructor(x, pDrop) {
@@ -173,6 +215,7 @@ class DropoutLayer extends Layer {
     this.pDrop = pDrop
   }
   forward() {
+    let {o, x} = this
     let N = x.length, dropped = this.dropped, pDrop = this.pDrop
     if(is_training) { // 在訓練階段，隨機的掐掉一些權重。
       // do dropout
@@ -184,6 +227,7 @@ class DropoutLayer extends Layer {
       // scale the activations during prediction
       for(var i=0;i<N;i++) { o.v[i] *= this.pDrop }
     }
+    return super.forward()
   }
   backward() {
     let len = x.len, dropped = this.dropped
@@ -193,20 +237,49 @@ class DropoutLayer extends Layer {
   }
 }
 
+class SoftmaxLayer extends Layer {
+  constructor(x) { super(x) }
+
+  forward() {
+    let {o, x} = this
+    let len = x.length, e = new Array(len)
+    let max = F.max(x.v), sum = 0
+    for (let i=0; i<len; i++) {
+      e[i] = Math.exp(x.v[i]-max)
+      sum += e[i]
+    }
+    for (let i=0; i<x.length; i++) {
+      o.v[i] = e[i] / sum
+    }
+    return super.forward() 
+  }
+
+  backward(y) { // y 是正確的那個輸出
+    let len = x.length
+    for (let i=0; i<len; i++) {
+      x.g[i] += o.v[i] * (1-o.v[i]) * o.g[i] // // Softmax 的梯度計算是 x.g = o.v * (1 - o.v) * o.g
+    }
+    return -Math.log(o.v[y]);
+  }
+}
+
 class PoolLayer extends Layer {
-  constructor(x, sx, sy, stride, pad) {
-    super(null, x, null, null)
+  constructor(x, p) {
+    super(x, p)
+    let {sx, sy, stride, pad} = p
     let xw = x.shape[0], xh=x.shape[1], xd = x.shape[2]
     let ow = Math.floor((xw + pad * 2 - sx) / stride + 1)
     let oh = Math.floor((xh + pad * 2 - sy) / stride + 1)
     let od = xd
-    let o = new ma6.tensor(null, [ow, oh, od])
+    this.o = new ma6.tensor(null, [ow, oh, od])
   }
   forward() {
+    let {o, x} = this
     let xw = x.shape[0], xh=x.shape[1], xd = x.shape[2]
     for (let d = 0; d < od; d++) {
 
     }
+    return super.forward()
 /*
   this.in_act = V;
 
@@ -248,33 +321,12 @@ class PoolLayer extends Layer {
   return this.out_act;
 }
 */
+    return o
   }
+
 }
 
 Object.assign(L, {
   Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, FullyConnectLayer, PerceptronLayer,
   InputLayer, PoolLayer, DropoutLayer, RegressionLayer, SoftmaxLayer
 })
-
-
-/*
-
-Layer2, 
-class Layer2 extends G.Gate2 {
-  constructor(o, x, y, f, gf) {
-    super()
-    this.p = {o:o, x:x, y:y, f:f, gf:gf}
-  }
-
-  forward() {
-    let {o, x, y, f} = this.p
-    o.v = f(x.v, y.v)
-    o.g = x.g = 0
-  }
-
-  backward() {
-    let {o, x, gf} = this.p
-    gf(o, x, y)
-  }
-}
-*/
