@@ -76,7 +76,6 @@ class FullyConnectLayer extends Layer {
     uu6.be(x)
     let wshape = uu6.clone(x.shape)
     wshape.push(p.n)
-    // console.log('wshape=', wshape)
     this.w = N.tensorVariable(null, wshape)
     this.o = N.tensorVariable(null, [p.n])
     this.bias = N.tensorVariable(null, [p.n])
@@ -85,7 +84,6 @@ class FullyConnectLayer extends Layer {
   }
   forward() {
     let {o, x, w, bias} = this
-    // let vx = x.v, vo =o.v, vw = w.v, vbias = bias.v
     let xlen = x.length, olen = o.length
     for (let oi=0; oi<olen; oi++) {
       let sum = 0
@@ -100,7 +98,6 @@ class FullyConnectLayer extends Layer {
 
   backward() {
     let {o, x, w, bias} = this
-    // let vx=x.v, vo=o.v, vw=w.v, gw=w.g, gx=x.g, go=o.g, gbias=bias.g
     let xlen = x.length, olen = o.length
     for (let oi=0; oi<olen; oi++) {
       let goi = o.g[oi]
@@ -167,7 +164,6 @@ class RegressionLayer extends Layer {
   forward() {
     super.forward() // 清除梯度 g
     let {o, x, y} = this
-    // let vx = x.v, gx = x.g, vo = o.v, go = o.g
     let len = x.length, loss = 0.0
     for (let i=0; i<len; i++) {
       let d = x.v[i] - y[i]   // y 是正確輸出值 (正確答案)，d[i] 是第 i 個輸出的差異
