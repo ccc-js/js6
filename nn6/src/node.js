@@ -37,25 +37,21 @@ class TensorNode extends Node {
   */
   constructor(shape, v, g) {
     super()
-    // console.log('shape=', shape, 'v=', v, 'g=', g)
     let size = (v) ? v.length : T.size(shape)
-    // console.log('size=', size)
-    this._v = v || V.array(size, 0) // 輸出值 (f(x))
-    // console.log('_v=', this._v)
-    this._g = g || V.array(size, 0) // 梯度值 (偏微分)
-    // console.log('_g=', this._g)
+    this.v = v || V.array(size, 0) // 輸出值 (f(x))
+    this.g = g || V.array(size, 0) // 梯度值 (偏微分)
     this.shape = shape || [size]
-    // console.log('shape=', this.shape)
-    // console.log('TensorNode=', this.toString())
   }
+  /*
   get v() { return this._v }
   set v(o) { V.assign(this._v, o) }
   get g() { return this._g }
   set g(o) { V.assign(this._g, o) }
-  get length() { return this._v.length }
+  */
+  get length() { return this.v.length }
   toString() {
     // return 'xxx'
-    return this.constructor.name + ' v:' + uu6.json(this._v) + ' g:' + uu6.json(this._g) + ' shape:' + uu6.json(this.shape)
+    return this.constructor.name + ' v:' + uu6.json(this.v) + ' g:' + uu6.json(this.g) + ' shape:' + uu6.json(this.shape)
     // return this.constructor.name + '\n  v:' + uu6.json(this._v) + '\n  g:', uu6.json(this._g) + '\n  shape:' + uu6.json(this.shape)
   }
 }

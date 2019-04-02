@@ -11,8 +11,9 @@ class Layer {
     this.p = uu6.clone(p)
   }
   forward() {
-    let {o,x} = this
-    o.g = x.g = 0
+    let {o, x} = this
+    V.assign(x.g, 0)
+    V.assign(o.g, 0)
     return o
   }
   backward() {}
@@ -79,8 +80,8 @@ class FullyConnectLayer extends Layer {
     this.w = N.tensorVariable(null, wshape)
     this.o = N.tensorVariable(null, [p.n])
     this.bias = N.tensorVariable(null, [p.n])
-    this.w.v = 0.2
-    this.bias.v = 0.1
+    V.assign(this.w.v, 0.2)
+    V.assign(this.bias.v, 0.1)
   }
   forward() {
     let {o, x, w, bias} = this
@@ -168,10 +169,10 @@ class RegressionLayer extends Layer {
     for (let i=0; i<len; i++) {
       let d = x.v[i] - y[i]   // y 是正確輸出值 (正確答案)，d[i] 是第 i 個輸出的差異
       x.g[i] = d              // 梯度就是網路輸出 x 與答案 y 之間的差異
-      loss += 0.5 * d * d      // 誤差採用最小平方法 1/2 (x-y)^2，這樣得到的梯度才會是 (xi-yi)
+      loss += 0.5 * d * d     // 誤差採用最小平方法 1/2 (x-y)^2，這樣得到的梯度才會是 (xi-yi)
     }
     o.v[0] = loss             // 錯誤的數量 loss 就是想要最小化的能量函數 => loss = 1/2 (x-y)^2
-                               // 整體的能量函數應該是所有 loss 的加總，也就是 sum(loss(x, y)) for all (x,y)
+                              // 整體的能量函數應該是所有 loss 的加總，也就是 sum(loss(x, y)) for all (x,y)
     return o
   }
   backward() {} // 輸出層的反傳遞已經在正傳遞時順便計算掉了！

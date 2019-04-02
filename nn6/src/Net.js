@@ -90,10 +90,8 @@ module.exports = class Net {
     let lastLayer = this.gates[this.gates.length-1]
     let x = lastLayer.o
     let thisLayer = new Layer(x, p)
-    // console.log('thisLayer=', thisLayer)
     this.gates.push(thisLayer)
     this.o = thisLayer.o
-    // console.log('push: this.o=', this.o)
     return thisLayer
   }
 
@@ -151,33 +149,3 @@ module.exports = class Net {
     // return JSON.stringify(this.watchNodes, null, 2)
   }
 }
-
-/*
-  // Tensor
-  top1 (x, f, gf) {
-    let o = new N.Variables(x.clone())
-    let g = new G.TensorGate1(o, x, f, gf)
-    this.gates.push(g)
-    this.o = o
-    return o
-  }
-  top2 (x, y, f, gf) {
-    let o = new N.Variables(x.clone())
-    let g = new G.TensorGate2(o, x, y, f, gf)
-    this.gates.push(g)
-    this.o = o
-    return o
-  }
-  topN (x, f, gf) {
-    let o = new N.Variables(x.clone())
-    let g = new G.TensorGateN(o, x, f, gf)
-    this.gates.push(g)
-    this.o = o
-    return o
-  }
-
-  tadd (x, y) { return this.top2(x, y, (o,x,y)=>T.oadd(o.v, x.v, y.v), (o,x,y)=>{ T.oassign(x.g, o.g); T.oassign(y.g, o.g) } ) }
-  tmul (x, y) { return this.top2(x, y, (o,x,y)=>T.omul(o.v, x.v, y.v), (o,x,y)=>{ T.omul(x.g, y.v, o.g); T.omul(y.g, x.v, o.g) } ) }
-  tsum (x) { return this.topN(x, (o,x)=>o.v = T.sum(x.v), (o,x)=>{ T.oaddc(x.g, o.g) } ) }
-  tsigmoid (x) { return this.top1(x, (o,x)=>T.osigmoid(o.v, x.v), (o,x)=>{ T.odsigmoid(x.g, o.g) } ) }
-*/

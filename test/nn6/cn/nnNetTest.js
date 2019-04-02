@@ -1,6 +1,6 @@
-const expect = require('../../se6').expect
-const ai6 = require('../../ai6')
-const nn6 = require('../../nn6')
+const expect = require('../../../se6').expect
+const ai6 = require('../../../ai6')
+const nn6 = require('../../../nn6')
 var net = require('./net1')
 let p = net
 describe('nn6.Net', function() {

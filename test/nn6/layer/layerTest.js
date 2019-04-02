@@ -2,6 +2,7 @@ const expect = require('../../../se6').expect
 const uu6 = require('../../../uu6')
 const nn6 = require('../../../nn6')
 const ma6 = require('../../../ma6')
+const V = ma6.V
 const L = nn6.L
 
 let x = new nn6.tensorVariable([2, -3])
@@ -10,7 +11,7 @@ console.log('x=', x.toString())
 function check(layer, vo, gx) {
   let o = layer.forward()
   expect(o.v).to.near(vo)
-  o.g = 1
+  V.assign(o.g, 1)
   layer.backward()
   console.log(layer.toString())
   expect(x.g).to.near(gx)
