@@ -9,11 +9,11 @@ console.log('x=', x.toString())
 
 function check(layer, vo, gx) {
   let o = layer.forward()
-  expect(o.v.v).to.near(vo)
+  expect(o.v).to.near(vo)
   o.g = 1
   layer.backward()
   console.log(layer.toString())
-  expect(x.g.v).to.near(gx)
+  expect(x.g).to.near(gx)
 }
 
 describe('nn6.Layer', function() {
@@ -34,9 +34,8 @@ describe('nn6.Layer', function() {
   describe('nn6.InputLayer', function() {
     it('InputLayer(x)', function() {
       let layer = new L.InputLayer([2])
-      let vx = x.v, gx = x.g
-      layer.setInput(vx.v)
-      check(layer, vx.v, gx.v)
+      layer.setInput(x.v)
+      check(layer, x.v, x.g)
     })
   })
   describe('nn6.RegressionLayer', function() {
@@ -45,9 +44,9 @@ describe('nn6.Layer', function() {
       let layer = new L.RegressionLayer(x)
       layer.setOutput(y)
       let o = layer.forward()
-      expect(o.v.v).to.near(vo)
+      expect(o.v).to.near(vo)
       layer.backward()
-      expect(x.g.v).to.near(gx)
+      expect(x.g).to.near(gx)
       console.log(layer.toString())
     })
   })
@@ -55,13 +54,13 @@ describe('nn6.Layer', function() {
   describe('nn6.FullyConnectLayer', function() {
     it('FullyConnectLayer 2to1', function() {
       let fcLayer = new L.FullyConnectLayer(x, {n:1})
-      uu6.be(fcLayer.w.v.v[0] == 0.2 && fcLayer.bias.v.v[0] == 0.1)
+      uu6.be(fcLayer.w.v[0] == 0.2 && fcLayer.bias.v[0] == 0.1)
       check(fcLayer, [-0.3], [0.2, 0.2])
     })
     it('FullyConnectLayer 2to2', function() {
       let fcLayer = new L.FullyConnectLayer(x, {n:2})
-      uu6.be(fcLayer.w.v.v[0] == 0.2 && fcLayer.bias.v.v[0] == 0.1)
-      fcLayer.w.v.v[3] = 0.5
+      uu6.be(fcLayer.w.v[0] == 0.2 && fcLayer.bias.v[0] == 0.1)
+      fcLayer.w.v[3] = 0.5
       check(fcLayer, [-0.3, -1.2], [0.4, 0.7])
     })
   })
@@ -69,7 +68,7 @@ describe('nn6.Layer', function() {
     it('PerceptronLayer 2to1', function() {
       let pLayer = new L.PerceptronLayer(x, {n:1})
       let fcLayer = pLayer.fcLayer
-      uu6.be(fcLayer.w.v.v[0] == 0.2 && fcLayer.bias.v.v[0] == 0.1)
+      uu6.be(fcLayer.w.v[0] == 0.2 && fcLayer.bias.v[0] == 0.1)
       check(pLayer, [0.4256], [0.0489,0.0489])
     })
   })

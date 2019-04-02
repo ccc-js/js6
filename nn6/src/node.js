@@ -1,6 +1,7 @@
 const ma6 = require('../../ma6')
 const uu6 = require('../../uu6')
-
+const V = ma6.V
+const T = ma6.T
 const N = {}
 
 class Node {}
@@ -25,6 +26,7 @@ class Variable extends Node {
 }
 
 class TensorNode extends Node {
+  /*
   static assign(t, o) {
     if (o instanceof ma6.Tensor) {
       return o.clone()
@@ -32,39 +34,44 @@ class TensorNode extends Node {
       return t.assign(o)
     }
   }
-  constructor(v, g) {
-    uu6.be(v instanceof ma6.Tensor)
+  */
+  constructor(shape, v, g) {
     super()
-    this._v = v // 輸出值 (f(x))
-    // console.log('TensorNode:v=', v)
-    g = g || v.clone().assign(0)
-    this._g = g // 梯度值 (偏微分)
+    // console.log('shape=', shape, 'v=', v, 'g=', g)
+    let size = (v) ? v.length : T.size(shape)
+    // console.log('size=', size)
+    this._v = v || V.array(size, 0) // 輸出值 (f(x))
+    // console.log('_v=', this._v)
+    this._g = g || V.array(size, 0) // 梯度值 (偏微分)
+    // console.log('_g=', this._g)
+    this.shape = shape || [size]
+    // console.log('shape=', this.shape)
+    // console.log('TensorNode=', this.toString())
   }
   get v() { return this._v }
-  set v(o) {
-    this._v = TensorNode.assign(this._v, o)
-  }
+  set v(o) { V.assign(this._v, o) }
   get g() { return this._g }
-  set g(o) {
-    this._g = TensorNode.assign(this._g, o)
-  }
+  set g(o) { V.assign(this._g, o) }
+  get length() { return this._v.length }
   toString() {
-    return uu6.json({v:this.v.toString(), g:this.g.toString()})
+    // return 'xxx'
+    return this.constructor.name + ' v:' + uu6.json(this._v) + ' g:' + uu6.json(this._g) + ' shape:' + uu6.json(this.shape)
+    // return this.constructor.name + '\n  v:' + uu6.json(this._v) + '\n  g:', uu6.json(this._g) + '\n  shape:' + uu6.json(this.shape)
   }
 }
 
 class TensorVariable extends TensorNode {
   constructor(v, shape) {
-    let t = ma6.tensor(v, shape)
+    // let t = ma6.tensor(v, shape)
     // t.assign(0.8);
-    super(t)
+    super(shape, v)
   }
 }
 
 class TensorConstant extends TensorNode {
   constructor(v) {
     super(v)
-    this._g = ma6.Tensor.zero(this._v.length) // 常數的梯度值為零
+    this._g = V.array(this._v.length, 0) // 常數的梯度值為零
   }
   set v(c) { } // 常數不能事後設定值
   set g(c) { } // 常數不能設定梯度

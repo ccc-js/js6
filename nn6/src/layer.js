@@ -1,7 +1,9 @@
 const L = module.exports = {}
+const uu6 = require('../../uu6')
+const ma6 = require('../../ma6')
 const F = require('./func')
 const N = require('./node')
-const uu6 = require('../../uu6')
+const V = ma6.V
 
 class Layer {
   constructor(x, p = {}) {
@@ -23,25 +25,25 @@ class Layer {
 class FLayer extends Layer {
   constructor(x, p) {
     super(x, p)
-    this.o = N.tensorVariable(null, x.v.shape)
+    this.o = N.tensorVariable(null, x.shape)
   }
   forward() {
     let {o, x} = this, {f} = this.p
-    let vx = x.v, vo=o.v, len = vx.length
+    let len = x.length
     for (let i=0; i<len; i++) {
-      vo.v[i] = f(vx.v[i])
+      o.v[i] = f(x.v[i])
     }
     return super.forward()
   }
 
   backward() {
-    let {o,x} = this, {gf} = this.p
-    let vx = x.v, vo=o.v, gx=x.g, go=o.g, len = vx.length
+    let {o, x} = this, {gf} = this.p
+    let len = x.length
     for (let i=0; i<len; i++) {
-      gx.v[i] += go.v[i] * gf(vx.v[i], vo.v[i])
+      x.g[i] += o.g[i] * gf(x.v[i], o.v[i])
     }
   }
-
+/*
   adjust(step, moment) {
     let {o,x} = this
     let vx = x.v, vo=o.v, gx=x.g, go=o.g, len = vx.length
@@ -50,6 +52,7 @@ class FLayer extends Layer {
       gx.v[i] = 0 // 調過後就設為 0，這樣才不會重複調整 ...
     }
   }
+*/
 }
 
 class SigmoidLayer extends FLayer {
@@ -71,7 +74,7 @@ class FullyConnectLayer extends Layer {
   constructor(x, p) {
     super(x, p)
     uu6.be(x)
-    let wshape = uu6.clone(x.v.shape)
+    let wshape = uu6.clone(x.shape)
     wshape.push(p.n)
     // console.log('wshape=', wshape)
     this.w = N.tensorVariable(null, wshape)
@@ -82,33 +85,33 @@ class FullyConnectLayer extends Layer {
   }
   forward() {
     let {o, x, w, bias} = this
-    let vx = x.v, vo =o.v, vw = w.v, vbias = bias.v
-    let xlen = vx.length, olen = vo.length
+    // let vx = x.v, vo =o.v, vw = w.v, vbias = bias.v
+    let xlen = x.length, olen = o.length
     for (let oi=0; oi<olen; oi++) {
       let sum = 0
       for (let xi=0; xi<xlen; xi++) {
-        sum += vx.v[xi] * vw.v[oi*xlen+xi]
+        sum += x.v[xi] * w.v[oi*xlen+xi]
       }
-      sum += -1 * vbias.v[oi]
-      vo.v[oi] = sum
+      sum += -1 * bias.v[oi]
+      o.v[oi] = sum
     }
     return super.forward()
   }
 
   backward() {
     let {o, x, w, bias} = this
-    let vx=x.v, vo=o.v, vw=w.v, gw=w.g, gx=x.g, go=o.g, gbias=bias.g
-    let xlen = vx.length, olen = vo.length
+    // let vx=x.v, vo=o.v, vw=w.v, gw=w.g, gx=x.g, go=o.g, gbias=bias.g
+    let xlen = x.length, olen = o.length
     for (let oi=0; oi<olen; oi++) {
-      let goi = go.v[oi]
+      let goi = o.g[oi]
       for (let xi=0; xi<xlen; xi++) { 
-        gw.v[oi*xlen+xi] += vx.v[xi] * goi
-        gx.v[xi] += vw.v[oi*xlen+xi] * goi
+        w.g[oi*xlen+xi] += x.v[xi] * goi
+        x.g[xi] += w.v[oi*xlen+xi] * goi
       }
-      gbias.v[oi] += -1 * goi
+      bias.g[oi] += -1 * goi
     }
   }
-
+/*
   adjust(step, moment) {
     let {o, x, w, bias} = this
     let vx=x.v, vo=o.v, vw=w.v, gw=w.g, gx=x.g, go=o.g, gbias=bias.g
@@ -126,7 +129,7 @@ class FullyConnectLayer extends Layer {
       gbias.v[oi] = 0
     }
   }
-
+*/
   toString() {
     let {w, bias} = this
     return super.toString() + '\n  w:'+w.toString()+'\n  bias:'+bias.toString()
@@ -164,14 +167,14 @@ class RegressionLayer extends Layer {
   forward() {
     super.forward() // 清除梯度 g
     let {o, x, y} = this
-    let vx = x.v, gx = x.g, vo = o.v, go = o.g
-    let len = vx.length, loss = 0.0
+    // let vx = x.v, gx = x.g, vo = o.v, go = o.g
+    let len = x.length, loss = 0.0
     for (let i=0; i<len; i++) {
-      let d = vx.v[i] - y[i]   // y 是正確輸出值 (正確答案)，d[i] 是第 i 個輸出的差異
-      gx.v[i] = d              // 梯度就是網路輸出 x 與答案 y 之間的差異
+      let d = x.v[i] - y[i]   // y 是正確輸出值 (正確答案)，d[i] 是第 i 個輸出的差異
+      x.g[i] = d              // 梯度就是網路輸出 x 與答案 y 之間的差異
       loss += 0.5 * d * d      // 誤差採用最小平方法 1/2 (x-y)^2，這樣得到的梯度才會是 (xi-yi)
     }
-    vo.v[0] = loss             // 錯誤的數量 loss 就是想要最小化的能量函數 => loss = 1/2 (x-y)^2
+    o.v[0] = loss             // 錯誤的數量 loss 就是想要最小化的能量函數 => loss = 1/2 (x-y)^2
                                // 整體的能量函數應該是所有 loss 的加總，也就是 sum(loss(x, y)) for all (x,y)
     return o
   }
@@ -190,15 +193,8 @@ class InputLayer extends Layer {
     this.o = this.x
   }
   setInput(inputs) {
-    this.x.v.assign(inputs)
-    /*
-    let {o, x} = this
-    let vx = x.v, gx = x.g, vo = o.v, go = o.g
-    let len = x.length
-    for (let i=0; i<len; i++) {
-      vx.v[i] = inputs[i]
-    }
-    */
+    console.log('x=', this.x.toString())
+    V.assign(this.x.v, inputs)
   }
   forward() { // 輸出 o = 輸入 x
     return super.forward()
