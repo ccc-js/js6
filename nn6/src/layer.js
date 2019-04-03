@@ -157,6 +157,23 @@ class PerceptronLayer extends Layer {
   }
 }
 
+class InputLayer extends Layer {
+  constructor(shape) {
+    super()
+    this.x = new N.TensorVariable(null, shape)
+    this.o = this.x
+  }
+  setInput(input) {
+    V.assign(this.x.v, input)
+  }
+  forward() { // 輸出 o = 輸入 x
+    return super.forward()
+  }
+  backward() {} // 輸入層不用反傳遞
+  adjust(step, moment) {} // 輸入層不用調梯度
+}
+
+
 class RegressionLayer extends Layer {
   constructor(x, p) {
     super(x, p)
@@ -176,9 +193,10 @@ class RegressionLayer extends Layer {
       x.g[i] = d              // 梯度就是網路輸出 x 與答案 y 之間的差異
       loss += 0.5 * d * d     // 誤差採用最小平方法 1/2 (x-y)^2，這樣得到的梯度才會是 (xi-yi)
     }
-    o.v[0] = loss             // 錯誤的數量 loss 就是想要最小化的能量函數 => loss = 1/2 (x-y)^2
+    this.loss = loss          // 錯誤的數量 loss 就是想要最小化的能量函數 => loss = 1/2 (x-y)^2
                               // 整體的能量函數應該是所有 loss 的加總，也就是 sum(loss(x, y)) for all (x,y)
-    return o
+    this.predict = x.v
+    return loss
   }
   backward() {} // 輸出層的反傳遞已經在正傳遞時順便計算掉了！
 
@@ -190,20 +208,52 @@ class RegressionLayer extends Layer {
   }
 }
 
-class InputLayer extends Layer {
-  constructor(shape) {
-    super()
-    this.x = new N.TensorVariable(null, shape)
-    this.o = this.x
+class SoftmaxLayer extends Layer {
+  constructor(x, p) {
+    super(x, p)
+    this.o = new N.TensorVariable(null, x.shape)
   }
-  setInput(input) {
-    V.assign(this.x.v, input)
+
+  setOutput(y) { // y 是正確的那個輸出
+    this.y = y
   }
-  forward() { // 輸出 o = 輸入 x
+
+  forward() {
+    let {o, x, y} = this
+    let len = x.length, e = new Array(len)
+    let max = F.max(x.v), sum = 0
+    for (let i=0; i<len; i++) {
+      e[i] = Math.exp(x.v[i]-max)
+      sum += e[i]
+    }
+    let iMax = 0
+    for (let i=0; i<x.length; i++) {
+      o.v[i] = e[i] / sum
+      if (o.v[i] > o.v[iMax]) iMax = i
+    }
+    this.e = e
+    this.predict = iMax
+    this.loss = -Math.log(e[y])
     return super.forward()
   }
-  backward() {} // 輸入層不用反傳遞
-  adjust(step, moment) {} // 輸入層不用調梯度
+
+  backward() {
+    let {o, x, y, e} = this
+    let len = x.length
+    for (let i=0; i<len; i++) {
+      let indicator = i === y ? 1.0 : 0.0
+      x.g[i] = -(indicator - e[i]) // o.v[i] * (1-o.v[i]) * 1
+    }
+  }
+
+  adjust(step, moment) {
+    let {o, x} = this
+    let len = x.length
+    for (let i=0; i<len; i++) {
+      x.v[i] += step * x.g[i]
+      x.g[i] = 0
+    }
+  }
 }
 
 // ====================== 以下尚未完成，尚未測試 ==========================
@@ -237,31 +287,6 @@ class DropoutLayer extends Layer {
   }
 }
 
-class SoftmaxLayer extends Layer {
-  constructor(x) { super(x) }
-
-  forward() {
-    let {o, x} = this
-    let len = x.length, e = new Array(len)
-    let max = F.max(x.v), sum = 0
-    for (let i=0; i<len; i++) {
-      e[i] = Math.exp(x.v[i]-max)
-      sum += e[i]
-    }
-    for (let i=0; i<x.length; i++) {
-      o.v[i] = e[i] / sum
-    }
-    return super.forward() 
-  }
-
-  backward(y) { // y 是正確的那個輸出
-    let len = x.length
-    for (let i=0; i<len; i++) {
-      x.g[i] += o.v[i] * (1-o.v[i]) * o.g[i] // // Softmax 的梯度計算是 x.g = o.v * (1 - o.v) * o.g
-    }
-    return -Math.log(o.v[y]);
-  }
-}
 
 class PoolLayer extends Layer {
   constructor(x, p) {
@@ -329,5 +354,5 @@ class PoolLayer extends Layer {
 
 Object.assign(L, {
   Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, FullyConnectLayer, PerceptronLayer,
-  InputLayer, RegressionLayer, // PoolLayer, DropoutLayer, SoftmaxLayer
+  InputLayer, RegressionLayer, SoftmaxLayer // PoolLayer, DropoutLayer, 
 })

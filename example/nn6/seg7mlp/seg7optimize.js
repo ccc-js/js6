@@ -1,4 +1,3 @@
-// const net = require('./perceptron')
 const net = require('./seg7mlp')
 
 const inputs = [

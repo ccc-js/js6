@@ -26,7 +26,6 @@ module.exports = class Net {
   constructor (p={}) {
     this.gates = []
     this.vars = []
-    this.watchNodes = []
     this.step = p.step || -0.01
     this.moment = p.moment || 0
   }
@@ -114,22 +113,19 @@ module.exports = class Net {
     }
   }
 
-  getLoss() {
-    let loss = this.o.v[0]
-    return loss
-  }
-
   adjust(step, moment) {
     let len = this.gates.length
     for (let i=0; i<len; i++) {
       this.gates[i].adjust(step, moment)
     }
-    return this.o
   }
 
   setInput(input) { this.gates[0].setInput(input) }
-  setOutput(out) { this.gates[this.gates.length-1].setOutput(out) }
-  predict() { return this.gates[this.gates.length-1].x.v }
+  setOutput(out) { this.lastGate().setOutput(out) }
+
+  lastGate() { return this.gates[this.gates.length-1] }
+  predict() { return this.lastGate().predict }
+  loss() { return this.lastGate().loss }
 
   learn(input, out) {
     this.setInput(input)
@@ -137,7 +133,7 @@ module.exports = class Net {
     this.forward()
     this.backward()
     this.adjust(this.step, this.moment)
-    return this.getLoss()
+    return this.loss()
   }
 
   dump(p) {
@@ -147,7 +143,7 @@ module.exports = class Net {
       this.setInput(inputs[i])
       this.setOutput(outs[i])
       this.forward()
-      console.log('input:', inputs[i], 'out:', outs[i], 'predict:', uu6.json(this.predict()), 'loss:', this.getLoss())
+      console.log('input:', inputs[i], 'out:', outs[i], 'predict:', uu6.json(this.predict()), 'loss:', this.loss())
     }
   }
 
@@ -171,14 +167,16 @@ module.exports = class Net {
     this.dump(p)
   }
 
-  watch (nodes) {
-    this.watchNodes = nodes || [this.i, this.o]
+  watch (nodeMap) {
+    this.watchNodes = nodeMap
   }
 
   toString() {
+    let watchNodes = this.watchNodes || {i:this.i, o:this.o}
+    console.log('watchNodes=', watchNodes)
     let list=[]
-    for (let key in this.watchNodes) {
-      list.push('  ' + key + ":" + this.watchNodes[key].toString())
+    for (let key in watchNodes) {
+      list.push('  ' + key + ":" + watchNodes[key].toString())
     }
     return this.constructor.name + ':\n' + list.join("\n")
   }
