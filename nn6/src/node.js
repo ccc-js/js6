@@ -4,7 +4,11 @@ const V = ma6.V
 const T = ma6.T
 const N = {}
 
-class Node {}
+class Node {
+  toString() {
+    return 'v:' + this.v + ' g:' + this.g
+  }
+}
 
 class Constant extends Node {
   constructor(v = 0) {
@@ -43,7 +47,6 @@ class TensorVariable extends TensorNode {
     let size = (v) ? v.length : T.size(shape)
     this.v = v || V.array(size, 0) // 輸出值 (f(x))
     this.g = V.array(size, 0)      // 梯度值 (偏微分)
-    // this.g0 = V.array(size, 0)     // 上次的梯度值 (動量 moment 使用)
     this.shape = shape || [size]
   }
 }
@@ -55,7 +58,6 @@ class TensorConstant extends TensorNode {
   }
   get v() { return this._v }
   get g() { return 0 }
-  // get g0() { return 0 }
 }
 
 module.exports = Object.assign(N, {

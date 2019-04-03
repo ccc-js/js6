@@ -1,4 +1,4 @@
-const nn6 = require('../../nn6')
+const nn6 = require('../../../nn6')
 const net = require('./net4')
 
 let p = net

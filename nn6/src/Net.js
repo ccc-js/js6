@@ -83,6 +83,7 @@ module.exports = class Net {
   inputLayer(shape) {
     let iLayer = new L.InputLayer(shape)
     this.gates.push(iLayer)
+    this.i =iLayer.x
     this.o = iLayer.o
     return iLayer
   }
@@ -146,33 +147,32 @@ module.exports = class Net {
       this.setInput(inputs[i])
       this.setOutput(outs[i])
       this.forward()
-      let netOut = this.predict()
-      console.log('input:', inputs[i], 'out:', uu6.json(netOut), 'loss:', this.getLoss())
+      console.log('input:', inputs[i], 'out:', outs[i], 'predict:', uu6.json(this.predict()), 'loss:', this.getLoss())
     }
   }
 
   optimize(p) {
-    let {inputs, outs, gap} = p
+    let {inputs, outs, gap, minLoops, maxLoops} = p
     uu6.be(inputs && outs)
     gap = gap || 0.00001
     let len = inputs.length
     let loss0 = Number.MAX_VALUE
-    while (true) {
+    for (let loops=0; loops < maxLoops; loops++) {
       let loss = 0
       for (let i=0; i<len; i++) {
         loss += this.learn(inputs[i], outs[i])
       }
-      if (loss < loss0 - gap) 
+      if (loss < loss0 - gap)
         loss0 = loss
-      else
+      else if (loops >= minLoops)
         break
-      console.log('loss=', loss)
+      console.log(loops+': loss=', loss)
     }
     this.dump(p)
   }
 
   watch (nodes) {
-    this.watchNodes = nodes
+    this.watchNodes = nodes || [this.i, this.o]
   }
 
   toString() {

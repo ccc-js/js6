@@ -1,4 +1,4 @@
-const nn6 = require('../../nn6')
+const nn6 = require('../../../nn6')
 const net = new nn6.Net()
 
 let x  = net.variable(2)

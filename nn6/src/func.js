@@ -44,17 +44,14 @@ F.sigmoid = function (x) {
 }
 
 F.dsigmoid = function (o) {
-  // let s = F.sigmoid(x)
   return o * (1 - o)
 }
 
 F.tanh = function (x) {
-  // return (Math.exp(x) - Math.exp(-x)) / (Math.exp(x) + Math.exp(-x));
   return Math.tanh(x)
 }
 
 F.dtanh = function (o) {
-  // let t = F.tanh(x)
   return 1.0 - o*o
 }
 
