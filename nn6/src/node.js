@@ -26,62 +26,36 @@ class Variable extends Node {
 }
 
 class TensorNode extends Node {
-  /*
-  static assign(t, o) {
-    if (o instanceof ma6.Tensor) {
-      return o.clone()
-    } else {
-      return t.assign(o)
-    }
-  }
-  */
-  constructor(shape, v, g) {
+  constructor(v, shape) {
     super()
-    let size = (v) ? v.length : T.size(shape)
-    this.v = v || V.array(size, 0) // 輸出值 (f(x))
-    this.g = g || V.array(size, 0) // 梯度值 (偏微分)
-    this.shape = shape || [size]
   }
-  /*
-  get v() { return this._v }
-  set v(o) { V.assign(this._v, o) }
-  get g() { return this._g }
-  set g(o) { V.assign(this._g, o) }
-  */
+
   get length() { return this.v.length }
+
   toString() {
-    // return 'xxx'
     return this.constructor.name + ' v:' + uu6.json(this.v) + ' g:' + uu6.json(this.g) + ' shape:' + uu6.json(this.shape)
-    // return this.constructor.name + '\n  v:' + uu6.json(this._v) + '\n  g:', uu6.json(this._g) + '\n  shape:' + uu6.json(this.shape)
   }
 }
 
 class TensorVariable extends TensorNode {
   constructor(v, shape) {
-    // let t = ma6.tensor(v, shape)
-    // t.assign(0.8);
-    super(shape, v)
+    super(v, shape)
+    let size = (v) ? v.length : T.size(shape)
+    this.v = v || V.array(size, 0) // 輸出值 (f(x))
+    this.g = V.array(size, 0)      // 梯度值 (偏微分)
+    // this.g0 = V.array(size, 0)     // 上次的梯度值 (動量 moment 使用)
+    this.shape = shape || [size]
   }
 }
 
 class TensorConstant extends TensorNode {
   constructor(v) {
-    super(v)
-    this._g = V.array(this._v.length, 0) // 常數的梯度值為零
+    super()
+    this._v = v || V.array(size, 0)      // 輸出值 (f(x))
   }
-  set v(c) { } // 常數不能事後設定值
-  set g(c) { } // 常數不能設定梯度
-}
-
-N.tensorVariable = function (v, shape) {
-  // console.log('N.tensor:shape =', shape)
-  // let v = new ma6.Tensor(null, shape)
-  return new TensorVariable(v, shape)
-}
-
-N.tensorConstant = function (a) {
-  let v = new ma6.Tensor(a)
-  return new TensorConstant(v)
+  get v() { return this._v }
+  get g() { return 0 }
+  // get g0() { return 0 }
 }
 
 module.exports = Object.assign(N, {

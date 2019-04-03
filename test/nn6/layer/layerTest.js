@@ -5,7 +5,7 @@ const ma6 = require('../../../ma6')
 const V = ma6.V
 const L = nn6.L
 
-let x = new nn6.tensorVariable([2, -3])
+let x = new nn6.TensorVariable([2, -3])
 console.log('x=', x.toString())
 
 function check(layer, vo, gx) {
@@ -54,12 +54,12 @@ describe('nn6.Layer', function() {
   // 以下 FullyConnectLayer, PerceptronLayer 成立的條件是 w 預設為 0.2, bias 預設為 0.1
   describe('nn6.FullyConnectLayer', function() {
     it('FullyConnectLayer 2to1', function() {
-      let fcLayer = new L.FullyConnectLayer(x, {n:1})
+      let fcLayer = new L.FullyConnectLayer(x, {n:1, cw:0.2, cbias:0.1})
       uu6.be(fcLayer.w.v[0] == 0.2 && fcLayer.bias.v[0] == 0.1)
       check(fcLayer, [-0.3], [0.2, 0.2])
     })
     it('FullyConnectLayer 2to2', function() {
-      let fcLayer = new L.FullyConnectLayer(x, {n:2})
+      let fcLayer = new L.FullyConnectLayer(x, {n:2, cw:0.2, cbias:0.1})
       uu6.be(fcLayer.w.v[0] == 0.2 && fcLayer.bias.v[0] == 0.1)
       fcLayer.w.v[3] = 0.5
       check(fcLayer, [-0.3, -1.2], [0.4, 0.7])
@@ -67,7 +67,7 @@ describe('nn6.Layer', function() {
   })
   describe('nn6.PerceptronLayer', function() {
     it('PerceptronLayer 2to1', function() {
-      let pLayer = new L.PerceptronLayer(x, {n:1})
+      let pLayer = new L.PerceptronLayer(x, {n:1, cw:0.2, cbias:0.1})
       let fcLayer = pLayer.fcLayer
       uu6.be(fcLayer.w.v[0] == 0.2 && fcLayer.bias.v[0] == 0.1)
       check(pLayer, [0.4256], [0.0489,0.0489])

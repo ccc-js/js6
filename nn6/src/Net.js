@@ -23,10 +23,12 @@ module.exports = class Net {
     return gnet
   }
 
-  constructor () {
+  constructor (p={}) {
     this.gates = []
     this.vars = []
     this.watchNodes = []
+    this.step = p.step || -0.01
+    this.moment = p.moment || 0
   }
 
   variable (v, g) {
@@ -38,12 +40,12 @@ module.exports = class Net {
   constant (v) { return new N.Constant(v) }
 
   tensorVariable (shape) {
-    let node = N.tensorVariable(shape)
+    let node = new N.TensorVariable(null, shape)
     this.vars.push(node)
     return node
   }
 
-  tensorConstant (a) { return N.tensorConstant(a) }
+  tensorConstant (a) { return new N.TensorConstant(a) }
 
   op1 (x, f, gfx) {
     let o = new N.Variable()
@@ -77,15 +79,14 @@ module.exports = class Net {
   div (x, y) { return this.op2(x, y, (x,y)=>x/y, (x,y)=>1/y, (x,y)=>-x/(y*y)) }
   pow (x, y) { return this.op2(x, y, F.pow, F.dpowx, F.dpowy) }
 
-  /*
   // Layer
-  input(shape) {
+  inputLayer(shape) {
     let iLayer = new L.InputLayer(shape)
     this.gates.push(iLayer)
     this.o = iLayer.o
     return iLayer
   }
-  */
+
   push(Layer, p) {
     let lastLayer = this.gates[this.gates.length-1]
     let x = lastLayer.o
@@ -103,12 +104,12 @@ module.exports = class Net {
     return this.o
   }
 
-  backward(outs) { // 反向傳遞計算梯度
-    this.o.g = 1 // 設定輸出節點 o 的梯度為 1
+  backward() { // 反向傳遞計算梯度
+    if (typeof this.o.g === 'number') this.o.g = 1 // 單變數輸出，非向量，這是優化問題，直接將梯度設為 1
     let len = this.gates.length
     for (let i=len-1; i>=0; i--) { // 反向傳遞計算每個節點 Node 的梯度 g
       let gate = this.gates[i]
-      gate.backward(outs)
+      gate.backward()
     }
   }
 
@@ -125,13 +126,49 @@ module.exports = class Net {
     return this.o
   }
 
-  learn(inputs, outs) {
-    this.gates[0].setInput(inputs)
+  setInput(input) { this.gates[0].setInput(input) }
+  setOutput(out) { this.gates[this.gates.length-1].setOutput(out) }
+  predict() { return this.gates[this.gates.length-1].x.v }
+
+  learn(input, out) {
+    this.setInput(input)
+    this.setOutput(out)
     this.forward()
-    this.gates[this.gates.length-1].setOutput(outs)
     this.backward()
     this.adjust(this.step, this.moment)
     return this.getLoss()
+  }
+
+  dump(p) {
+    let {inputs, outs} = p
+    let len = inputs.length
+    for (let i=0; i<len; i++) {
+      this.setInput(inputs[i])
+      this.setOutput(outs[i])
+      this.forward()
+      let netOut = this.predict()
+      console.log('input:', inputs[i], 'out:', uu6.json(netOut), 'loss:', this.getLoss())
+    }
+  }
+
+  optimize(p) {
+    let {inputs, outs, gap} = p
+    uu6.be(inputs && outs)
+    gap = gap || 0.00001
+    let len = inputs.length
+    let loss0 = Number.MAX_VALUE
+    while (true) {
+      let loss = 0
+      for (let i=0; i<len; i++) {
+        loss += this.learn(inputs[i], outs[i])
+      }
+      if (loss < loss0 - gap) 
+        loss0 = loss
+      else
+        break
+      console.log('loss=', loss)
+    }
+    this.dump(p)
   }
 
   watch (nodes) {
@@ -139,13 +176,10 @@ module.exports = class Net {
   }
 
   toString() {
-    // console.log('Net: watchNodes = ', this.watchNodes)
-    // return uu6.json(this.watchNodes, 2, 4)
     let list=[]
     for (let key in this.watchNodes) {
-      list.push(key+":"+this.watchNodes[key].toString())
+      list.push('  ' + key + ":" + this.watchNodes[key].toString())
     }
-    return list.join("\n")
-    // return JSON.stringify(this.watchNodes, null, 2)
+    return this.constructor.name + ':\n' + list.join("\n")
   }
 }

@@ -1,8 +1,6 @@
-// const nn6 = require('../../nn6')
 const net = require('./perceptron')
 
-net.forward()
+net.learn([1,1], [1])
 console.log(net.toString())
-
-net.backward()
+net.learn([0,1], [1])
 console.log(net.toString())

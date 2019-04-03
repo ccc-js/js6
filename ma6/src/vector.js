@@ -3,6 +3,13 @@ const V = module.exports = {}
 
 V.array = uu6.array
 
+V.random = function (r, min=0, max=1) {
+  let len = r.length
+  for (let i=0; i<len; i++) {
+    r[i] = uu6.random(min, max)
+  }
+}
+
 V.assign = function (r, o) {
   let isC = (typeof o === 'number')
   if (!isC) uu6.be(r.length === o.length)

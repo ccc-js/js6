@@ -12,8 +12,8 @@ class Layer {
   }
   forward() {
     let {o, x} = this
-    V.assign(x.g, 0)
-    V.assign(o.g, 0)
+    V.assign(x.g, 0) // 清除 x 的梯度
+    V.assign(o.g, 0) // 清除 o 的梯度
     return o
   }
   backward() {}
@@ -26,7 +26,7 @@ class Layer {
 class FLayer extends Layer {
   constructor(x, p) {
     super(x, p)
-    this.o = N.tensorVariable(null, x.shape)
+    this.o = new N.TensorVariable(null, x.shape)
   }
   forward() {
     let {o, x} = this, {f} = this.p
@@ -44,16 +44,15 @@ class FLayer extends Layer {
       x.g[i] += o.g[i] * gf(x.v[i], o.v[i])
     }
   }
-/*
+
   adjust(step, moment) {
     let {o,x} = this
-    let vx = x.v, vo=o.v, gx=x.g, go=o.g, len = vx.length
+    let len = x.length
     for (let i=0; i<len; i++) {
-      vx.v[i] += step * gx.v[i]
-      gx.v[i] = 0 // 調過後就設為 0，這樣才不會重複調整 ...
+      x.v[i] += step * x.g[i]
+      x.g[i] = 0 // 調過後就設為 0，這樣才不會重複調整 ...
     }
   }
-*/
 }
 
 class SigmoidLayer extends FLayer {
@@ -77,11 +76,11 @@ class FullyConnectLayer extends Layer {
     uu6.be(x)
     let wshape = uu6.clone(x.shape)
     wshape.push(p.n)
-    this.w = N.tensorVariable(null, wshape)
-    this.o = N.tensorVariable(null, [p.n])
-    this.bias = N.tensorVariable(null, [p.n])
-    V.assign(this.w.v, 0.2)
-    V.assign(this.bias.v, 0.1)
+    this.w = new N.TensorVariable(null, wshape)
+    this.o = new N.TensorVariable(null, [p.n])
+    this.bias = new N.TensorVariable(null, [p.n])
+    if (p.cw) V.assign(this.w.v, p.cw); else V.random(this.w.v, -1, 1)
+    if (p.cbias) V.assign(this.bias.v, p.cbias); else V.random(this.bias.v, -1, 1)
   }
   forward() {
     let {o, x, w, bias} = this
@@ -90,8 +89,10 @@ class FullyConnectLayer extends Layer {
       let sum = 0
       for (let xi=0; xi<xlen; xi++) {
         sum += x.v[xi] * w.v[oi*xlen+xi]
+        w.g[oi*xlen+xi] = 0 // 清除 w 的梯度
       }
       sum += -1 * bias.v[oi]
+      bias.g[oi] = 0 // 清除 bias 的梯度
       o.v[oi] = sum
     }
     return super.forward()
@@ -109,25 +110,24 @@ class FullyConnectLayer extends Layer {
       bias.g[oi] += -1 * goi
     }
   }
-/*
+
   adjust(step, moment) {
     let {o, x, w, bias} = this
-    let vx=x.v, vo=o.v, vw=w.v, gw=w.g, gx=x.g, go=o.g, gbias=bias.g
-    let xlen = vx.length, olen = vo.length
+    let xlen = x.length, olen = o.length
     for (let xi=0; xi<xlen; xi++) {
-      vx.v[xi] += step * gx.v[xi]
-      gx.v[xi] = 0
+      x.v[xi] += step * x.g[xi]
+      x.g[xi] = 0
     }
     for (let oi=0; oi<olen; oi++) {
       for (let xi=0; xi<xlen; xi++) {
-        vw.v[oi*xlen+xi] += step * gw.v[oi*xlen+xi]
-        gw.v[oi*xlen+xi] = 0
+        w.v[oi*xlen+xi] += step * w.g[oi*xlen+xi]
+        w.g[oi*xlen+xi] = 0
       }
-      vbias.v[oi] += step * gbias.v[oi]
-      gbias.v[oi] = 0
+      bias.v[oi] += step * bias.g[oi]
+      bias.g[oi] = 0
     }
   }
-*/
+
   toString() {
     let {w, bias} = this
     return super.toString() + '\n  w:'+w.toString()+'\n  bias:'+bias.toString()
@@ -137,7 +137,7 @@ class FullyConnectLayer extends Layer {
 class PerceptronLayer extends Layer {
   constructor(x, p) {
     super(x, p)
-    this.fcLayer = new FullyConnectLayer(x, {n:p.n})
+    this.fcLayer = new FullyConnectLayer(x, p)
     this.sigLayer = new SigmoidLayer(this.fcLayer.o)
     this.o = this.sigLayer.o
   }
@@ -150,12 +150,17 @@ class PerceptronLayer extends Layer {
     this.sigLayer.backward()
     this.fcLayer.backward()
   }
+
+  adjust(step, moment) {
+    this.fcLayer.adjust(step, moment)
+    this.sigLayer.adjust(step, moment)
+  }
 }
 
 class RegressionLayer extends Layer {
   constructor(x, p) {
     super(x, p)
-    this.o = N.tensorVariable(null, [1])
+    this.o = new N.TensorVariable(null, [1])
   }
 
   setOutput(y) {
@@ -177,6 +182,8 @@ class RegressionLayer extends Layer {
   }
   backward() {} // 輸出層的反傳遞已經在正傳遞時順便計算掉了！
 
+  adjust(step, moment) {} // 輸出層不用調梯度
+
   toString() {
     let {y} = this
     return super.toString() + '\n  y:' + uu6.json(y)
@@ -186,21 +193,21 @@ class RegressionLayer extends Layer {
 class InputLayer extends Layer {
   constructor(shape) {
     super()
-    this.x = N.tensorVariable(null, shape)
+    this.x = new N.TensorVariable(null, shape)
     this.o = this.x
   }
-  setInput(inputs) {
-    console.log('x=', this.x.toString())
-    V.assign(this.x.v, inputs)
+  setInput(input) {
+    V.assign(this.x.v, input)
   }
   forward() { // 輸出 o = 輸入 x
     return super.forward()
   }
-  backward() {}
+  backward() {} // 輸入層不用反傳遞
+  adjust(step, moment) {} // 輸入層不用調梯度
 }
 
 // ====================== 以下尚未完成，尚未測試 ==========================
-
+/*
 class DropoutLayer extends Layer {
   constructor(x, pDrop) {
     super(x)
@@ -273,7 +280,7 @@ class PoolLayer extends Layer {
 
     }
     return super.forward()
-/*
+
   this.in_act = V;
 
   var A = new Vol(this.out_sx, this.out_sy, this.out_depth, 0.0); // PoolLayer 的輸出張量
@@ -313,13 +320,14 @@ class PoolLayer extends Layer {
   this.out_act = A;
   return this.out_act;
 }
-*/
+
     return o
   }
 
 }
+*/
 
 Object.assign(L, {
   Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, FullyConnectLayer, PerceptronLayer,
-  InputLayer, PoolLayer, DropoutLayer, RegressionLayer, SoftmaxLayer
+  InputLayer, RegressionLayer, // PoolLayer, DropoutLayer, SoftmaxLayer
 })
