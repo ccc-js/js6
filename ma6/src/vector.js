@@ -21,7 +21,8 @@ V.assign = function (r, o) {
 }
 
 V.normalize = function (r) {
-  let s = V.sum(r) // 不能用 sum，sum 只適用於機率。
+  let ar = V.abs(r)
+  let s = V.sum(ar) // 不能用 sum，sum 只適用於機率。
   let len = r.length
   for (let i=0; i<len; i++) {
     r[i] = r[i]/s
@@ -112,6 +113,10 @@ V.oneg = function (r, a, len = a.length) {
   for (let i = 0; i < len; i++) r[i] = -a[i]
 }
 
+V.oabs = function (r, a, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = Math.abs(a[i])
+}
+
 V.op1 = function (a, f1) {
   let len = a.length
   let r = new Array(len)
@@ -120,7 +125,7 @@ V.op1 = function (a, f1) {
 }
 
 V.neg = function (a) { return V.op1(a, V.oneg) }
-
+V.abs = function (a) { return V.op1(a, V.oabs) }
 /*
 V.neg = function (a) {
   let len = a.length

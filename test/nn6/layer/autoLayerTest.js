@@ -81,11 +81,13 @@ describe('nn6.Layer', function() {
       uu6.be(false)
       /* -- 這裡有錯，負加正 normalize 之後
       softmax 的梯度參考 https://math.stackexchange.com/questions/945871/derivative-of-softmax-loss-function
+      中文請參考: https://zhuanlan.zhihu.com/p/25723112
 gx1:numeric = [ 0.4745762711864407, 0.5254237288135594 ]
 y= 0
 e= [ 1, 0.006737946999085467 ]
 o.v= [ 0.9933071490757153, 0.006692850924284856 ]
-x.g= [ -0.006692850924284732, 0.006692850924284856 ]
+x.g= [ -0.006692850924284732, 0.006692850924284856 ] <-- 這個  normalize 之後有問題，會變得超大 ....
+但是只用 normalize 加上 abs 也是不行的 .... 該如何解決才能和數值法算出來的一樣呢？
 gx2:backprop= [ -53960361942207.555, 53960361942208.555 ]
 */
     })
