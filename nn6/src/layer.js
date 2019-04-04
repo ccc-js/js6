@@ -98,7 +98,8 @@ class FullyConnectLayer extends Layer {
     super(x, p)
     uu6.be(x)
     let wshape = uu6.clone(x.shape)
-    wshape.push(p.n)
+    wshape.unshift(p.n)  // shape = [o.length, x.length]
+    // wshape.push(p.n)
     this.w = new N.TensorVariable(null, wshape)
     this.o = new N.TensorVariable(null, [p.n])
     this.bias = new N.TensorVariable(null, [p.n])
@@ -112,7 +113,7 @@ class FullyConnectLayer extends Layer {
     for (let oi=0; oi<olen; oi++) {
       let sum = 0
       for (let xi=0; xi<xlen; xi++) {
-        sum += x.v[xi] * w.v[xi*olen+oi]
+        sum += x.v[xi] * w.v[oi*xlen+xi]
       }
       sum += -1 * bias.v[oi]
       o.v[oi] = sum
@@ -127,43 +128,13 @@ class FullyConnectLayer extends Layer {
     let xlen = x.length, olen = o.length
     for (let oi=0; oi<olen; oi++) { 
       for (let xi=0; xi<xlen; xi++) {
-        w.g[xi*olen+oi] += x.v[xi] * o.g[oi]
-        x.g[xi] += w.v[xi*olen+oi] * o.g[oi]
+        w.g[oi*xlen+xi] += x.v[xi] * o.g[oi]
+        x.g[xi] += w.v[oi*xlen+xi] * o.g[oi]
       }
       bias.g[oi] += -1 * o.g[oi]
     }
   }
-  /*
-  forward() {
-    let {o, x, w, bias} = this
-    let xlen = x.length, olen = o.length
-    for (let oi=0; oi<olen; oi++) {
-      let sum = 0
-      for (let xi=0; xi<xlen; xi++) {
-        sum += x.v[xi] * w.v[oi*xlen+xi]
-        w.g[oi*xlen+xi] = 0 // 清除 w 的梯度
-        x.g[xi] = 0 // 清除 x 的梯度
-      }
-      sum += -1 * bias.v[oi]
-      bias.g[oi] = 0 // 清除 bias 的梯度
-      o.v[oi] = sum
-    }
-    return super.forward()
-  }
 
-  backward() {
-    let {o, x, w, bias} = this
-    let xlen = x.length, olen = o.length
-    for (let oi=0; oi<olen; oi++) {
-      let goi = o.g[oi]
-      for (let xi=0; xi<xlen; xi++) { 
-        w.g[oi*xlen+xi] += x.v[xi] * goi
-        x.g[xi] += w.v[oi*xlen+xi] * goi
-      }
-      bias.g[oi] += -1 * goi
-    }
-  }
- */
   adjust(step, moment) {
     let {o, x, w, bias} = this
     let xlen = x.length, olen = o.length
@@ -226,7 +197,6 @@ class InputLayer extends Layer {
   adjust(step, moment) {} // 輸入層不用調梯度
 }
 
-
 class RegressionLayer extends Layer {
   constructor(x, p) {
     super(x, p)
@@ -261,10 +231,13 @@ class RegressionLayer extends Layer {
   }
 }
 
+// 說明: 這個和 RegressionLayer 一樣，是輸出層，只要輸出 loss
+// softmax 的梯度參考 https://math.stackexchange.com/questions/945871/derivative-of-softmax-loss-function
+// 中文請參考: https://zhuanlan.zhihu.com/p/25723112
 class SoftmaxLayer extends Layer {
   constructor(x, p) {
     super(x, p)
-    this.o = new N.TensorVariable(null, x.shape)
+    this.o = new N.TensorVariable(null, [1])
   }
 
   setOutput(y) { // y 是正確的那個輸出
@@ -275,34 +248,28 @@ class SoftmaxLayer extends Layer {
     let {o, x, y} = this
     let len = x.length, e = new Array(len)
     let max = F.max(x.v), sum = 0
+    let iMax = 0
     for (let i=0; i<len; i++) {
       e[i] = Math.exp(x.v[i]-max)
+      if (e[i] > e[iMax]) iMax = i
       sum += e[i]
     }
-    let iMax = 0
-    for (let i=0; i<x.length; i++) {
-      o.v[i] = e[i] / sum
-      if (o.v[i] > o.v[iMax]) iMax = i
+    for (let i=0; i<len; i++) {
+      e[i] = e[i] / sum
     }
     this.e = e
     this.predict = iMax
-    this.loss = -Math.log(e[y])
+    this.loss = o.v[0] = -Math.log(e[y]) // 這個對嗎？是否應該用 -Math.log(o.v[y])
     return super.forward()
   }
 
   backward() {
     let {o, x, y, e} = this
-    console.log('y=', y)
-    console.log('e=', e)
-    console.log('o.v=', o.v)
     let len = x.length
     for (let i=0; i<len; i++) {
       let indicator = i === y ? 1.0 : 0.0
-      // x.g[i] = -(indicator - e[i]) // o.v[i] * (1-o.v[i]) * 1
-      x.g[i] = o.v[i] - indicator
-      // x.g[i] = e[i] * (1-e[i])
+      x.g[i] = e[i] - indicator
     }
-    console.log('x.g=', x.g)
   }
 
   adjust(step, moment) {
@@ -314,6 +281,12 @@ class SoftmaxLayer extends Layer {
     }
   }
 }
+
+Object.assign(L, {
+  Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, FullyConnectLayer, PerceptronLayer,
+  InputLayer, RegressionLayer, SoftmaxLayer // PoolLayer, DropoutLayer, ConvLayer
+})
+
 
 // ====================== 以下尚未完成，尚未測試 ==========================
 /*
@@ -409,9 +382,115 @@ class PoolLayer extends Layer {
   }
 
 }
-*/
 
-Object.assign(L, {
-  Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, FullyConnectLayer, PerceptronLayer,
-  InputLayer, RegressionLayer, SoftmaxLayer // PoolLayer, DropoutLayer, 
-})
+  ConvLayer.prototype = {
+    forward: function(V, is_training) {
+      // optimized code by @mdda that achieves 2x speedup over previous version
+
+      this.in_act = V;
+      var A = new Vol(this.out_sx |0, this.out_sy |0, this.out_depth |0, 0.0);
+      
+      var V_sx = V.sx |0;
+      var V_sy = V.sy |0;
+      var xy_stride = this.stride |0;
+
+      for(var d=0;d<this.out_depth;d++) {
+        var f = this.filters[d];
+        var x = -this.pad |0;
+        var y = -this.pad |0;
+        for(var ay=0; ay<this.out_sy; y+=xy_stride,ay++) {  // xy_stride
+          x = -this.pad |0;
+          for(var ax=0; ax<this.out_sx; x+=xy_stride,ax++) {  // xy_stride
+
+            // convolve centered at this particular location
+            var a = 0.0;
+            for(var fy=0;fy<f.sy;fy++) {
+              var oy = y+fy; // coordinates in the original input array coordinates
+              for(var fx=0;fx<f.sx;fx++) {
+                var ox = x+fx;
+                if(oy>=0 && oy<V_sy && ox>=0 && ox<V_sx) {
+                  for(var fd=0;fd<f.depth;fd++) {
+                    // avoid function call overhead (x2) for efficiency, compromise modularity :(
+                    a += f.w[((f.sx * fy)+fx)*f.depth+fd] * V.w[((V_sx * oy)+ox)*V.depth+fd];
+                  }
+                }
+              }
+            }
+            a += this.biases.w[d];
+            A.set(ax, ay, d, a);
+          }
+        }
+      }
+      this.out_act = A;
+      return this.out_act;
+    },
+    backward: function() {
+
+      var V = this.in_act;
+      V.dw = global.zeros(V.w.length); // zero out gradient wrt bottom data, we're about to fill it
+
+      var V_sx = V.sx |0;
+      var V_sy = V.sy |0;
+      var xy_stride = this.stride |0;
+
+      for(var d=0;d<this.out_depth;d++) {
+        var f = this.filters[d];
+        var x = -this.pad |0;
+        var y = -this.pad |0;
+        for(var ay=0; ay<this.out_sy; y+=xy_stride,ay++) {  // xy_stride
+          x = -this.pad |0;
+          for(var ax=0; ax<this.out_sx; x+=xy_stride,ax++) {  // xy_stride
+
+            // convolve centered at this particular location
+            var chain_grad = this.out_act.get_grad(ax,ay,d); // gradient from above, from chain rule
+            for(var fy=0;fy<f.sy;fy++) {
+              var oy = y+fy; // coordinates in the original input array coordinates
+              for(var fx=0;fx<f.sx;fx++) {
+                var ox = x+fx;
+                if(oy>=0 && oy<V_sy && ox>=0 && ox<V_sx) {
+                  for(var fd=0;fd<f.depth;fd++) {
+                    // avoid function call overhead (x2) for efficiency, compromise modularity :(
+                    var ix1 = ((V_sx * oy)+ox)*V.depth+fd;
+                    var ix2 = ((f.sx * fy)+fx)*f.depth+fd;
+                    f.dw[ix2] += V.w[ix1]*chain_grad;
+                    V.dw[ix1] += f.w[ix2]*chain_grad;
+                  }
+                }
+              }
+            }
+            this.biases.dw[d] += chain_grad;
+          }
+        }
+      }
+    },
+
+  forward() {
+    let {o, x, w, bias} = this
+    let xlen = x.length, olen = o.length
+    for (let oi=0; oi<olen; oi++) {
+      let sum = 0
+      for (let xi=0; xi<xlen; xi++) {
+        sum += x.v[xi] * w.v[oi*xlen+xi]
+        w.g[oi*xlen+xi] = 0 // 清除 w 的梯度
+        x.g[xi] = 0 // 清除 x 的梯度
+      }
+      sum += -1 * bias.v[oi]
+      bias.g[oi] = 0 // 清除 bias 的梯度
+      o.v[oi] = sum
+    }
+    return super.forward()
+  }
+
+  backward() {
+    let {o, x, w, bias} = this
+    let xlen = x.length, olen = o.length
+    for (let oi=0; oi<olen; oi++) {
+      let goi = o.g[oi]
+      for (let xi=0; xi<xlen; xi++) { 
+        w.g[oi*xlen+xi] += x.v[xi] * goi
+        x.g[xi] += w.v[oi*xlen+xi] * goi
+      }
+      bias.g[oi] += -1 * goi
+    }
+  }
+*/

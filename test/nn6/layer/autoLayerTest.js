@@ -18,7 +18,7 @@ function check(layer) {
   let gx2 = x.g
   V.normalize(gx2)
   console.log('gx2:backprop=', gx2)
-  expect(gx2).to.near(gx1) 
+  expect(gx2).to.near(gx1)
 }
 
 describe('nn6.Layer', function() {
@@ -78,10 +78,8 @@ describe('nn6.Layer', function() {
       let layer = new L.SoftmaxLayer(x)
       layer.y = 0
       check(layer)
-      uu6.be(false)
       /* -- 這裡有錯，負加正 normalize 之後
-      softmax 的梯度參考 https://math.stackexchange.com/questions/945871/derivative-of-softmax-loss-function
-      中文請參考: https://zhuanlan.zhihu.com/p/25723112
+
 gx1:numeric = [ 0.4745762711864407, 0.5254237288135594 ]
 y= 0
 e= [ 1, 0.006737946999085467 ]
