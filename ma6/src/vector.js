@@ -20,6 +20,15 @@ V.assign = function (r, o) {
   return r
 }
 
+V.normalize = function (r) {
+  let s = V.sum(r) // 不能用 sum，sum 只適用於機率。
+  let len = r.length
+  for (let i=0; i<len; i++) {
+    r[i] = r[i]/s
+  }
+  return r
+}
+
 V.oadd = function (r, a, b, len = a.length) {
   for (let i = 0; i < len; i++) r[i] = a[i] + b[i]
 }

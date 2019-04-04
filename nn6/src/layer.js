@@ -10,13 +10,36 @@ class Layer {
     this.x = x
     this.p = uu6.clone(p)
   }
+
   forward() {
     let {o, x} = this
     V.assign(x.g, 0) // 清除 x 的梯度
     V.assign(o.g, 0) // 清除 o 的梯度
     return o
   }
+
   backward() {}
+
+  grad(h=0.00001) {
+    let {x, o} = this
+    let xlen = x.length, olen = o.length
+    let gx = V.array(xlen, 0)
+
+    this.forward()
+    let vo = uu6.clone(o.v)
+    for (let xi=0; xi<xlen; xi++) {
+      x.v[xi] += h
+      this.forward()
+      let gxi = 0
+      for (let oi=0; oi<olen; oi++) {
+        gxi += (o.v[oi] - vo[oi])
+      }
+      gx[xi] = gxi
+      x.v[xi] -= h
+    }
+    return V.normalize(gx)
+  }
+
   toString() {
     let {o,x} = this
     return this.constructor.name + ':\n  x:' + x.toString() + '\n  o:' + o.toString()
@@ -82,6 +105,35 @@ class FullyConnectLayer extends Layer {
     if (p.cw) V.assign(this.w.v, p.cw); else V.random(this.w.v, -1, 1)
     if (p.cbias) V.assign(this.bias.v, p.cbias); else V.random(this.bias.v, -1, 1)
   }
+
+  forward() {
+    let {o, x, w, bias} = this
+    let xlen = x.length, olen = o.length
+    for (let oi=0; oi<olen; oi++) {
+      let sum = 0
+      for (let xi=0; xi<xlen; xi++) {
+        sum += x.v[xi] * w.v[xi*olen+oi]
+      }
+      sum += -1 * bias.v[oi]
+      o.v[oi] = sum
+    }
+    V.assign(w.g, 0)       // 清除 w 的梯度
+    V.assign(bias.g, 0)    // 清除 bias 的梯度
+    return super.forward() // 清除 x, o 的梯度
+  }
+
+  backward() {
+    let {o, x, w, bias} = this
+    let xlen = x.length, olen = o.length
+    for (let oi=0; oi<olen; oi++) { 
+      for (let xi=0; xi<xlen; xi++) {
+        w.g[xi*olen+oi] += x.v[xi] * o.g[oi]
+        x.g[xi] += w.v[xi*olen+oi] * o.g[oi]
+      }
+      bias.g[oi] += -1 * o.g[oi]
+    }
+  }
+  /*
   forward() {
     let {o, x, w, bias} = this
     let xlen = x.length, olen = o.length
@@ -90,6 +142,7 @@ class FullyConnectLayer extends Layer {
       for (let xi=0; xi<xlen; xi++) {
         sum += x.v[xi] * w.v[oi*xlen+xi]
         w.g[oi*xlen+xi] = 0 // 清除 w 的梯度
+        x.g[xi] = 0 // 清除 x 的梯度
       }
       sum += -1 * bias.v[oi]
       bias.g[oi] = 0 // 清除 bias 的梯度
@@ -110,7 +163,7 @@ class FullyConnectLayer extends Layer {
       bias.g[oi] += -1 * goi
     }
   }
-
+ */
   adjust(step, moment) {
     let {o, x, w, bias} = this
     let xlen = x.length, olen = o.length
@@ -193,7 +246,7 @@ class RegressionLayer extends Layer {
       x.g[i] = d              // 梯度就是網路輸出 x 與答案 y 之間的差異
       loss += 0.5 * d * d     // 誤差採用最小平方法 1/2 (x-y)^2，這樣得到的梯度才會是 (xi-yi)
     }
-    this.loss = loss          // 錯誤的數量 loss 就是想要最小化的能量函數 => loss = 1/2 (x-y)^2
+    this.loss = o.v[0] = loss // 錯誤的數量 loss 就是想要最小化的能量函數 => loss = 1/2 (x-y)^2
                               // 整體的能量函數應該是所有 loss 的加總，也就是 sum(loss(x, y)) for all (x,y)
     this.predict = x.v
     return loss
@@ -239,11 +292,17 @@ class SoftmaxLayer extends Layer {
 
   backward() {
     let {o, x, y, e} = this
+    console.log('y=', y)
+    console.log('e=', e)
+    console.log('o.v=', o.v)
     let len = x.length
     for (let i=0; i<len; i++) {
       let indicator = i === y ? 1.0 : 0.0
-      x.g[i] = -(indicator - e[i]) // o.v[i] * (1-o.v[i]) * 1
+      // x.g[i] = -(indicator - e[i]) // o.v[i] * (1-o.v[i]) * 1
+      x.g[i] = o.v[i] - indicator
+      // x.g[i] = e[i] * (1-e[i])
     }
+    console.log('x.g=', x.g)
   }
 
   adjust(step, moment) {
