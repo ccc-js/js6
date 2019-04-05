@@ -3,6 +3,7 @@ const uu6 = require('../../uu6')
 const ma6 = require('../../ma6')
 const F = require('./func')
 const N = require('./node')
+const assert = require('assert')
 const V = ma6.V
 
 class Layer {
@@ -24,18 +25,18 @@ class Layer {
     let {x, o} = this
     let xlen = x.length, olen = o.length
     let gx = V.array(xlen, 0)
-
     this.forward()
     let vo = uu6.clone(o.v)
     for (let xi=0; xi<xlen; xi++) {
-      x.v[xi] += h
+      let xvi = x.v[xi]
+      x.v[xi] += h  // 小幅調整 x.v[xi] 的值
       this.forward()
-      let gxi = 0
+      let gxi = 0   // 計算所造成的輸出影響總和
       for (let oi=0; oi<olen; oi++) {
         gxi += (o.v[oi] - vo[oi])
       }
-      gx[xi] = gxi
-      x.v[xi] -= h
+      gx[xi] = gxi  // 這就是 xi 軸的梯度 g_o^x[i]，簡寫為 gxi
+      x.v[xi] = xvi // 還原 x.v[xi] 的值
     }
     return V.normalize(gx)
   }
@@ -282,9 +283,180 @@ class SoftmaxLayer extends Layer {
   }
 }
 
+class DropoutLayer extends Layer {
+  constructor(x, p) {
+    super(x)
+    this.dropped = new Array(x.length)
+    this.dropProb = p.dropProb || 0.5 // 預設 drop 掉一半
+    this.isTraining = p.isTraining || false
+    this.o = new N.TensorVariable(null, this.x.shape)
+  }
+  forward() {
+    let {o, x, dropped, dropProb, isTraining } = this
+    let len = x.length
+    if(isTraining) { // 在訓練階段，隨機的掐掉一些節點 (do dropout) ，以提升容錯力！(在某些節點死掉時，網路還是穩定的！)
+      for(var i=0;i<len;i++) {
+        if(Math.random() < dropProb) { o.v[i]=0; dropped[i] = true } // drop! 這個節點已經被掐掉了 ..
+        else { dropped[i] = false, o.v[i] = x.v[i] } // 需注意的是，每次 forward 都重設，所以每次被掐掉的節點都不一樣，這會讓訓練花更久的時間！
+      }
+    } else { // 使用階段是全員啟動的，所以將權重 * drop_prob 才會得到和訓練階段期望值一致的結果。// scale the activations during prediction
+      for(var i=0;i<len;i++) { o.v[i] = this.dropProb * x.v[i] }
+    }
+    return super.forward()
+  }
+  backward() {
+    let {x, o, dropped} = this
+    let len = x.length
+    for (let i=0; i<len; i++) { // 反向傳遞: 單純將沒 dropped 掉的梯度傳回去。(copy over the gradient)
+      if(!dropped[i]) x.g[i] = o.g[i]
+    }
+  }
+}
+
+class PoolLayer extends Layer {
+  constructor(x, p) {
+    super(x, p)
+    let {sx, sy, stride, pad} = p // sx, sy: 池化遮罩大小, stride: 步伐大小, pad: 超出寬度
+    let [xd, xw, xh] = x.shape
+    let od = xd
+    let ow = Math.floor((xw + pad * 2 - sx) / stride + 1)
+    let oh = Math.floor((xh + pad * 2 - sy) / stride + 1)
+    console.log()
+    let o = new N.TensorVariable(null, [od, ow, oh])
+    let switchx = V.array(od*ow*oh) // store switches for x,y coordinates for where the max comes from, for each output neuron
+    let switchy = V.array(od*ow*oh) // d 個池的最大點座標
+    console.log('p=', {o, sx, sy, switchx, switchy, stride, pad, xd, xw, xh, od, ow, oh})
+    Object.assign(this, {o, sx, sy, switchx, switchy, stride, pad, xd, xw, xh, od, ow, oh})
+  }
+
+  forward() {
+    let {o, x, xd, xw, xh, sx, sy, switchx, switchy, stride, pad, od, ow, oh} = this
+    // let n = 0
+    for (let d = 0; d < od; d++) {
+      let xi = -pad // xi = 目前區塊的右上角 x
+      for(let ax=0; ax<ow; xi+=stride, ax++) {
+        let yi = -pad // yi = 目前區塊的右上角 y
+        for(let ay=0; ay<oh; yi+=stride, ay++) {
+          // 接下來尋找 (sx*sy) 區塊的最大值。
+          // convolve centered at this particular location
+          let max = -99999; // hopefully small enough ;\
+          let winx=-1, winy=-1;
+          for(let fx=0; fx<sx; fx++) {
+            for(let fy=0; fy<sy; fy++) {
+              let mx = xi+fx, my = yi+fy // (mx, my) 遮罩目前遮蔽的點位置 maskX, maskY
+              if(mx>=0 && mx<xw && my>=0 && my<xh) {
+                let v = x.v[(d*xw+mx)*xh+my]
+                // perform max pooling and store pointers to where
+                // the max came from. This will speed up backprop 
+                // and can help make nice visualizations in future
+                if(v > max) { max = v; winx=mx; winy=my; } // 取得最大值
+              }
+            }
+          }
+          let oi = (d*ow + ax)*oh+ay
+          // switch(x,y) 紀錄該 MaxPool 區塊的最大值位置，之後計算反傳遞梯度時會需要
+          switchx[oi] = winx
+          switchy[oi] = winy
+          o.v[oi] = max
+        }
+      }
+    }
+    return super.forward()
+  }
+
+  backward() {
+    let {o, x, xd, xw, xh, sx, sy, switchx, switchy, stride, pad, od, ow, oh} = this
+    // let n = 0;
+    console.log('switchx=', switchx, 'switchy=', switchy)
+    for(let d=0; d<od; d++) {
+      let xi = -pad
+      for(let ax=0; ax<ow; xi+=stride, ax++) {
+        let yi = -pad
+        for(let ay=0; ay<oh; yi+=stride, ay++) {
+          let oi = (d*ow + ax)*oh+ay
+          let swx = switchx[oi], swy = switchy[oi]
+          let grad = o.g[oi]
+          // 如果只有一個最大值，那麼以下這行確實能反映輸入點的梯度，但是如果有很多相同的最大值，那麼這行只會修改一個阿！
+          x.g[(d*xw+swx)*xh+swy] += grad
+        }
+      }
+    }
+  }
+
+}
+/*
+class ConvLayer extends Layer {
+  constructor(x, p) {
+    super(x, p)
+    let {sx, sy, stride, pad, decayMul1, decayMul2} = p
+    let [xd, xw, xh] = x.shape
+    let od = xd
+    let ow = Math.floor((xw + pad * 2  - sx) / stride + 1)
+    let oh = Math.floor((xh + pad * 2 - sy) / stride + 1)
+    let o = new N.TensorVariable(null, [ow, oh, od])
+    let w = new N.TensorVariable(null, [ow, oh, od])
+    let pad = pad || 0, stride = stride || 1, sy = sy || sx, decayMul1 = decayMul1 || 0.0, decayMul2 = decayMul2 || 1.0
+    Object.assign(this, {o, sx, sy, switchx, switchy, stride, pad, xd, xw, xh, od, ow, oh})
+  }
+
+  forward() {
+    let {o, x, xd, xw, xh, sx, sy, switchx, switchy, stride, pad, od, ow, oh} = this
+    let n = 0
+    for (let d = 0; d < od; d++) {
+      let x = -this.pad; // x 軸超出部分
+      let y = -this.pad; // y 軸超出部分
+      for(let ax=0; ax<sx; x+=stride, ax++) {
+        y = -this.pad; // y 軸超出部分
+        for(let ay=0; ay<sy; y+=stride, ay++) {
+          // 接下來尋找 (stride*stride) 區塊的最大值。
+          // convolve centered at this particular location
+          let a = -99999; // hopefully small enough ;\
+          let winx=-1, winy=-1;
+          for(let fx=0; fx<sx; fx++) {
+            for(let fy=0; fy<sy; fy++) {
+              let oy = y+fy, ox = x+fx
+              if(oy>=0 && oy<V.sy && ox>=0 && ox<V.sx) {
+                let v = x.v[(d*xw+ox)*xh+oy)
+                // perform max pooling and store pointers to where
+                // the max came from. This will speed up backprop 
+                // and can help make nice visualizations in future
+                if(v > a) { a = v; winx=ox; winy=oy; } // 取得最大值
+              }
+            }
+          }
+          // switch(x,y) 紀錄該 MaxPool 區塊的最大值位置，之後計算反傳遞梯度時會需要
+          switchx[n] = winx;
+          switchy[n] = winy;
+          n++;
+          o.v[(d*ow + ax)*oh+ay] = a // A.set(ax, ay, d, a); // 設定 MaxPool 縮小後的輸出值
+        }
+      }
+    }
+    return super.forward()
+  }
+
+  backward() {
+    let {o, x, xd, xw, xh, sx, sy, switchx, switchy, stride, pad, od, ow, oh} = this
+    var n = 0;
+    for(var d=0; d<od; d++) {
+      var x = -pad;
+      var y = -pad;
+      for(var ax=0; ax<sx; x+=stride, ax++) {
+        y = -pad;
+        for(var ay=0; ay<sy; y+=stride, ay++) {
+          var g = o.g[(d*ow + ax)*oh+ay] // *this.out_act.get_grad(ax,ay,d);
+          let swx = switchx[n], swy = switchy[n]
+          x.g[(d*ow+swx)*oh+swy] += g // V.add_grad(this.switchx[n], this.switchy[n], d, chain_grad);
+          n++;
+        }
+      }
+    }
+  }
+}
+*/
 Object.assign(L, {
   Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, FullyConnectLayer, PerceptronLayer,
-  InputLayer, RegressionLayer, SoftmaxLayer // PoolLayer, DropoutLayer, ConvLayer
+  InputLayer, RegressionLayer, SoftmaxLayer, PoolLayer, DropoutLayer // , ConvLayer
 })
 
 

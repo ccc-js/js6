@@ -6,18 +6,21 @@ const V = ma6.V
 const L = nn6.L
 
 let x = new nn6.TensorVariable([2, -3])
+let m = new nn6.TensorVariable([1.0, 0, 1.1, 0, 0, 1.2, 0, 1.3, 0, 0, 0, 1.4, 0, 0, 2.0, 0], [1, 4, 4])
 console.log('x=', x.toString())
+console.log('m=', m.toString())
 
 function check(layer) {
   let {x,o} = layer
   let gx1 = layer.grad()
-  console.log('gx1:numeric =', gx1)
+  console.log('gx1:numeric =', uu6.json(gx1))
   layer.forward()
+  console.log('forward() x=', x.toString(), 'o=', o.toString())
   V.assign(o.g, 1)
   layer.backward()
   let gx2 = x.g
   V.normalize(gx2)
-  console.log('gx2:backprop=', gx2)
+  console.log('gx2:backprop=', uu6.json(gx2))
   expect(gx2).to.near(gx1)
 }
 
@@ -78,16 +81,18 @@ describe('nn6.Layer', function() {
       let layer = new L.SoftmaxLayer(x)
       layer.y = 0
       check(layer)
-      /* -- 這裡有錯，負加正 normalize 之後
-
-gx1:numeric = [ 0.4745762711864407, 0.5254237288135594 ]
-y= 0
-e= [ 1, 0.006737946999085467 ]
-o.v= [ 0.9933071490757153, 0.006692850924284856 ]
-x.g= [ -0.006692850924284732, 0.006692850924284856 ] <-- 這個  normalize 之後有問題，會變得超大 ....
-但是只用 normalize 加上 abs 也是不行的 .... 該如何解決才能和數值法算出來的一樣呢？
-gx2:backprop= [ -53960361942207.555, 53960361942208.555 ]
-*/
+    })
+  })
+  describe('nn6.DropoutLayer', function() {
+    it('DropoutLayer', function() {
+      let layer = new L.DropoutLayer(x, {dropProb: 0.0, isTraining:false })
+      check(layer)
+    })
+  })
+  describe('nn6.PoolLayer', function() {
+    it('PoolLayer', function() {
+      let layer = new L.PoolLayer(m, {sx:3, sy:3, stride:1, pad:0})
+      check(layer)
     })
   })
 })
