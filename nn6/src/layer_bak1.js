@@ -3,6 +3,7 @@ const uu6 = require('../../uu6')
 const ma6 = require('../../ma6')
 const F = require('./func')
 const N = require('./node')
+const assert = require('assert')
 const V = ma6.V
 
 class Layer {
@@ -37,7 +38,6 @@ class Layer {
       gx[xi] = gxi  // 這就是 xi 軸的梯度 g_o^x[i]，簡寫為 gxi
       x.v[xi] = xvi // 還原 x.v[xi] 的值
     }
-    console.log('grad(): gx=', gx)
     return V.normalize(gx)
   }
 
@@ -316,36 +316,40 @@ class DropoutLayer extends Layer {
 class PoolLayer extends Layer {
   constructor(x, p) {
     super(x, p)
-    let i = x // i: input = x
-    let {fw, fh, stride, pad} = p // fw, fh: 池化遮罩 (filter) 大小, stride: 步伐大小, pad: 超出寬度
+    let i = x
+    let {fw, fh, stride, pad} = p // fw, fh: 池化遮罩大小, stride: 步伐大小, pad: 超出寬度
     let [id, iw, ih] = x.shape
     let od = id
     let ow = Math.floor((iw + pad * 2 - fw) / stride + 1)
     let oh = Math.floor((ih + pad * 2 - fh) / stride + 1)
+    console.log()
     let o = new N.TensorVariable(null, [od, ow, oh])
     let switchx = V.array(od*ow*oh) // store switches for x,y coordinates for where the max comes from, for each output neuron
     let switchy = V.array(od*ow*oh) // d 個池的最大點座標
-    // console.log('p=', {o, fw, fh, switchx, switchy, stride, pad, id, iw, ih, od, ow, oh})
+    console.log('p=', {o, fw, fh, switchx, switchy, stride, pad, id, iw, ih, od, ow, oh})
     Object.assign(this, {o, i, fw, fh, switchx, switchy, stride, pad, id, iw, ih, od, ow, oh})
   }
 
   forward() {
     let {o, x, id, iw, ih, fw, fh, switchx, switchy, stride, pad, od, ow, oh} = this
+    // let n = 0
     for (let d = 0; d < od; d++) {
       let ix = -pad // ix = 目前區塊的右上角 x
       for(let ox=0; ox<ow; ix+=stride, ox++) {
-        let iy = -pad // iy = 目前區塊的右上角 y
-        for(let oy=0; oy<oh; iy+=stride, oy++) {
-          // 接下來尋找 (fw*fh) 區塊的最大值。 convolve at this particular location
-          let max = -Number.MAX_VALUE
-          let winx=-1, winy=-1
+        let yi = -pad // yi = 目前區塊的右上角 y
+        for(let oy=0; oy<oh; yi+=stride, oy++) {
+          // 接下來尋找 (fw*fh) 區塊的最大值。
+          // convolve centered at this particular location
+          let max = -99999; // hopefully small enough ;\
+          let winx=-1, winy=-1;
           for(let fx=0; fx<fw; fx++) {
             for(let fy=0; fy<fh; fy++) {
-              let mx = ix+fx, my = iy+fy // (mx, my) 遮罩目前遮蔽的點位置 maskX, maskY
+              let mx = ix+fx, my = yi+fy // (mx, my) 遮罩目前遮蔽的點位置 maskX, maskY
               if(mx>=0 && mx<iw && my>=0 && my<ih) {
                 let v = x.v[(d*iw+mx)*ih+my]
-                // perform max pooling and store pointers to where the max came from. 
-                // This will speed up backprop and can help make nice visualizations in future
+                // perform max pooling and store pointers to where
+                // the max came from. This will speed up backprop 
+                // and can help make nice visualizations in future
                 if(v > max) { max = v; winx=mx; winy=my; } // 取得最大值
               }
             }
@@ -363,114 +367,210 @@ class PoolLayer extends Layer {
 
   backward() {
     let {o, x, id, iw, ih, fw, fh, switchx, switchy, stride, pad, od, ow, oh} = this
+    // let n = 0;
+    console.log('switchx=', switchx, 'switchy=', switchy)
     for(let d=0; d<od; d++) {
       let ix = -pad
       for(let ox=0; ox<ow; ix+=stride, ox++) {
-        let iy = -pad
-        for(let oy=0; oy<oh; iy+=stride, oy++) {
+        let yi = -pad
+        for(let oy=0; oy<oh; yi+=stride, oy++) {
           let oi = (d*ow + ox)*oh+oy
           let swx = switchx[oi], swy = switchy[oi]
           let grad = o.g[oi]
-          // 如果只有一個最大值，那麼以下這行確實能反映輸入點的梯度，但是如果有很多相同的最大值，那麼這行只會修改一個！
-          // 所以應該要讓每個輸入的值都不同，才能確保這個結果和數值方法計算的梯度一樣！
+          // 如果只有一個最大值，那麼以下這行確實能反映輸入點的梯度，但是如果有很多相同的最大值，那麼這行只會修改一個阿！
           x.g[(d*iw+swx)*ih+swy] += grad
         }
       }
     }
   }
-}
 
-class ConvLayer extends Layer {
-  // https://zhuanlan.zhihu.com/p/29534841
-  // 目前沒有使用：权重衰减（weight decay）：对于目标函数加入正则化项，限制权重参数的个数，这是一种防止过拟合的方法，这个方法其实就是机器学习中的l2正则化方法，只不过在神经网络中旧瓶装新酒改名为weight decay [3]。
-  constructor(x, p) { 
-    super(x, p)
-    console.log('ConvLayer')
-    let i = x // i: input = x
-    let {od, fw, fh, stride, pad } = p // fw, fh: 池化遮罩 (filter) 大小, stride: 步伐大小, pad: 超出寬度
-    let [id, iw, ih] = x.shape
-    let ow = Math.floor((iw + pad * 2 - fw) / stride + 1)
-    let oh = Math.floor((ih + pad * 2 - fh) / stride + 1)
-    let o = new N.TensorVariable(null, [od, ow, oh])
-    console.log('o=', o)
-    let fd = id
-    let filters = []
-    for(let oi=0; oi<od; oi++) {
-      filters.push(new N.TensorVariable(null, [fd, fw, fh]))
-      V.assign(filters[oi].v, p.cw || 0.0)
-    }
-    console.log('filters=', filters)
-    let bias = new N.TensorVariable(null, [1, 1, od])
-    V.assign(bias.v, p.cbias || 0.0)
-    console.log('bias=', bias)
-    Object.assign(this, { o, i, id, iw, ih, od, ow, oh, fd, fw, fh, stride, pad, bias, filters })
-  }
-
-  forward() {
-    let {o, i, id, iw, ih, fd, fw, fh, stride, pad, od, ow, oh, filters, bias} = this
-    for (let d = 0; d < od; d++) {
-      let f = filters[d]
-      let ix = -pad // ix = 目前區塊的右上角 x
-      for(let ox=0; ox<ow; ix+=stride, ox++) {
-        let iy = -pad // iy = 目前區塊的右上角 y
-        for(let oy=0; oy<oh; iy+=stride, oy++) {
-          let a = 0.0
-          for(let fx=0; fx<fw; fx++) {
-            let mx = ix + fx
-            for(let fy=0; fy<fh; fy++) {
-              let my = iy + fy
-              if (mx >= 0 && mx < iw && my >=0 && my < ih) {
-                for (let fz=0; fz<fd; fz++) {
-                  a += f.v[((fz*fw)+fx)*fh+fy] * i.v[((fz*iw)+mx)*ih+my]
-                }
-              }
-            }
-          }
-          a += bias.v[d]
-          o.v[((d*ow)+ox)*oh+oy] = a
-        }
-      }
-    }
-    console.log('forward(): i=', i)
-    console.log('forward(): o=', o)
-    return super.forward()
-  }
-
-  backward() {
-    let {o, i, id, iw, ih, fd, fw, fh, stride, pad, od, ow, oh, filters, bias} = this
-    for(let d=0; d<od; d++) {
-      let f = filters[d]
-      let ix = -pad
-      for(let ox=0; ox<ow; ix+=stride, ox++) {
-        let iy = -pad
-        for(let oy=0; oy<oh; iy+=stride, oy++) {
-          let oGrad = o.g[(d*ow+ox)*oh+oy] // 取得輸出 o 的梯度
-          for (let fx=0; fx < fw; fx++) {
-            let mx = ix+fx
-            for (let fy=0; fy < fh; fy++) {
-              let my = iy+fy
-              if (mx>=0 && mx<iw && my>=0 && my<ih) { // 反饋到每一個輸入與遮罩
-                for (let fz=0; fz<fd; fz++) {
-                  let ii = ((fz*iw)+mx)*ih+my
-                  let fi = ((fz*fw)+fx)*fh+fy
-                  f.g[fi] += i.v[ii] * oGrad
-                  i.g[ii] += f.v[fi] * oGrad
-                }
-              }
-            }
-          }
-          bias.g[d] += oGrad
-        }
-      }
-      console.log('backward:f=', f)
-    }
-    console.log('backward:i=', i)
-    console.log('backward:x=', this.x)
-    console.log('backward:bias=', bias)
-  }
 }
 
 Object.assign(L, {
   Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, FullyConnectLayer, PerceptronLayer,
-  InputLayer, RegressionLayer, SoftmaxLayer, PoolLayer, DropoutLayer, ConvLayer
+  InputLayer, RegressionLayer, SoftmaxLayer, PoolLayer, DropoutLayer // , ConvLayer
 })
+
+/*
+class ConvLayer extends Layer {
+  constructor(x, p) {
+    super(x, p)
+    let {sx, sy, stride, pad, decayMul1, decayMul2} = p
+    let [xd, xw, xh] = x.shape
+    let od = xd
+    let ow = Math.floor((xw + pad * 2  - sx) / stride + 1)
+    let oh = Math.floor((xh + pad * 2 - sy) / stride + 1)
+    let o = new N.TensorVariable(null, [ow, oh, od])
+    let w = new N.TensorVariable(null, [ow, oh, od])
+    let pad = pad || 0, stride = stride || 1, sy = sy || sx, decayMul1 = decayMul1 || 0.0, decayMul2 = decayMul2 || 1.0
+    Object.assign(this, {o, sx, sy, switchx, switchy, stride, pad, xd, xw, xh, od, ow, oh})
+  }
+
+  forward() {
+    let {o, x, xd, xw, xh, sx, sy, switchx, switchy, stride, pad, od, ow, oh} = this
+    let n = 0
+    for (let d = 0; d < od; d++) {
+      let x = -this.pad; // x 軸超出部分
+      let y = -this.pad; // y 軸超出部分
+      for(let ax=0; ax<sx; x+=stride, ax++) {
+        y = -this.pad; // y 軸超出部分
+        for(let ay=0; ay<sy; y+=stride, ay++) {
+          // 接下來尋找 (stride*stride) 區塊的最大值。
+          // convolve centered at this particular location
+          let a = -99999; // hopefully small enough ;\
+          let winx=-1, winy=-1;
+          for(let fx=0; fx<sx; fx++) {
+            for(let fy=0; fy<sy; fy++) {
+              let oy = y+fy, ox = x+fx
+              if(oy>=0 && oy<V.sy && ox>=0 && ox<V.sx) {
+                let v = x.v[(d*xw+ox)*xh+oy)
+                // perform max pooling and store pointers to where
+                // the max came from. This will speed up backprop 
+                // and can help make nice visualizations in future
+                if(v > a) { a = v; winx=ox; winy=oy; } // 取得最大值
+              }
+            }
+          }
+          // switch(x,y) 紀錄該 MaxPool 區塊的最大值位置，之後計算反傳遞梯度時會需要
+          switchx[n] = winx;
+          switchy[n] = winy;
+          n++;
+          o.v[(d*ow + ax)*oh+ay] = a // A.set(ax, ay, d, a); // 設定 MaxPool 縮小後的輸出值
+        }
+      }
+    }
+    return super.forward()
+  }
+
+  backward() {
+    let {o, x, xd, xw, xh, sx, sy, switchx, switchy, stride, pad, od, ow, oh} = this
+    var n = 0;
+    for(var d=0; d<od; d++) {
+      var x = -pad;
+      var y = -pad;
+      for(var ax=0; ax<sx; x+=stride, ax++) {
+        y = -pad;
+        for(var ay=0; ay<sy; y+=stride, ay++) {
+          var g = o.g[(d*ow + ax)*oh+ay] // *this.out_act.get_grad(ax,ay,d);
+          let swx = switchx[n], swy = switchy[n]
+          x.g[(d*ow+swx)*oh+swy] += g // V.add_grad(this.switchx[n], this.switchy[n], d, chain_grad);
+          n++;
+        }
+      }
+    }
+  }
+}
+*/
+// ====================== 以下尚未完成，尚未測試 ==========================
+/*
+  ConvLayer.prototype = {
+    forward: function(V, is_training) {
+      // optimized code by @mdda that achieves 2x speedup over previous version
+
+      this.in_act = V;
+      var A = new Vol(this.out_sx |0, this.out_sy |0, this.out_depth |0, 0.0);
+      
+      var V_sx = V.sx |0;
+      var V_sy = V.sy |0;
+      var xy_stride = this.stride |0;
+
+      for(var d=0;d<this.out_depth;d++) {
+        var f = this.filters[d];
+        var x = -this.pad |0;
+        var y = -this.pad |0;
+        for(var ay=0; ay<this.out_sy; y+=xy_stride,ay++) {  // xy_stride
+          x = -this.pad |0;
+          for(var ax=0; ax<this.out_sx; x+=xy_stride,ax++) {  // xy_stride
+
+            // convolve centered at this particular location
+            var a = 0.0;
+            for(var fy=0;fy<f.sy;fy++) {
+              var oy = y+fy; // coordinates in the original input array coordinates
+              for(var fx=0;fx<f.sx;fx++) {
+                var ox = x+fx;
+                if(oy>=0 && oy<V_sy && ox>=0 && ox<V_sx) {
+                  for(var fd=0;fd<f.depth;fd++) {
+                    // avoid function call overhead (x2) for efficiency, compromise modularity :(
+                    a += f.w[((f.sx * fy)+fx)*f.depth+fd] * V.w[((V_sx * oy)+ox)*V.depth+fd];
+                  }
+                }
+              }
+            }
+            a += this.biases.w[d];
+            A.set(ax, ay, d, a);
+          }
+        }
+      }
+      this.out_act = A;
+      return this.out_act;
+    },
+    backward: function() {
+
+      var V = this.in_act;
+      V.dw = global.zeros(V.w.length); // zero out gradient wrt bottom data, we're about to fill it
+
+      var V_sx = V.sx |0;
+      var V_sy = V.sy |0;
+      var xy_stride = this.stride |0;
+
+      for(var d=0;d<this.out_depth;d++) {
+        var f = this.filters[d];
+        var x = -this.pad |0;
+        var y = -this.pad |0;
+        for(var ay=0; ay<this.out_sy; y+=xy_stride,ay++) {  // xy_stride
+          x = -this.pad |0;
+          for(var ax=0; ax<this.out_sx; x+=xy_stride,ax++) {  // xy_stride
+
+            // convolve centered at this particular location
+            var chain_grad = this.out_act.get_grad(ax,ay,d); // gradient from above, from chain rule
+            for(var fy=0;fy<f.sy;fy++) {
+              var oy = y+fy; // coordinates in the original input array coordinates
+              for(var fx=0;fx<f.sx;fx++) {
+                var ox = x+fx;
+                if(oy>=0 && oy<V_sy && ox>=0 && ox<V_sx) {
+                  for(var fd=0;fd<f.depth;fd++) {
+                    // avoid function call overhead (x2) for efficiency, compromise modularity :(
+                    var ix1 = ((V_sx * oy)+ox)*V.depth+fd;
+                    var ix2 = ((f.sx * fy)+fx)*f.depth+fd;
+                    f.dw[ix2] += V.w[ix1]*chain_grad;
+                    V.dw[ix1] += f.w[ix2]*chain_grad;
+                  }
+                }
+              }
+            }
+            this.biases.dw[d] += chain_grad;
+          }
+        }
+      }
+    },
+
+  forward() {
+    let {o, x, w, bias} = this
+    let xlen = x.length, olen = o.length
+    for (let oi=0; oi<olen; oi++) {
+      let sum = 0
+      for (let xi=0; xi<xlen; xi++) {
+        sum += x.v[xi] * w.v[oi*xlen+xi]
+        w.g[oi*xlen+xi] = 0 // 清除 w 的梯度
+        x.g[xi] = 0 // 清除 x 的梯度
+      }
+      sum += -1 * bias.v[oi]
+      bias.g[oi] = 0 // 清除 bias 的梯度
+      o.v[oi] = sum
+    }
+    return super.forward()
+  }
+
+  backward() {
+    let {o, x, w, bias} = this
+    let xlen = x.length, olen = o.length
+    for (let oi=0; oi<olen; oi++) {
+      let goi = o.g[oi]
+      for (let xi=0; xi<xlen; xi++) { 
+        w.g[oi*xlen+xi] += x.v[xi] * goi
+        x.g[xi] += w.v[oi*xlen+xi] * goi
+      }
+      bias.g[oi] += -1 * goi
+    }
+  }
+*/

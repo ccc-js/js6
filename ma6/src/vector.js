@@ -25,7 +25,7 @@ V.normalize = function (r) {
   let s = V.sum(ar) // 不能用 sum，sum 只適用於機率。
   let len = r.length
   for (let i=0; i<len; i++) {
-    r[i] = r[i]/s
+    r[i] = (s==0) ? 0 : r[i]/s
   }
   return r
 }

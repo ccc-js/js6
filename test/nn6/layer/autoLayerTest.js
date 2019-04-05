@@ -91,7 +91,13 @@ describe('nn6.Layer', function() {
   })
   describe('nn6.PoolLayer', function() {
     it('PoolLayer', function() {
-      let layer = new L.PoolLayer(m, {sx:3, sy:3, stride:1, pad:0})
+      let layer = new L.PoolLayer(m, {fw:3, fh:3, stride:1, pad:0})
+      check(layer)
+    }) 
+  })
+  describe('nn6.ConvLayer', function() {
+    it('ConvLayer', function() {
+      let layer = new L.ConvLayer(m, {od:1, fw:3, fh:3, stride:1, pad:0, cw:0.2, cbias:0.1})
       check(layer)
     })
   })
