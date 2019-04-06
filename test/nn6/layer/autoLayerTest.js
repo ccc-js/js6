@@ -100,6 +100,18 @@ describe('nn6.Layer', function() {
       let layer = new L.ConvLayer(m, {od:1, fw:3, fh:3, stride:1, pad:0, cw:0.2, cbias:0.1})
       check(layer)
     })
+    it('ConvLayer', function() {
+      let layer = new L.ConvLayer(m, {od:1, fw:3, fh:3, stride:1, pad:2, cw:0.3, cbias:0.0})
+      check(layer)
+    })
+    it('ConvLayer', function() {
+      let layer = new L.ConvLayer(m, {od:1, fw:3, fh:3, stride:2, pad:2, cw:0.1, cbias:0.2})
+      check(layer)
+    })
+    it('ConvLayer', function() {
+      let layer = new L.ConvLayer(m, {od:1, fw:3, fh:3, stride:2, pad:2 })
+      check(layer)
+    })
   })
 })
 

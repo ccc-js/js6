@@ -8,50 +8,46 @@ class Expect {
   }
 
   check(cond) {
-    uu6.be((cond && !this.isNot) || (!cond && this.isNot))
+    return (cond && !this.isNot) || (!cond && this.isNot)
   }
 
   pass(f) {
     let cond = f(this.o)
-    this.check(cond)
+    if (this.check(cond)) return this
+    throw Error('Expect.pass fail!')
   }
 
   equal(o) {
-    this.check(uu6.eq(this.o, o))
-    return this
+    if (this.check(uu6.eq(this.o, o))) return this
+    throw Error('Expect.equal fail!')
   }
 
   near(n, gap) {
-    this.check(uu6.near(this.o, n, gap))
-    return this
+    if (this.check(uu6.near(this.o, n, gap))) return this
+    throw Error('Expect.near fail!')
   }
 
   type(type) { 
-    this.check(uu6.type(this.o, type))
-    return this
+    if (this.check(uu6.type(this.o, type))) return this
+    throw Error('Expect.type fail!')
   }
 
   a(type) {
-    this.check(uu6.type(this.o, type) || uu6.eq(this.o, type))
-    return this
+    if (this.check(uu6.type(this.o, type) || uu6.eq(this.o, type))) return this
+    throw Error('Expect.a fail!')
   }
 
   contain(member) {
     let m = uu6.member(this.o, member)
-    this.check(m != null)
-    this.o = m
-    return this
+    if (this.check(m != null)) { this.o = m; return this }
+    throw Error('Expect.contain fail!')
   }
-
-  property(member) { return this.contain(member) }
-  
-  include(member) { return this.contain(member) }
 
   get not() {
     this.isNot = !this.isNot
     return this
   }
-
+  get 不() { return this.not }
   get to() { return this }
   get but() { return this }
   get at() { return this }
@@ -67,16 +63,24 @@ class Expect {
   get have() { return this }
   get been() { return this }
   get that() { return this }
+  get 那個() { return this.that }
   get and() { return this }
   get to() { return this }
 }
 
-// let p = Expect.prototype
-// p.to = 
-// p.but = p.at = p.of = p.same = p.does = p.do = p.still = p.is = p.be = p.should = p.has = p.have = p.been = p.with = p.that = p.and = p.self
-// p.include = p.property = p.contain
-// p.a = p.type
-
-E.expect = function (o) {
+E.expect = E.希望 = E.願 = E.驗證 = E.確認 = function (o) {
   return new Expect(o)
 }
+
+let p = Expect.prototype
+
+p.property = p.contain
+p.include = p.contain
+p.包含 = p.include
+p.通過 = p.pass
+p.等於 = p.equal
+p.靠近 = p.near
+p.型態 = p.type
+p.是 = p.a
+p.有 = p.contain
+p.屬性 = p.property

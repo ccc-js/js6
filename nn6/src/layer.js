@@ -37,7 +37,7 @@ class Layer {
       gx[xi] = gxi  // 這就是 xi 軸的梯度 g_o^x[i]，簡寫為 gxi
       x.v[xi] = xvi // 還原 x.v[xi] 的值
     }
-    console.log('grad(): gx=', gx)
+    // console.log('grad(): gx=', gx)
     return V.normalize(gx)
   }
 
@@ -397,12 +397,12 @@ class ConvLayer extends Layer {
     let filters = []
     for(let oi=0; oi<od; oi++) {
       filters.push(new N.TensorVariable(null, [fd, fw, fh]))
-      V.assign(filters[oi].v, p.cw || 0.0)
+      if (p.cw) V.assign(filters[oi].v, p.cw); else V.random(filters[oi].v, -1, 1)
     }
-    console.log('filters=', filters)
+    console.log('filters=', filters.toString())
     let bias = new N.TensorVariable(null, [1, 1, od])
-    V.assign(bias.v, p.cbias || 0.0)
-    console.log('bias=', bias)
+    if (p.cbias) V.assign(bias.v, p.cbias); else V.random(bias.v, -1, 1)
+    console.log('bias=', bias.toString())
     Object.assign(this, { o, i, id, iw, ih, od, ow, oh, fd, fw, fh, stride, pad, bias, filters })
   }
 
@@ -415,13 +415,13 @@ class ConvLayer extends Layer {
         let iy = -pad // iy = 目前區塊的右上角 y
         for(let oy=0; oy<oh; iy+=stride, oy++) {
           let a = 0.0
-          for(let fx=0; fx<fw; fx++) {
-            let mx = ix + fx
-            for(let fy=0; fy<fh; fy++) {
-              let my = iy + fy
-              if (mx >= 0 && mx < iw && my >=0 && my < ih) {
-                for (let fz=0; fz<fd; fz++) {
-                  a += f.v[((fz*fw)+fx)*fh+fy] * i.v[((fz*iw)+mx)*ih+my]
+          for (let fz=0; fz<fd; fz++) {
+            for(let fx=0; fx<fw; fx++) {
+              let mx = ix + fx
+              for(let fy=0; fy<fh; fy++) {
+                let my = iy + fy
+                if (mx >= 0 && mx < iw && my >=0 && my < ih) {
+                    a += f.v[((fz*fw)+fx)*fh+fy] * i.v[((fz*iw)+mx)*ih+my]
                 }
               }
             }
@@ -431,8 +431,8 @@ class ConvLayer extends Layer {
         }
       }
     }
-    console.log('forward(): i=', i)
-    console.log('forward(): o=', o)
+    // console.log('forward(): i=', i)
+    // console.log('forward(): o=', o)
     return super.forward()
   }
 
@@ -445,12 +445,12 @@ class ConvLayer extends Layer {
         let iy = -pad
         for(let oy=0; oy<oh; iy+=stride, oy++) {
           let oGrad = o.g[(d*ow+ox)*oh+oy] // 取得輸出 o 的梯度
-          for (let fx=0; fx < fw; fx++) {
-            let mx = ix+fx
-            for (let fy=0; fy < fh; fy++) {
-              let my = iy+fy
-              if (mx>=0 && mx<iw && my>=0 && my<ih) { // 反饋到每一個輸入與遮罩
-                for (let fz=0; fz<fd; fz++) {
+          for (let fz=0; fz<fd; fz++) {
+            for (let fx=0; fx < fw; fx++) {
+              let mx = ix+fx
+              for (let fy=0; fy < fh; fy++) {
+                let my = iy+fy
+                if (mx>=0 && mx<iw && my>=0 && my<ih) { // 反饋到每一個輸入與遮罩
                   let ii = ((fz*iw)+mx)*ih+my
                   let fi = ((fz*fw)+fx)*fh+fy
                   f.g[fi] += i.v[ii] * oGrad
@@ -462,11 +462,11 @@ class ConvLayer extends Layer {
           bias.g[d] += oGrad
         }
       }
-      console.log('backward:f=', f)
+      // console.log('backward:f=', f)
     }
-    console.log('backward:i=', i)
-    console.log('backward:x=', this.x)
-    console.log('backward:bias=', bias)
+    // console.log('backward:i=', i)
+    // console.log('backward:x=', this.x)
+    // console.log('backward:bias=', bias)
   }
 }
 
