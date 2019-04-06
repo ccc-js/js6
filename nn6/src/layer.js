@@ -385,24 +385,24 @@ class ConvLayer extends Layer {
   // 目前沒有使用：权重衰减（weight decay）：对于目标函数加入正则化项，限制权重参数的个数，这是一种防止过拟合的方法，这个方法其实就是机器学习中的l2正则化方法，只不过在神经网络中旧瓶装新酒改名为weight decay [3]。
   constructor(x, p) { 
     super(x, p)
-    console.log('ConvLayer')
+    // console.log('ConvLayer')
     let i = x // i: input = x
     let {od, fw, fh, stride, pad } = p // fw, fh: 池化遮罩 (filter) 大小, stride: 步伐大小, pad: 超出寬度
     let [id, iw, ih] = x.shape
     let ow = Math.floor((iw + pad * 2 - fw) / stride + 1)
     let oh = Math.floor((ih + pad * 2 - fh) / stride + 1)
     let o = new N.TensorVariable(null, [od, ow, oh])
-    console.log('o=', o)
+    // console.log('o=', o)
     let fd = id
     let filters = []
     for(let oi=0; oi<od; oi++) {
       filters.push(new N.TensorVariable(null, [fd, fw, fh]))
       if (p.cw) V.assign(filters[oi].v, p.cw); else V.random(filters[oi].v, -1, 1)
     }
-    console.log('filters=', filters.toString())
+    // console.log('filters=', filters.toString())
     let bias = new N.TensorVariable(null, [1, 1, od])
     if (p.cbias) V.assign(bias.v, p.cbias); else V.random(bias.v, -1, 1)
-    console.log('bias=', bias.toString())
+    // console.log('bias=', bias.toString())
     Object.assign(this, { o, i, id, iw, ih, od, ow, oh, fd, fw, fh, stride, pad, bias, filters })
   }
 
