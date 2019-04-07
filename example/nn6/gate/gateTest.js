@@ -1,0 +1,7 @@
+// const nn6 = require('../../nn6')
+const net = require('./perceptron')
+net.setInput([1,1])
+net.setOutput([1])
+net.forward()
+net.backward()
+console.log(net.toString())
