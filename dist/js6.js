@@ -1,6 +1,9 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+js6 = require('./js6')
+
+},{"./js6":10}],2:[function(require,module,exports){
 module.exports = require('./src/ai6')
-},{"./src/ai6":4}],2:[function(require,module,exports){
+},{"./src/ai6":5}],3:[function(require,module,exports){
 var uu6 = require('../../uu6')
 
 class GeneticAlgorithm {
@@ -64,7 +67,7 @@ class GeneticAlgorithm {
 
 module.exports = GeneticAlgorithm
 
-},{"../../uu6":33}],3:[function(require,module,exports){
+},{"../../uu6":33}],4:[function(require,module,exports){
 class Solution { // 解答的物件模版 (類別)
   constructor(v) {
     this.v = v                // 參數 v 為解答的資料結構
@@ -83,7 +86,7 @@ class Solution { // 解答的物件模版 (類別)
 Solution.prototype.step = 0.01          // 每一小步預設走的距離
 
 module.exports = Solution   // 將解答類別匯出。
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 const ai6 = module.exports = {
   gd: require('./gradientDescendent'),
   hillClimbing: require('./hillClimbing'),
@@ -95,7 +98,7 @@ const ai6 = module.exports = {
 ai6.gradientDescendent = ai6.gd
 
 
-},{"./GeneticAlgorithm":2,"./Solution":3,"./gradientDescendent":5,"./hillClimbing":6,"./simulatedAnnealing":7}],5:[function(require,module,exports){
+},{"./GeneticAlgorithm":3,"./Solution":4,"./gradientDescendent":6,"./hillClimbing":7,"./simulatedAnnealing":8}],6:[function(require,module,exports){
 const ma6 = require('../../ma6')
 const uu6 = require('../../uu6')
 
@@ -133,7 +136,7 @@ module.exports = gradientDescendent
     //process.exit(1)
     // if (e2 > e - gap) break
 */
-},{"../../ma6":11,"../../uu6":33}],6:[function(require,module,exports){
+},{"../../ma6":11,"../../uu6":33}],7:[function(require,module,exports){
 function hillClimbing(s, maxGens, maxFails) { // 爬山演算法的主體函數
   console.log("start: %s", s); // 印出初始解
   var fails = 0;          // 失敗次數設為 0
@@ -155,7 +158,7 @@ function hillClimbing(s, maxGens, maxFails) { // 爬山演算法的主體函數
 }
 
 module.exports = hillClimbing          // 將爬山演算法的類別匯出。
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 function prob(e, enew, T) { // 模擬退火法的機率函數
   if (enew < e) 
     return 1;
@@ -186,15 +189,12 @@ function simulatedAnnealing(s, maxGens) { // 模擬退火法的主要函數
 }
 
 module.exports = simulatedAnnealing;             // 將模擬退火演算法匯出。
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 module.exports = {
   MapVector: require('../ma6/src/MapVector'),
 }
 
-},{"../ma6/src/MapVector":12}],9:[function(require,module,exports){
-js6 = require('./index')
-
-},{"./index":10}],10:[function(require,module,exports){
+},{"../ma6/src/MapVector":12}],10:[function(require,module,exports){
 module.exports = {
   ai6: require('./ai6'),
   ds6: require('./ds6'),
@@ -205,7 +205,7 @@ module.exports = {
   uu6: require('./uu6'),
 }
 
-},{"./ai6":1,"./ds6":8,"./ma6":11,"./nn6":22,"./se6":29,"./sp6":32,"./uu6":33}],11:[function(require,module,exports){
+},{"./ai6":2,"./ds6":9,"./ma6":11,"./nn6":22,"./se6":29,"./sp6":32,"./uu6":33}],11:[function(require,module,exports){
 module.exports = require('./src/ma6')
 
 },{"./src/ma6":15}],12:[function(require,module,exports){
@@ -283,7 +283,8 @@ module.exports = class MapVector extends V.Vector {
 module.exports = {
   Pi: Math.PI,
   E: Math.E,
-  Epsilon: 0.000001
+  // Epsilon: 0.000001
+  Epsilon: 2.220446049250313e-16
 }
 },{}],14:[function(require,module,exports){
 const F = module.exports = {}
@@ -380,61 +381,86 @@ const ma6 = module.exports = {
   // PointFunction: require('./PointFunction'),
 }
 
+// Object.assign(ma6.M, require('./M/ext'))
+
 uu6.mixin(ma6, ma6.P, ma6.V, ma6.T, ma6.M, ma6.S, ma6.F, ma6.C, 
   require('./point')
 )
 
 },{"../../uu6":33,"./constant":13,"./function":14,"./matrix":16,"./point":17,"./prob":18,"./stat":19,"./tensor":20,"./vector":21}],16:[function(require,module,exports){
+const uu6 = require("../../uu6")
+const V = require("./vector")
+const T = require("./tensor")
+
 const M = module.exports = {}
 
+M.new = function (rows, cols) {
+  let r = new Array(rows)
+  for (let i=0; i<rows; i++) {
+    r[i] = V.array(cols, 0)
+  }
+  return r
+}
+
+M.flatten = function (m) {
+  let rows = m.length, cols = m[0].length
+  let r = new Array()
+  for (let i=0; i<rows; i++) {
+    for (let j=0; j<cols; j++)
+    r[i*cols+j] = m[i][j]
+  }
+  return r
+}
+
+M.identity = function (n) {
+  let v = V.array(n, 1)
+  return M.diag(v)
+}
+
+M.diag = function (v) {
+  let rows = v.length
+  let r = M.new(rows, rows)
+  for (let i = 0; i < rows; i++) {
+    r[i][i] = v[i]
+  }
+  return r
+}
+
 M.tr = M.transpose = function (m) {
-  var r = []
-  var rows = m.length
-  var cols = m[0].length
-  for (var j = 0; j < cols; j++) {
-    var rj = r[j] = []
-    for (var i = 0; i < rows; i++) {
+  let r = []
+  let rows = m.length
+  let cols = m[0].length
+  for (let j = 0; j < cols; j++) {
+    let rj = r[j] = []
+    for (let i = 0; i < rows; i++) {
       rj[i] = m[i][j]
     }
   }
   return r
 }
 
-M.dot = function (a, b, isComplex = false) {
-  var arows = a.length
-  var bcols = b[0].length
-  var r = []
-  var bt = M.tr(b)
-  for (var i = 0; i < arows; i++) {
-    var ri = r[i] = []
-    for (var j = 0; j < bcols; j++) {
-      ri.push(j6.V.dot(a[i], bt[j], isComplex))
+M.dot = function (a, b) {
+  let arows = a.length
+  let bcols = b[0].length
+  let r = []
+  let bt = M.tr(b)
+  for (let i = 0; i < arows; i++) {
+    let ri = r[i] = []
+    for (let j = 0; j < bcols; j++) {
+      ri.push(V.dot(a[i], bt[j]))
     }
   }
   return r
 }
 
-M.diag = function (v) {
-  var rows = v.length
-  var r = M.new(rows, rows)
-  for (var i = 0; i < rows; i++) {
-    r[i][i] = v[i]
-  }
-  return r
-}
-
-M.identity = function (n) {
-  return M.diag(j6.T.repeat([n], () => 1))
-}
-
 M.inv = function (m0) {
-  var s = j6.T.dim(m0), abs = Math.abs, m = s[0], n = s[1]
-  var A = j6.clone(m0), Ai, Aj
-  var I = M.identity(m), Ii, Ij
-  var i, j, k, x
+  let m = m0.length, n = m0[0].length, abs = Math.abs
+  let A = uu6.clone(m0), Ai, Aj
+  let I = M.identity(m), Ii, Ij
+  let i, j, k, x, i0, v0
   for (j = 0; j < n; ++j) {
-    var i0 = -1
-    var v0 = -1
+    i0 = -1
+    v0 = -1
     for (i = j; i !== m; ++i) {
       k = abs(A[i][j])
       if (k > v0) { i0 = i; v0 = k }
@@ -459,12 +485,12 @@ M.inv = function (m0) {
 }
 
 M.det = function (x) {
-  var s = j6.dim(x)
-  if (s.length !== 2 || s[0] !== s[1]) { throw new Error('numeric: det() only works on square matrices') }
-  var n = s[0], ret = 1, i, j, k, A = j6.clone(x), Aj, Ai, alpha, temp, k1
+  let abs = Math.abs
+  if (x.length !== x[0].length) { throw new Error('numeric: det() only works on square matrices') }
+  let n = x.length, ret = 1, i, j, k, A = uu6.clone(x), Aj, Ai, alpha, temp, k1
   for (j = 0; j < n - 1; j++) {
     k = j
-    for (i = j + 1; i < n; i++) { if (Math.abs(A[i][j]) > Math.abs(A[k][j])) { k = i } }
+    for (i = j + 1; i < n; i++) { if (abs(A[i][j]) > abs(A[k][j])) { k = i } }
     if (k !== j) {
       temp = A[k]; A[k] = A[j]; A[j] = temp
       ret *= -1
@@ -485,7 +511,441 @@ M.det = function (x) {
   }
   return ret * A[j][j]
 }
-},{}],17:[function(require,module,exports){
+
+// AX = b
+M.lu = function(A) {
+  var abs = Math.abs
+  var i, j, k, absAjk, Akk, Ak, Pk, Ai
+  var max
+  var n = A.length, n1 = n-1
+  var P = new Array(n)
+  A = uu6.clone(A)
+
+  for (k = 0; k < n; ++k) {
+    Pk = k
+    Ak = A[k]
+    max = abs(Ak[k])
+    for (j = k + 1; j < n; ++j) {
+      absAjk = abs(A[j][k])
+      if (max < absAjk) {
+        max = absAjk
+        Pk = j
+      }
+    }
+    P[k] = Pk
+
+    if (Pk != k) {
+      A[k] = A[Pk]
+      A[Pk] = Ak
+      Ak = A[k]
+    }
+
+    Akk = Ak[k]
+
+    for (i = k + 1; i < n; ++i) {
+      A[i][k] /= Akk
+    }
+
+    for (i = k + 1; i < n; ++i) {
+      Ai = A[i]
+      for (j = k + 1; j < n1; ++j) {
+        Ai[j] -= Ai[k] * Ak[j]
+        ++j
+        Ai[j] -= Ai[k] * Ak[j]
+      }
+      if(j===n1) Ai[j] -= Ai[k] * Ak[j]
+    }
+  }
+
+  return { LU: A, P:  P }
+}
+
+M.luSolve = function (LUP, b) {
+  var i, j;
+  var LU = LUP.LU;
+  var n   = LU.length;
+  var x = uu6.clone(b);
+  var P   = LUP.P;
+  var Pi, LUi, LUii, tmp;
+
+  for (i=n-1;i!==-1;--i) x[i] = b[i];
+  for (i = 0; i < n; ++i) {
+    Pi = P[i];
+    if (P[i] !== i) {
+      tmp = x[i];
+      x[i] = x[Pi];
+      x[Pi] = tmp;
+    }
+
+    LUi = LU[i];
+    for (j = 0; j < i; ++j) {
+      x[i] -= x[j] * LUi[j];
+    }
+  }
+
+  for (i = n - 1; i >= 0; --i) {
+    LUi = LU[i];
+    for (j = i + 1; j < n; ++j) {
+      x[i] -= x[j] * LUi[j];
+    }
+
+    x[i] /= LUi[i];
+  }
+
+  return x;
+}
+
+M.solve = function (A,b) { return M.luSolve(M.lu(A), b) }
+
+class Matrix extends T.Tensor {
+  constructor(v, shape) {
+    super(v, shape)
+  }
+
+  transpose() {
+    let a = this.ndarray()
+    return new Matrix(M.transpose(a))
+  }
+
+  dot (b) {
+    let ax = this.ndarray(), bx = b.ndarray()
+    return new Matrix(M.dot(ax, bx))
+  }
+
+  diag () {
+    let a = this, av = a.v, [rows, cols] = a.shape
+    let r = new Matrix(a.v, a.shape), rv = r.v
+    let v = V.array(rows)
+    for (let i = 0; i < rows; i++) {
+      v[i] = av[i][i]
+    }
+    return v
+  }
+
+  inv () {
+    let a = this.ndarray()
+    let ia = M.inv(a)
+    return new Matrix(ia)
+  }
+
+  det() {
+    let a = this.ndarray()
+    return M.det(a)
+  }
+
+  lu() {
+    let a = this.ndarray()
+    return M.lu(a)
+  }
+
+  svd() {
+    let a = this.ndarray()
+    return svd(a)
+  }
+
+  solve(b) {
+    let a = this.ndarray()
+    return M.solve(a, b)
+  }
+}
+
+Object.assign(M, {Matrix })
+
+// ============================ SVD =======================================================
+const Epsilon = 2.220446049250313e-16
+
+function svd(A) {
+  var temp;
+//Compute the thin SVD from G. H. Golub and C. Reinsch, Numer. Math. 14, 403-420 (1970)
+var prec= Epsilon; //Math.pow(2,-52) // assumes double prec
+var tolerance= 1.e-64/prec;
+var itmax= 50;
+var c=0;
+var i=0;
+var j=0;
+var k=0;
+var l=0;
+
+var u= uu6.clone(A);
+var m= u.length;
+
+var n= u[0].length;
+
+if (m < n) throw "Need more rows than columns"
+
+var e = new Array(n);
+var q = new Array(n);
+for (i=0; i<n; i++) e[i] = q[i] = 0.0;
+var v = M.new(n, n); 
+//	v.zero();
+
+ function pythag(a,b)
+ {
+  a = Math.abs(a)
+  b = Math.abs(b)
+  if (a > b)
+    return a*Math.sqrt(1.0+(b*b/a/a))
+  else if (b == 0.0) 
+    return a
+  return b*Math.sqrt(1.0+(a*a/b/b))
+}
+
+//Householder's reduction to bidiagonal form
+
+var f= 0.0;
+var g= 0.0;
+var h= 0.0;
+var x= 0.0;
+var y= 0.0;
+var z= 0.0;
+var s= 0.0;
+
+for (i=0; i < n; i++)
+{	
+  e[i]= g;
+  s= 0.0;
+  l= i+1;
+  for (j=i; j < m; j++) 
+    s += (u[j][i]*u[j][i]);
+  if (s <= tolerance)
+    g= 0.0;
+  else
+  {	
+    f= u[i][i];
+    g= Math.sqrt(s);
+    if (f >= 0.0) g= -g;
+    h= f*g-s
+    u[i][i]=f-g;
+    for (j=l; j < n; j++)
+    {
+      s= 0.0
+      for (k=i; k < m; k++) 
+        s += u[k][i]*u[k][j]
+      f= s/h
+      for (k=i; k < m; k++) 
+        u[k][j]+=f*u[k][i]
+    }
+  }
+  q[i]= g
+  s= 0.0
+  for (j=l; j < n; j++) 
+    s= s + u[i][j]*u[i][j]
+  if (s <= tolerance)
+    g= 0.0
+  else
+  {	
+    f= u[i][i+1]
+    g= Math.sqrt(s)
+    if (f >= 0.0) g= -g
+    h= f*g - s
+    u[i][i+1] = f-g;
+    for (j=l; j < n; j++) e[j]= u[i][j]/h
+    for (j=l; j < m; j++)
+    {	
+      s=0.0
+      for (k=l; k < n; k++) 
+        s += (u[j][k]*u[i][k])
+      for (k=l; k < n; k++) 
+        u[j][k]+=s*e[k]
+    }	
+  }
+  y= Math.abs(q[i])+Math.abs(e[i])
+  if (y>x) 
+    x=y
+}
+
+// accumulation of right hand gtransformations
+for (i=n-1; i != -1; i+= -1)
+{	
+  if (g != 0.0)
+  {
+     h= g*u[i][i+1]
+    for (j=l; j < n; j++) 
+      v[j][i]=u[i][j]/h
+    for (j=l; j < n; j++)
+    {	
+      s=0.0
+      for (k=l; k < n; k++) 
+        s += u[i][k]*v[k][j]
+      for (k=l; k < n; k++) 
+        v[k][j]+=(s*v[k][i])
+    }	
+  }
+  for (j=l; j < n; j++)
+  {
+    v[i][j] = 0;
+    v[j][i] = 0;
+  }
+  v[i][i] = 1;
+  g= e[i]
+  l= i
+}
+
+// accumulation of left hand transformations
+for (i=n-1; i != -1; i+= -1)
+{	
+  l= i+1
+  g= q[i]
+  for (j=l; j < n; j++) 
+    u[i][j] = 0;
+  if (g != 0.0)
+  {
+    h= u[i][i]*g
+    for (j=l; j < n; j++)
+    {
+      s=0.0
+      for (k=l; k < m; k++) s += u[k][i]*u[k][j];
+      f= s/h
+      for (k=i; k < m; k++) u[k][j]+=f*u[k][i];
+    }
+    for (j=i; j < m; j++) u[j][i] = u[j][i]/g;
+  }
+  else
+    for (j=i; j < m; j++) u[j][i] = 0;
+  u[i][i] += 1;
+}
+
+// diagonalization of the bidiagonal form
+prec= prec*x
+for (k=n-1; k != -1; k+= -1)
+{
+  for (var iteration=0; iteration < itmax; iteration++)
+  {	// test f splitting
+    var test_convergence = false
+    for (l=k; l != -1; l+= -1)
+    {	
+      if (Math.abs(e[l]) <= prec)
+      {	test_convergence= true
+        break 
+      }
+      if (Math.abs(q[l-1]) <= prec)
+        break 
+    }
+    if (!test_convergence)
+    {	// cancellation of e[l] if l>0
+      c= 0.0
+      s= 1.0
+      var l1= l-1
+      for (i =l; i<k+1; i++)
+      {	
+        f= s*e[i]
+        e[i]= c*e[i]
+        if (Math.abs(f) <= prec)
+          break
+        g= q[i]
+        h= pythag(f,g)
+        q[i]= h
+        c= g/h
+        s= -f/h
+        for (j=0; j < m; j++)
+        {	
+          y= u[j][l1]
+          z= u[j][i]
+          u[j][l1] =  y*c+(z*s)
+          u[j][i] = -y*s+(z*c)
+        } 
+      }	
+    }
+    // test f convergence
+    z= q[k]
+    if (l== k)
+    {	//convergence
+      if (z<0.0)
+      {	//q[k] is made non-negative
+        q[k]= -z
+        for (j=0; j < n; j++)
+          v[j][k] = -v[j][k]
+      }
+      break  //break out of iteration loop and move on to next k value
+    }
+    if (iteration >= itmax-1)
+      throw 'Error: no convergence.'
+    // shift from bottom 2x2 minor
+    x= q[l]
+    y= q[k-1]
+    g= e[k-1]
+    h= e[k]
+    f= ((y-z)*(y+z)+(g-h)*(g+h))/(2.0*h*y)
+    g= pythag(f,1.0)
+    if (f < 0.0)
+      f= ((x-z)*(x+z)+h*(y/(f-g)-h))/x
+    else
+      f= ((x-z)*(x+z)+h*(y/(f+g)-h))/x
+    // next QR transformation
+    c= 1.0
+    s= 1.0
+    for (i=l+1; i< k+1; i++)
+    {	
+      g= e[i]
+      y= q[i]
+      h= s*g
+      g= c*g
+      z= pythag(f,h)
+      e[i-1]= z
+      c= f/z
+      s= h/z
+      f= x*c+g*s
+      g= -x*s+g*c
+      h= y*s
+      y= y*c
+      for (j=0; j < n; j++)
+      {	
+        x= v[j][i-1]
+        z= v[j][i]
+        v[j][i-1] = x*c+z*s
+        v[j][i] = -x*s+z*c
+      }
+      z= pythag(f,h)
+      q[i-1]= z
+      c= f/z
+      s= h/z
+      f= c*g+s*y
+      x= -s*g+c*y
+      for (j=0; j < m; j++)
+      {
+        y= u[j][i-1]
+        z= u[j][i]
+        u[j][i-1] = y*c+z*s
+        u[j][i] = -y*s+z*c
+      }
+    }
+    e[l]= 0.0
+    e[k]= f
+    q[k]= x
+  } 
+}
+  
+//vt= transpose(v)
+//return (u,q,vt)
+for (i=0;i<q.length; i++) 
+  if (q[i] < prec) q[i] = 0
+  
+//sort eigenvalues	
+for (i=0; i< n; i++)
+{	 
+//writeln(q)
+ for (j=i-1; j >= 0; j--)
+ {
+  if (q[j] < q[i])
+  {
+//  writeln(i,'-',j)
+   c = q[j]
+   q[j] = q[i]
+   q[i] = c
+   for(k=0;k<u.length;k++) { temp = u[k][i]; u[k][i] = u[k][j]; u[k][j] = temp; }
+   for(k=0;k<v.length;k++) { temp = v[k][i]; v[k][i] = v[k][j]; v[k][j] = temp; }
+//	   u.swapCols(i,j)
+//	   v.swapCols(i,j)
+   i = j	   
+  }
+ }	
+}
+
+return {U:u,S:q,V:v}
+};
+
+
+},{"../../uu6":33,"./tensor":20,"./vector":21}],17:[function(require,module,exports){
 const P = module.exports = {}
 
 const V = require('./vector')
@@ -765,7 +1225,7 @@ T.offset = function (shape, idx, lo) {
   lo = lo || V.array(len)
   let offset = idx[0]+lo[0]
   for (let i=1; i<len; i++) {
-    offset = offset*shape[i] + idx[i] + lo[i]
+    offset = offset * shape[i] + idx[i] + lo[i]
   }
   return offset
 }
@@ -1517,6 +1977,7 @@ class Layer {
   constructor(x, p = {}) {
     this.x = x
     this.p = uu6.clone(p)
+    console.log('p=', p, 'this.p=', this.p)
   }
 
   forward() {
@@ -1667,26 +2128,32 @@ class FullyConnectLayer extends Layer {
   }
 }
 
-class PerceptronLayer extends Layer {
+class FcActLayer extends Layer {
   constructor(x, p) {
     super(x, p)
     this.fcLayer = new FullyConnectLayer(x, p)
-    this.sigLayer = new SigmoidLayer(this.fcLayer.o)
-    this.o = this.sigLayer.o
+    this.actLayer = new p.ActLayer(this.fcLayer.o)
+    this.o = this.actLayer.o
   }
   forward() {
     this.fcLayer.forward()
-    this.sigLayer.forward()
+    this.actLayer.forward()
     return super.forward()
   }
   backward() {
-    this.sigLayer.backward()
+    this.actLayer.backward()
     this.fcLayer.backward()
   }
 
   adjust(step, moment) {
     this.fcLayer.adjust(step, moment)
-    this.sigLayer.adjust(step, moment)
+    this.actLayer.adjust(step, moment)
+  }
+}
+
+class PerceptronLayer extends FcActLayer {
+  constructor(x, p) {
+    super(x, Object.assign(p, {ActLayer: SigmoidLayer}))
   }
 }
 
@@ -1979,7 +2446,8 @@ class ConvLayer extends Layer {
 }
 
 Object.assign(L, {
-  Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, FullyConnectLayer, PerceptronLayer,
+  Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, 
+  FullyConnectLayer, FcActLayer, PerceptronLayer,
   InputLayer, RegressionLayer, SoftmaxLayer, PoolLayer, DropoutLayer, ConvLayer
 })
 
@@ -2175,6 +2643,8 @@ A.defaults = function (args, defs) {
 const U = module.exports = {}
 
 U.array = function (n, value=0) {
+  // console.log('array(n): n=', n)
+  if (n <= 0) n = 1
   let a = new Array(n)
   return a.fill(value)
 }
@@ -2271,13 +2741,12 @@ U.near = function (n1, n2, gap=0.01) {
 }
 
 U.clone = function (o) {
-  let type = typeof o
-  if (Array.isArray(o))
-    return o.slice(0)
-  else if (type === 'object')
-    return {...o}
-  else
-    return o
+  if (null == o || "object" != typeof o) return o
+  var copy = o.constructor()
+  for (var attr in o) {
+    if (o.hasOwnProperty(attr)) copy[attr] = o[attr]
+  }
+  return copy;
 }
 
 U.type = function (o, type) { // U.is
@@ -2365,4 +2834,4 @@ uu6.mixin(uu6,
   require('./control'),
   require('./args'),
 )
-},{"./args":34,"./array":35,"./control":36,"./error":37,"./object":38,"./random":39,"./string":40}]},{},[9]);
+},{"./args":34,"./array":35,"./control":36,"./error":37,"./object":38,"./random":39,"./string":40}]},{},[1]);
