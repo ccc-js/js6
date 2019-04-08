@@ -24,16 +24,12 @@ U.near = function (n1, n2, gap=0.01) {
 }
 
 U.clone = function (o) {
-  return JSON.parse(JSON.stringify(o))
-  /*
-  let type = typeof o
-  if (Array.isArray(o))
-    return o.slice(0)
-  else if (type === 'object')
-    return {...o}
-  else
-    return o
-  */
+  if (null == o || "object" != typeof o) return o
+  var copy = o.constructor()
+  for (var attr in o) {
+    if (o.hasOwnProperty(attr)) copy[attr] = o[attr]
+  }
+  return copy;
 }
 
 U.type = function (o, type) { // U.is

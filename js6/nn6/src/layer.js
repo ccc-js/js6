@@ -9,6 +9,7 @@ class Layer {
   constructor(x, p = {}) {
     this.x = x
     this.p = uu6.clone(p)
+    console.log('p=', p, 'this.p=', this.p)
   }
 
   forward() {
