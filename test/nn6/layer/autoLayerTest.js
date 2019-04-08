@@ -68,6 +68,14 @@ describe('nn6.Layer', function() {
       check(fcLayer)
     })
   })
+  describe('nn6.FcActLayer', function() {
+    it('FcActLayer 2to1', function() {
+      let pLayer = new L.FcActLayer(x, {n:1, cw:0.2, cbias:0.1, ActLayer:L.ReluLayer })
+      let fcLayer = pLayer.fcLayer
+      uu6.be(fcLayer.w.v[0] == 0.2 && fcLayer.bias.v[0] == 0.1)
+      check(pLayer)
+    })
+  })
   describe('nn6.PerceptronLayer', function() {
     it('PerceptronLayer 2to1', function() {
       let pLayer = new L.PerceptronLayer(x, {n:1, cw:0.2, cbias:0.1})

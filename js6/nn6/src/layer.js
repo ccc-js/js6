@@ -160,26 +160,32 @@ class FullyConnectLayer extends Layer {
   }
 }
 
-class PerceptronLayer extends Layer {
+class FcActLayer extends Layer {
   constructor(x, p) {
     super(x, p)
     this.fcLayer = new FullyConnectLayer(x, p)
-    this.sigLayer = new SigmoidLayer(this.fcLayer.o)
-    this.o = this.sigLayer.o
+    this.actLayer = new p.ActLayer(this.fcLayer.o)
+    this.o = this.actLayer.o
   }
   forward() {
     this.fcLayer.forward()
-    this.sigLayer.forward()
+    this.actLayer.forward()
     return super.forward()
   }
   backward() {
-    this.sigLayer.backward()
+    this.actLayer.backward()
     this.fcLayer.backward()
   }
 
   adjust(step, moment) {
     this.fcLayer.adjust(step, moment)
-    this.sigLayer.adjust(step, moment)
+    this.actLayer.adjust(step, moment)
+  }
+}
+
+class PerceptronLayer extends FcActLayer {
+  constructor(x, p) {
+    super(x, Object.assign(p, {ActLayer: SigmoidLayer}))
   }
 }
 
@@ -472,6 +478,7 @@ class ConvLayer extends Layer {
 }
 
 Object.assign(L, {
-  Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, FullyConnectLayer, PerceptronLayer,
+  Layer, FLayer, SigmoidLayer, TanhLayer, ReluLayer, 
+  FullyConnectLayer, FcActLayer, PerceptronLayer,
   InputLayer, RegressionLayer, SoftmaxLayer, PoolLayer, DropoutLayer, ConvLayer
 })
