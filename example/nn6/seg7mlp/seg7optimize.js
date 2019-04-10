@@ -31,7 +31,7 @@ const inputs = [
 net.optimize({
   inputs: inputs,
   outs: outs,
-  minLoops: 20000,
-  maxLoops: 1000000,
-  gap: 0.0000001
+  minLoops: 10000,
+  maxLoops: 100000,
+  gap: 0.00001
 })

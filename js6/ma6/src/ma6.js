@@ -2,6 +2,7 @@ const uu6 = require('../../uu6')
 
 const ma6 = module.exports = {
   R: require('./R'),
+  P: require('./probability'),
   V: require('./vector'),
   T: require('./tensor'),
   M: require('./matrix'),

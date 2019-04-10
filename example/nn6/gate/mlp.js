@@ -1,4 +1,4 @@
-const nn6 = require('../../../nn6')
+const nn6 = require('../../../js6/nn6')
 const net = new nn6.Net()
 
 let iLayer = net.inputLayer([2])

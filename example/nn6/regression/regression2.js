@@ -25,7 +25,7 @@ let d = genData(20)
 net.optimize({
   inputs: d.data,
   outs: d.labels,
-  minLoops: 20000,
+  minLoops: 2000,
   maxLoops: 100000,
   // gap: 0.00001
 })

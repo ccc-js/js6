@@ -1,72 +1,69 @@
-const P = module.exports = require('./probability')
+const P = require('./probability')
+const R = module.exports = {}
 const uu6 = require('../../uu6')
+
 // Uniform Distribution
-P.dunif = (arg) => P.uniform.pdf(arg)
-P.punif = (arg) => P.uniform.cdf(arg)
-P.qunif = (arg) => P.uniform.inv(arg)
-P.runif = (arg) => uu6.repeats(arg.n, ()=>P.uniform.sample(arg))
-/*
-P.runif = (arg) => {
-  let r = uu6.repeats(arg.n, ()=>P.uniform.sample(arg))
-  return r
-}*/
+R.dunif = (arg) => P.uniform.pdf(arg)
+R.punif = (arg) => P.uniform.cdf(arg)
+R.qunif = (arg) => P.uniform.inv(arg)
+R.runif = (arg) => uu6.repeats(arg.n, ()=>P.uniform.sample(arg))
 
 // Exponential Distribution
-P.dexp = (arg) => P.exp.pdf(arg)
-P.pexp = (arg) => P.exp.cdf(arg)
-P.qexp = (arg) => P.exp.inv(arg)
-P.rexp = (arg) => uu6.repeats(arg.n, ()=>P.exp.sample(arg))
+R.dexp = (arg) => P.exp.pdf(arg)
+R.pexp = (arg) => P.exp.cdf(arg)
+R.qexp = (arg) => P.exp.inv(arg)
+R.rexp = (arg) => uu6.repeats(arg.n, ()=>P.exp.sample(arg))
 
 // Normal Distribution
-P.dnorm = (arg) => P.normal.pdf(arg)
-P.pnorm = (arg) => P.normal.cdf(arg)
-P.qnorm = (arg) => P.normal.inv(arg)
-P.rnorm = (arg) => uu6.repeats(arg.n, ()=>P.normal.sample(arg))
+R.dnorm = (arg) => P.normal.pdf(arg)
+R.pnorm = (arg) => P.normal.cdf(arg)
+R.qnorm = (arg) => P.normal.inv(arg)
+R.rnorm = (arg) => uu6.repeats(arg.n, ()=>P.normal.sample(arg))
 
 // Beta Distribution
-P.dbeta = (arg) => P.beta.pdf(arg)
-P.pbeta = (arg) => P.beta.cdf(arg)
-P.qbeta = (arg) => P.beta.inv(arg)
-P.rbeta = (arg) => uu6.repeats(arg.n, ()=>P.beta.sample(arg))
+R.dbeta = (arg) => P.beta.pdf(arg)
+R.pbeta = (arg) => P.beta.cdf(arg)
+R.qbeta = (arg) => P.beta.inv(arg)
+R.rbeta = (arg) => uu6.repeats(arg.n, ()=>P.beta.sample(arg))
 
 // F Distribution
-P.df = (arg) => P.f.pdf(arg)
-P.pf = (arg) => P.f.cdf(arg)
-P.qf = (arg) => P.f.inv(arg)
-P.rf = (arg) => uu6.repeats(arg.n, ()=>P.f.sample(arg))
+R.df = (arg) => P.f.pdf(arg)
+R.pf = (arg) => P.f.cdf(arg)
+R.qf = (arg) => P.f.inv(arg)
+R.rf = (arg) => uu6.repeats(arg.n, ()=>P.f.sample(arg))
 
 // Cauchy Distribution
-P.dcauchy = (arg) => P.cauchy.pdf(arg)
-P.pcauchy = (arg) => P.cauchy.cdf(arg)
-P.qcauchy = (arg) => P.cauchy.inv(arg)
-P.rcauchy = (arg) => uu6.repeats(arg.n, ()=>P.cauchy.sample(arg))
+R.dcauchy = (arg) => P.cauchy.pdf(arg)
+R.pcauchy = (arg) => P.cauchy.cdf(arg)
+R.qcauchy = (arg) => P.cauchy.inv(arg)
+R.rcauchy = (arg) => uu6.repeats(arg.n, ()=>P.cauchy.sample(arg))
 
 // ChiSquare Distribution
-P.dchisq = (arg) => P.chiSquare.pdf(arg)
-P.pchisq = (arg) => P.chiSquare.cdf(arg)
-P.qchisq = (arg) => P.chiSquare.inv(arg)
-P.rchisq = (arg) => uu6.repeats(arg.n, ()=>P.chiSquare.sample(arg))
+R.dchisq = (arg) => P.chiSquare.pdf(arg)
+R.pchisq = (arg) => P.chiSquare.cdf(arg)
+R.qchisq = (arg) => P.chiSquare.inv(arg)
+R.rchisq = (arg) => uu6.repeats(arg.n, ()=>P.chiSquare.sample(arg))
 
 // Gamma Distribution
-P.dgamma = (arg) => P.gamma.pdf(arg)
-P.pgamma = (arg) => P.gamma.cdf(arg)
-P.qgamma = (arg) => P.gamma.inv(arg)
-P.rgamma = (arg) => uu6.repeats(arg.n, ()=>P.gamma.sample(arg))
+R.dgamma = (arg) => P.gamma.pdf(arg)
+R.pgamma = (arg) => P.gamma.cdf(arg)
+R.qgamma = (arg) => P.gamma.inv(arg)
+R.rgamma = (arg) => uu6.repeats(arg.n, ()=>P.gamma.sample(arg))
 
 // InvGamma Distribution
-P.dinvgamma = (arg) => P.invGamma.pdf(arg)
-P.pinvgamma = (arg) => P.invGamma.cdf(arg)
-P.qinvgamma = (arg) => P.invGamma.inv(arg)
-P.rinvgamma = (arg) => uu6.repeats(arg.n, ()=>P.invGamma.sample(arg))
+R.dinvgamma = (arg) => P.invGamma.pdf(arg)
+R.pinvgamma = (arg) => P.invGamma.cdf(arg)
+R.qinvgamma = (arg) => P.invGamma.inv(arg)
+R.rinvgamma = (arg) => uu6.repeats(arg.n, ()=>P.invGamma.sample(arg))
 
 // T Distribution
-P.dt = (arg) => P.t.pdf(arg)
-P.pt = (arg) => P.t.cdf(arg)
-P.qt = (arg) => P.t.inv(arg)
-P.rt = (arg) => uu6.repeats(arg.n, ()=>P.t.sample(arg))
+R.dt = (arg) => P.t.pdf(arg)
+R.pt = (arg) => P.t.cdf(arg)
+R.qt = (arg) => P.t.inv(arg)
+R.rt = (arg) => uu6.repeats(arg.n, ()=>P.t.sample(arg))
 
-// uniform
-P.dweibull = (arg) => P.weibull.pdf(arg)
-P.pweibull = (arg) => P.weibull.cdf(arg)
-P.qweibull = (arg) => P.weibull.inv(arg)
-P.rweibull = (arg) => uu6.repeats(arg.n, ()=>P.weibull.sample(arg))
+// Weibull Distribution
+R.dweibull = (arg) => P.weibull.pdf(arg)
+R.pweibull = (arg) => P.weibull.cdf(arg)
+R.qweibull = (arg) => P.weibull.inv(arg)
+R.rweibull = (arg) => uu6.repeats(arg.n, ()=>P.weibull.sample(arg))

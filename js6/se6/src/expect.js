@@ -20,7 +20,7 @@ class Expect {
   each(f) {
     let o = this.o
     for (let k in o) {
-      if (!f(o[k])) throw Error('Expect.each fail!')
+      if (!f(o[k])) throw Error('Expect.each fail! key='+k)
     }
   }
 

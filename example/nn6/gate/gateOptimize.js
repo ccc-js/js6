@@ -14,14 +14,14 @@ const xorGate = {
   outs: [[0],[1],[1],[0]],
 }
 
-// let g = andGate
+let g = andGate
 // let g = orGate
-let g = xorGate // xor 的學習不是每次都成功，若失敗的話再試一次！
+// let g = xorGate // xor 的學習不是每次都成功，若失敗的話再試一次！
 
 net.optimize({
   inputs: g.inputs,
   outs: g.outs,
   minLoops: 2000,
-  maxLoops: 1000000,
+  maxLoops: 100000,
   gap: 0.0000001
 })

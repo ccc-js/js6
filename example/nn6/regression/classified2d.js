@@ -33,5 +33,5 @@ net.optimize({
   outs: d.labels,
   minLoops: 2000,
   maxLoops: 100000,
-  // gap: 0.00001
+  gap: 0.00001
 })
