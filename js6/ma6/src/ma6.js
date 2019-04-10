@@ -1,7 +1,7 @@
 const uu6 = require('../../uu6')
 
 const ma6 = module.exports = {
-  P: require('./probability'),
+  R: require('./R'),
   V: require('./vector'),
   T: require('./tensor'),
   M: require('./matrix'),
@@ -10,7 +10,8 @@ const ma6 = module.exports = {
   C: require('./constant'),
 }
 
-uu6.mixin(ma6, ma6.P, ma6.V, ma6.T, ma6.M, ma6.S, ma6.F, ma6.C, 
+uu6.mixin(ma6, ma6.R, ma6.V, ma6.T, ma6.M, ma6.S, ma6.F, ma6.C, 
   require('./point'),
   require('./complex'),
+  require('./calculus'),
 )

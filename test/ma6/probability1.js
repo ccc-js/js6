@@ -1,11 +1,19 @@
 const {expect} = require('../../js6/se6')
 const ma6 = require('../../js6/ma6')
+const uu6 = require('../../js6/uu6')
 
 function check(x, d, arg) {
-  let p = d.cdf(Object.assign({}, {x}, arg))
-  let x2 = d.inv(Object.assign({}, {p}, arg))
+  let dx = 0.000001
+  let argx = Object.assign({}, {x}, arg)
+  let p = d.cdf(argx)
+  let argp = Object.assign({}, {p}, arg)
+  let x2 = d.inv(argp)
   console.log('x=', x, 'p=', p, 'x2=', x2)
   expect(x2).to.near(x)
+  let argx1 = Object.assign({}, {x:x+dx}, arg)
+  let p1 = d.cdf(argx1)
+  let dp = (p1-p)/dx
+  expect(dp).to.near(d.pdf(argx))
 }
 
 let x = 0.7

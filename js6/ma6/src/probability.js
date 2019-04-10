@@ -151,7 +151,7 @@ class F extends Distribution {
     p = (df1 * x) / (df2 + x * df1)
     q = df2 / (df2 + x * df1)
     f = df1 * q / 2.0
-    return f * P.Binomial.pdf((df1 - 2) / 2, (df1 + df2 - 2) / 2, p)
+    return f * P.binomial.pdf({k:(df1 - 2) / 2, n:(df1 + df2 - 2) / 2, p})
   }
   cdf(arg) {
     let {x, df1, df2} = arg

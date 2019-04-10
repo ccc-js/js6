@@ -17,6 +17,13 @@ class Expect {
     throw Error('Expect.pass fail!')
   }
 
+  each(f) {
+    let o = this.o
+    for (let k in o) {
+      if (!f(o[k])) throw Error('Expect.each fail!')
+    }
+  }
+
   equal(o) {
     if (this.check(uu6.eq(this.o, o))) return this
     throw Error('Expect.equal fail!')

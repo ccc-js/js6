@@ -1,31 +1,29 @@
 const F = module.exports = {}
+const V = require('./vector')
 
 // =========== Calculus =================
 F.dx = 0.01
 
 // 微分 differential calculus
 F.diff = function (f, x, dx = F.dx) {
-  var dy = f(x.add(dx)).sub(f(x.sub(dx)))
-  return dy.div(dx.mul(2))
+  return (f(x+dx) - f(x-dx))/(2*dx)
 }
 
 // 積分 integral calculus
 F.i = F.integral = function (f, a, b, dx = F.dx) {
   var area = 0.0
   for (var x = a; x < b; x = x + dx) {
-    area = area + f(x).mul(dx)
+    area = area + f(x) * dx
   }
   return area
 }
 
 // 偏微分 partial differential calculus
 // f=[f1,f2,....] , x=[x1,x2,...] , dx=[dx1,dx2,....]
-F.pdiff = F.pdifferential = function (f, x, i) {
-  f = F.fa(f)
-  var dx = F.fill(x.length, 0)
-  dx[i] = F.dx
-  var df = f(x.add(dx)).sub(f(x.sub(dx)))
-  return df.div(dx.norm().mul(2))
+F.pdiff = F.pdifferential = function (f, x, i, dx = F.dx) {
+  let xi = x[i]
+  x[i] += F.dx
+  return (f(x+dx)-f(x-dx))/(2*dx)
 }
 
 // multidimensional integral calculus
@@ -34,10 +32,10 @@ F.pintegral = function (f, a, b) {
 }
 
 // 梯度 gradient : grad(f,x)=[pdiff(f,x,0), .., pdiff(f,x,n)]
-F.grad = F.gradient = function (f, x) {
+F.grad = F.gradient = function (f, x, dx = F.dx) {
   var gf = []
   for (var i = 0; i < x.length; i++) {
-    gf[i] = F.pdiff(f, x, i)
+    gf[i] = F.pdiff(f, x, i, dx)
   }
   return gf
 }
@@ -50,7 +48,7 @@ F.divergence = function (F, x) {
     f[i] = (xt) => F(xt)[i]
     d[i] = F.pdiff(f[i], x, i)
   }
-  return d.sum()
+  return V.sum(d)
 }
 
 // 旋度 curl : curl(F) = div(F)xF
@@ -62,7 +60,7 @@ F.vintegral = function (F, r, a, b, dt) {
   dt = dt || F.dx
   var sum = 0
   for (var t = a; t < b; t += dt) {
-    sum += F(r(t)).dot(r.diff(t))
+    sum += V.dot(F(r(t)) * F.diff(r, t, dt))
   }
   return sum
 }

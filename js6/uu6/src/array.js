@@ -8,12 +8,19 @@ U.array = function (n, value=0) {
 }
 
 U.repeats = function (n, f) {
-  let r = []
+  let r = new Array(n)
   for (let i=0; i<n; i++) {
-    r.push(f())
+    r[i] = f()
   }
   return r
 }
+
+/* 改用 array
+U.repeats = function (n, value = 0) {
+  let a = new Array(n)
+  return a.fill(value)
+}
+*/
 
 U.last = function (a) {
   return a[a.length-1]
@@ -41,11 +48,6 @@ U.amap2 = function (a, b, f) {
     c[i] = f(a[i], b[i])
   }
   return c
-}
-
-U.repeats = function (n, value = 0) {
-  let a = new Array(n)
-  return a.fill(value)
 }
 
 U.range = function (begin, end, step=1) {
