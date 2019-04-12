@@ -35,7 +35,9 @@ U.clone = function (o) {
 U.type = function (o, type) { // U.is
   if (typeof o === type) return true
   if (type==='array' && Array.isArray(o)) return true
-  if (typeof o === 'object' && o instanceof type) return true
+  if (typeof o === 'object') {
+    if (typeof type === 'object' && o instanceof type) return true
+  }
   return false
 }
 

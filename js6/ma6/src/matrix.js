@@ -206,10 +206,36 @@ M.luSolve = function (LUP, b) {
 }
 
 M.solve = function (A,b) { return M.luSolve(M.lu(A), b) }
-
+/*
 class Matrix extends T.Tensor {
   constructor(v, shape) {
     super(v, shape)
+    uu6.be(shape.length == 2)
+  }
+
+  rows () { return this.shape[0] }
+  cols () { return this.shape[1] }
+
+  rowSum () {
+    let rows = this.rows(), cols = this.cols()
+    let s = V.array(rows), v = this.v
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        s[i] += v[i*cols+j]
+      }
+    }
+    return new T.Tensor(s)
+  }
+  
+  colSum () {
+    let rows = this.rows(), cols = this.cols()
+    let s = V.array(cols), v = this.v
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        s[j] += v[i*cols+j]
+      }
+    }
+    return T.Tensor(s)
   }
 
   transpose() {
@@ -258,13 +284,13 @@ class Matrix extends T.Tensor {
     return M.solve(a, b)
   }
 }
-
 Object.assign(M, {Matrix })
+*/
 
 // ============================ SVD =======================================================
 const Epsilon = 2.220446049250313e-16
 
-function svd(A) {
+M.svd = function svd(A) {
   var temp;
 //Compute the thin SVD from G. H. Golub and C. Reinsch, Numer. Math. 14, 403-420 (1970)
 var prec= Epsilon; //Math.pow(2,-52) // assumes double prec

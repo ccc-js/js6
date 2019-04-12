@@ -15,6 +15,16 @@ U.repeats = function (n, f) {
   return r
 }
 
+U.range = function (begin, end, step=1) {
+  let len = Math.floor((end-begin)/step)
+  let a = new Array(len)
+  let i = 0
+  for (let t=begin; t<end; t+=step) {
+    a[i++] = t
+  }
+  return a
+}
+
 /* 改用 array
 U.repeats = function (n, value = 0) {
   let a = new Array(n)
@@ -50,12 +60,3 @@ U.amap2 = function (a, b, f) {
   return c
 }
 
-U.range = function (begin, end, step=1) {
-  let len = Math.floor((end-begin)/step)
-  let a = new Array(len)
-  let i = 0
-  for (let t=begin; t<end; t+=step) {
-    a[i++] = t
-  }
-  return a
-}

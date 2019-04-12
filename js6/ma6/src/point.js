@@ -1,9 +1,10 @@
 const P = module.exports = {}
 
 const V = require('./vector')
+// const T = require('./tensor')
 
-class Point extends V.Vector {
-  constructor(o) { super(o) }
+class Point extends V.Vector { // extends V.Vector
+  constructor(v) { super(v) }
   static call(f, p) {
     return f(p.v)
   }
@@ -27,6 +28,10 @@ class Point extends V.Vector {
 
   static distance(x, y) {
     return x.sub(y).norm()
+    /*
+    let v = V.sub(x.v, y.v)
+    return V.norm(v)
+    */
   }
   // be(d(x,y)>=0);
   // be(d(x,x)==0);

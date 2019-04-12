@@ -3,6 +3,8 @@ const V = module.exports = {}
 
 V.array = uu6.array
 
+V.range = uu6.range
+
 V.random = function (r, min=0, max=1) {
   let len = r.length
   for (let i=0; i<len; i++) {
@@ -126,21 +128,28 @@ V.op1 = function (a, f1) {
 
 V.neg = function (a) { return V.op1(a, V.oneg) }
 V.abs = function (a) { return V.op1(a, V.oabs) }
-/*
-V.neg = function (a) {
-  let len = a.length
-  let r = new Array(len)
-  for (let i=0; i<len; i++) {
-    r[i] = -a[i]
-  }
-  return r
-}
-*/
+
 V.dot = function (a,b) {
   let len = a.length
   let r = 0
   for (let i=0; i<len; i++) {
     r += a[i] * b[i]
+  }
+  return r
+}
+
+V.min = function (a) {
+  let len = a.length, r = a[0]
+  for (let i=1; i<len; i++) {
+    if (a[i] < r) r = a[i]
+  }
+  return r
+}
+
+V.max = function (a) {
+  let len = a.length, r = a[0]
+  for (let i=1; i<len; i++) {
+    if (a[i] > r) r = a[i]
   }
   return r
 }
@@ -179,6 +188,24 @@ V.sd = function (a) {
   return Math.sqrt(V.sum(d2)/(a.length-1))
 }
 
+const EPSILON = 0.00000001
+
+V.hist = function (a, from = Math.floor(V.min(a)), to=Math.ceil(V.max(a)), step = 1) {
+  // from = (from==null) ?  : from
+  // to   = (to==null) ?  : to
+  var n = Math.ceil((to - from + EPSILON) / step)
+  var xc = V.range(from + step / 2.0, to, step)
+  var bins = V.array(n, 0)
+  let len = a.length
+  for (let i=0; i<len; i++) {
+    var slot = Math.floor((a[i] - from) / step)
+    if (slot >= 0 && slot < n) {
+      bins[slot]++
+    }
+  }
+  return {type: 'histogram', xc: xc, bins: bins, from: from, to: to, step: step}
+}
+
 class Vector {
   constructor(o) { this.v = (Array.isArray(o))?o.slice(0):new Array(o) }
   static random(n, min=0, max=1) { return new Vector(V.random(n, min, max)) }
@@ -197,15 +224,17 @@ class Vector {
   subc(c) { let a=this; return a.clone(V.subc(a.v,c)) } 
   powc(c) { let a=this; return a.clone(V.powc(a.v,c)) }
   neg() { let a=this; return a.clone(V.neg(a.v)) }
-  dot(b) { let a=this; return V.dot(a.v,b.v) } 
+  dot(b) { let a=this; return V.dot(a.v,b.v) }
+  min() { let a=this; return V.min(a.v) }
+  max() { let a=this; return V.max(a.v) }
   sum() { let a=this; return V.sum(a.v) }
   norm() { let a=this; return V.norm(a.v)  }
   mean() { let a=this; return V.mean(a.v) }
   sd() { let a=this; return V.sd(a.v) }
   toString() { return this.v.toString() }
   clone(v) { return new Vector(v||this.v) }
+  hist(from, to, step) { let a = this; return V.hist(a.v, from, to, step) }
   get length() { return this.v.length }
-  // size() { return this.v.length }
 }
 
 V.Vector = Vector

@@ -2,6 +2,7 @@ const T = module.exports = {}
 
 const uu6 = require('../../uu6')
 const V   = require('./vector')
+const M   = require('./matrix')
 
 T.size = function (shape) {
   return V.product(shape)
@@ -56,12 +57,12 @@ T.sliceNdarray = function (v, shape, lo, hi) {
 
 T.tensor2ndarray = function (v, shape, lo, hi) {
   return T.sliceNdarray(v, shape, V.array(shape.length), shape)
-} 
+}
 
 T.ndarray2tensor = function (nd) {
   let t = null
-  if (!uu6.type(nd, 'array')) {
-    t = { v: nd, shape:[] }
+  if (!Array.isArray(nd[0])) {
+    t = { v: nd, shape: [nd.length] }
     return t
   }
   let rows = nd.length
@@ -76,21 +77,17 @@ T.ndarray2tensor = function (nd) {
   return {v: v, shape: t.shape }
 }
 
-class Tensor extends V.Vector {
+class Tensor extends V.Vector { // 
+  // ================== Tensor =========================
   constructor(v, shape) {
     super()
     uu6.be(v || shape)
     if (v && !shape) {
-      // if (typeof v === 'number') { // v = 1d size
-      //   this.v = V.zeros(v)
-      // } else { // from ndarray
-        let nd = v
-        let t = T.ndarray2tensor(nd)
-        this.v = t.v
-        this.shape = t.shape  
-      // }
+      let nd = v
+      let t = T.ndarray2tensor(nd)
+      this.v = t.v
+      this.shape = t.shape  
     } else {
-      // console.log('Tensor():shape=', shape)
       this.v = v || uu6.array(T.size(shape))
       this.shape = shape || [this.v.length]
       uu6.be(T.size(this.shape) === this.v.length)
@@ -104,9 +101,8 @@ class Tensor extends V.Vector {
     this.v[T.offset(this.shape, idx)] = o
   }
   slice(v, shape, lo, hi) {
-
-    this.lo = lo
-    this.hi = hi
+    this.lo = (!lo) ? lo : V.add(this.lo, lo)
+    this.hi = (!lo) ? hi : V.add(this.lo, hi)
   }
   reshape(shape) {
     uu6.be(uu6.type(shape, 'array') && T.size(shape) === this.v.length)
@@ -116,16 +112,93 @@ class Tensor extends V.Vector {
   ndarray() {
     return T.tensor2ndarray(this.v, this.shape)
   }
-  clone() {
-    return new Tensor(this.v.slice(0), this.shape)
+  clone(v) {
+    let vt = v || this.v
+    return new Tensor(vt.slice(0), this.shape)
   }
   toString() {
-    // return uu6.json({shape:this.shape, v:this.v})
     return uu6.json(this.ndarray())
+  }
+  dim() { return this.shape.length }
+
+  // ================== Matrix =============================
+  beMatrix() { uu6.be(this.dim() == 2) }
+  rows () { this.beMatrix(); return this.shape[0] }
+  cols () { this.beMatrix(); return this.shape[1] }
+
+  rowSum () { this.beMatrix();
+    let rows = this.rows(), cols = this.cols()
+    let s = V.array(rows), v = this.v
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        s[i] += v[i*cols+j]
+      }
+    }
+    return new Tensor(s)
+  }
+  rowMean() { return this.rowSum().divc(this.cols()) }
+  
+  colSum () { this.beMatrix();
+    let rows = this.rows(), cols = this.cols()
+    let s = V.array(cols), v = this.v
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        s[j] += v[i*cols+j]
+      }
+    }
+    return Tensor(s)
+  }
+  colMean() { return this.colSum().divc(this.rows()) }
+
+  transpose() { this.beMatrix();
+    let a = this.ndarray()
+    return new Tensor(M.transpose(a))
+  }
+
+  dot (b) { this.beMatrix();
+    let ax = this.ndarray(), bx = b.ndarray()
+    return new Tensor(M.dot(ax, bx))
+  }
+
+  diag () { this.beMatrix();
+    let a = this, av = a.v, [rows, cols] = a.shape
+    let r = new Tensor(a.v, a.shape), rv = r.v
+    let v = V.array(rows)
+    for (let i = 0; i < rows; i++) {
+      v[i] = av[i][i]
+    }
+    return v
+  }
+
+  inv () { this.beMatrix();
+    let a = this.ndarray()
+    let ia = M.inv(a)
+    return new Tensor(ia)
+  }
+
+  det() { this.beMatrix();
+    let a = this.ndarray()
+    return M.det(a)
+  }
+
+  lu() { this.beMatrix();
+    let a = this.ndarray()
+    return M.lu(a)
+  }
+
+  svd() { this.beMatrix();
+    let a = this.ndarray()
+    return M.svd(a)
+  }
+
+  solve(b) { this.beMatrix();
+    let a = this.ndarray()
+    return M.solve(a, b)
   }
 }
 
 T.Tensor = Tensor
+T.Matrix = Tensor
 
 T.tensor = function (v, shape) {
   return new Tensor(v, shape)
