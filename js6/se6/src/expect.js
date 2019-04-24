@@ -85,6 +85,7 @@ p.property = p.contain
 p.include = p.contain
 p.包含 = p.include
 p.通過 = p.pass
+p.每個 = p.each
 p.等於 = p.equal
 p.靠近 = p.near
 p.型態 = p.type

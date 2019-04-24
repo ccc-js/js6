@@ -16,15 +16,6 @@ R.dunif = (arg) => P.uniform.pdf(arg)
 R.punif = (arg) => P.uniform.cdf(arg)
 R.qunif = (arg) => P.uniform.inv(arg)
 R.runif = (arg) => R.repeats(arg, (arg)=>P.uniform.sample(arg))
-/*
-R.runif = function (arg) {
-  let n = arg.n, v = new Array(n)
-  for (let i=0; i<n; i++) {
-    v[i] = Math.random()
-  }
-  return T.tensor(v)
-}
-*/
 
 // Exponential Distribution
 R.dexp = (arg) => P.exp.pdf(arg)

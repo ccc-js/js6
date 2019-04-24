@@ -67,7 +67,7 @@ class GeneticAlgorithm {
 
 module.exports = GeneticAlgorithm
 
-},{"../../uu6":33}],4:[function(require,module,exports){
+},{"../../uu6":44}],4:[function(require,module,exports){
 class Solution { // 解答的物件模版 (類別)
   constructor(v) {
     this.v = v                // 參數 v 為解答的資料結構
@@ -136,7 +136,7 @@ module.exports = gradientDescendent
     //process.exit(1)
     // if (e2 > e - gap) break
 */
-},{"../../ma6":11,"../../uu6":33}],7:[function(require,module,exports){
+},{"../../ma6":11,"../../uu6":44}],7:[function(require,module,exports){
 function hillClimbing(s, maxGens, maxFails) { // 爬山演算法的主體函數
   console.log("start: %s", s); // 印出初始解
   var fails = 0;          // 失敗次數設為 0
@@ -197,6 +197,7 @@ module.exports = {
 },{"../ma6/src/MapVector":12}],10:[function(require,module,exports){
 module.exports = {
   ai6: require('./ai6'),
+  ml6: require('./ml6'),
   ds6: require('./ds6'),
   ma6: require('./ma6'),
   nn6: require('./nn6'),
@@ -205,10 +206,10 @@ module.exports = {
   uu6: require('./uu6'),
 }
 
-},{"./ai6":2,"./ds6":9,"./ma6":11,"./nn6":22,"./se6":29,"./sp6":32,"./uu6":33}],11:[function(require,module,exports){
+},{"./ai6":2,"./ds6":9,"./ma6":11,"./ml6":29,"./nn6":33,"./se6":40,"./sp6":43,"./uu6":44}],11:[function(require,module,exports){
 module.exports = require('./src/ma6')
 
-},{"./src/ma6":15}],12:[function(require,module,exports){
+},{"./src/ma6":20}],12:[function(require,module,exports){
 const uu6 = require('../../uu6')
 const V = require('./vector')
 
@@ -279,14 +280,276 @@ module.exports = class MapVector extends V.Vector {
   }
 }
 
-},{"../../uu6":33,"./vector":21}],13:[function(require,module,exports){
+},{"../../uu6":44,"./vector":28}],13:[function(require,module,exports){
+const P = require('./probability')
+const R = module.exports = {}
+const T = require('./tensor')
+const uu6 = require('../../uu6')
+
+R.repeats = function (arg, f) {
+  let n = arg.n, v = new Array(n)
+  for (let i=0; i<n; i++) {
+    v[i] = f(arg)
+  }
+  return T.tensor(v)
+}
+
+// Uniform Distribution
+R.dunif = (arg) => P.uniform.pdf(arg)
+R.punif = (arg) => P.uniform.cdf(arg)
+R.qunif = (arg) => P.uniform.inv(arg)
+R.runif = (arg) => R.repeats(arg, (arg)=>P.uniform.sample(arg))
+
+// Exponential Distribution
+R.dexp = (arg) => P.exp.pdf(arg)
+R.pexp = (arg) => P.exp.cdf(arg)
+R.qexp = (arg) => P.exp.inv(arg)
+R.rexp = (arg) => R.repeats(arg, (arg)=>P.exp.sample(arg))
+
+// Normal Distribution
+R.dnorm = (arg) => P.normal.pdf(arg)
+R.pnorm = (arg) => P.normal.cdf(arg)
+R.qnorm = (arg) => P.normal.inv(arg)
+R.rnorm = (arg) => R.repeats(arg, (arg)=>P.normal.sample(arg))
+
+// Beta Distribution
+R.dbeta = (arg) => P.beta.pdf(arg)
+R.pbeta = (arg) => P.beta.cdf(arg)
+R.qbeta = (arg) => P.beta.inv(arg)
+R.rbeta = (arg) => R.repeats(arg, (arg)=>P.beta.sample(arg))
+
+// F Distribution
+R.df = (arg) => P.f.pdf(arg)
+R.pf = (arg) => P.f.cdf(arg)
+R.qf = (arg) => P.f.inv(arg)
+R.rf = (arg) => R.repeats(arg, (arg)=>P.f.sample(arg))
+
+// Cauchy Distribution
+R.dcauchy = (arg) => P.cauchy.pdf(arg)
+R.pcauchy = (arg) => P.cauchy.cdf(arg)
+R.qcauchy = (arg) => P.cauchy.inv(arg)
+R.rcauchy = (arg) => R.repeats(arg, (arg)=>P.cauchy.sample(arg))
+
+// ChiSquare Distribution
+R.dchisq = (arg) => P.chiSquare.pdf(arg)
+R.pchisq = (arg) => P.chiSquare.cdf(arg)
+R.qchisq = (arg) => P.chiSquare.inv(arg)
+R.rchisq = (arg) => R.repeats(arg, (arg)=>P.chiSquare.sample(arg))
+
+// Gamma Distribution
+R.dgamma = (arg) => P.gamma.pdf(arg)
+R.pgamma = (arg) => P.gamma.cdf(arg)
+R.qgamma = (arg) => P.gamma.inv(arg)
+R.rgamma = (arg) => R.repeats(arg, (arg)=>P.gamma.sample(arg))
+
+// InvGamma Distribution
+R.dinvgamma = (arg) => P.invGamma.pdf(arg)
+R.pinvgamma = (arg) => P.invGamma.cdf(arg)
+R.qinvgamma = (arg) => P.invGamma.inv(arg)
+R.rinvgamma = (arg) => R.repeats(arg, (arg)=>P.invGamma.sample(arg))
+
+// T Distribution
+R.dt = (arg) => P.t.pdf(arg)
+R.pt = (arg) => P.t.cdf(arg)
+R.qt = (arg) => P.t.inv(arg)
+R.rt = (arg) => R.repeats(arg, (arg)=>P.t.sample(arg))
+
+// Weibull Distribution
+R.dweibull = (arg) => P.weibull.pdf(arg)
+R.pweibull = (arg) => P.weibull.cdf(arg)
+R.qweibull = (arg) => P.weibull.inv(arg)
+R.rweibull = (arg) => R.repeats(arg, (arg)=>P.weibull.sample(arg))
+
+},{"../../uu6":44,"./probability":24,"./tensor":27}],14:[function(require,module,exports){
+function argmax(list) {
+  let max = Number.NEGATIVE_INFINITY, index = null
+  for (let k in list) {
+    if (list[k] > max) { index=k; max=list[k] }
+  }
+  return {max, index}
+}
+
+module.exports = argmax
+},{}],15:[function(require,module,exports){
+const F = module.exports = {}
+const V = require('./vector')
+
+// =========== Calculus =================
+F.dx = 0.01
+
+// 微分 differential calculus
+F.diff = function (f, x, dx = F.dx) {
+  return (f(x+dx) - f(x-dx))/(2*dx)
+}
+
+// 積分 integral calculus
+F.i = F.integral = function (f, a, b, dx = F.dx) {
+  var area = 0.0
+  for (var x = a; x < b; x = x + dx) {
+    area = area + f(x) * dx
+  }
+  return area
+}
+
+// 偏微分 partial differential calculus
+// f=[f1,f2,....] , x=[x1,x2,...] , dx=[dx1,dx2,....]
+F.pdiff = F.pdifferential = function (f, x, i, dx = F.dx) {
+  let xi = x[i]
+  x[i] += F.dx
+  return (f(x+dx)-f(x-dx))/(2*dx)
+}
+
+// multidimensional integral calculus
+// f=[f1,f2,....] , a=[a1,a2,...] , b=[b1,b2,....]
+F.pintegral = function (f, a, b) {
+}
+
+// 梯度 gradient : grad(f,x)=[pdiff(f,x,0), .., pdiff(f,x,n)]
+F.grad = F.gradient = function (f, x, dx = F.dx) {
+  var gf = []
+  for (var i = 0; i < x.length; i++) {
+    gf[i] = F.pdiff(f, x, i, dx)
+  }
+  return gf
+}
+
+// 散度 divergence : div(f,x) = sum(pdiff(F[i],x,i))
+F.divergence = function (F, x) {
+  var f = []
+  var d = []
+  for (var i = 0; i < x.length; i++) {
+    f[i] = (xt) => F(xt)[i]
+    d[i] = F.pdiff(f[i], x, i)
+  }
+  return V.sum(d)
+}
+
+// 旋度 curl : curl(F) = div(F)xF
+F.curl = F.curlance = function (F, x) {
+}
+
+// 線積分： int F●dr = int F(r(t))●r'(t) dt
+F.vintegral = function (F, r, a, b, dt) {
+  dt = dt || F.dx
+  var sum = 0
+  for (var t = a; t < b; t += dt) {
+    sum += V.dot(F(r(t)) * F.diff(r, t, dt))
+  }
+  return sum
+}
+
+// 定理：int j6●dr  = int(sum(Qxi dxi))
+
+// 向量保守場： F=grad(f) ==> int j6●dr = f(B)-f(F)
+
+// 定理： 向量保守場 F, pdiff(Qxi,xj) == pdiff(Qxj,xi)  for any i, j
+// ex: F=[x^2y, x^3] 中， grad(F)=[x^2, 3x^2] 兩者不相等，所以不是保守場
+
+// 格林定理：保守場中 《線積分=微分後的區域積分》
+// int P dx + Q dy = int int pdiff(Q,x) - pdiff(P, y) dx dy
+
+// 散度定理：通量 = 散度的區域積分
+// 2D : int j6●n ds = int int div F dx dy
+// 3D : int int j6●n dS = int int int div F dV
+
+// 史托克定理：  F 在曲面 S 上的旋度總和 = F 沿著邊界曲線 C 的線積分
+// int int_D curl(F)●n dS = int_C j6●dr
+
+},{"./vector":28}],16:[function(require,module,exports){
+const C = module.exports = {}
+
+C.toComplex = function (o) {
+  if (typeof o === 'number')
+    return new Complex(o, 0);
+  else if (o instanceof Complex)
+    return o;
+  throw Error('toComplex fail');
+}
+
+C.polarToComplex = function (r,theta) {
+  let cr = r*Math.cos(theta), ci = r*Math.sin(theta)
+  return new Complex(cr, ci)
+}
+
+C.parseComplex = function(s) {
+  let m = s.match(/^([^\+]*)(\+(.*))?$/)
+  let r = parseFloat(m[1])
+  let i = typeof m[3]==='undefined' ? 1 : parseFloat(m[3])
+  return new Complex(r, i)
+}
+
+class Complex {
+  constructor(r,i) {
+    this.r = r; this.i = i
+  }
+
+  conj() { let {r,i} = this; return new Complex(r, -i) }
+  neg() { let {r,i} = this; return new Complex(-r, -i) }
+  add(b) { let {r,i} = this; return new Complex(r+b.r, i+b.i) }
+  sub(b) { let {r,i} = this; return new Complex(r-b.r, i-b.i) }
+  mul(b) { let {r,i} = this; return new Complex(r*b.r-i*b.i, r*b.i+i*b.r) }
+	div(b) { return this.mul(b.power(-1)) }
+  clone() {  let {r,i} = this; return new Complex(r, i) }
+  toString() {
+    let {r,i} = this
+    let op = (i < 0)?'':'+'
+    return r + op + i + 'i'
+  }
+  
+  toPolar() {
+    let {r, i}=this
+    let d=Math.sqrt(r*r+i*i)
+    let theta = Math.acos(r/d)
+    return {r:d, theta:theta}
+  }
+  
+  power(k) {
+    let p = this.toPolar()
+    return C.polarToComplex(Math.pow(p.r, k), k*p.theta)
+  }
+  
+  sqrt() {
+    return this.power(1/2)
+  }
+
+  toFixed(digits=4) {
+    let c = this.clone()
+    c.r = parseFloat(c.r.toFixed(digits))
+    c.i = parseFloat(c.i.toFixed(digits))
+    return C.parseComplex(c.toString())
+  }
+}
+
+Object.assign(C, { Complex })
+
+},{}],17:[function(require,module,exports){
 module.exports = {
   Pi: Math.PI,
   E: Math.E,
   // Epsilon: 0.000001
   Epsilon: 2.220446049250313e-16
 }
-},{}],14:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
+const M = module.exports = {}
+const V = require('./vector')
+
+M.logp = function(n) {
+  let a = V.steps(1, n, 1)
+  let la = V.log(a)
+	return V.sum(la)
+}
+
+// 傳回多項分布的 log 值！ log( (n!)/(x1!x2!...xk!) p1^x1 p2^x2 ... pk^xk )
+// = [log(n)+...+log(1)]-[log(x1)...]+....+x1*log(p1)+...+xk*log(pk)
+M.xplog = function(x, p) {
+  var n = V.sum(x)
+  var r = M.logp(n)
+  let len = x.length
+  for (let i=0; i<len; i++) r -= M.logp(x[i]);
+  return r + V.dot(x, V.log(p))
+}
+
+},{"./vector":28}],19:[function(require,module,exports){
 const F = module.exports = {}
 
 F.grad = function (f, v, h=0.01) {
@@ -367,27 +630,30 @@ F.lcm = function (a, b) {
   return (a * b) / F.gcd(a, b)
 }
 
-},{}],15:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 const uu6 = require('../../uu6')
 
 const ma6 = module.exports = {
-  P: require('./prob'),
+  R: require('./R'),
+  P: require('./probability'),
   V: require('./vector'),
   T: require('./tensor'),
   M: require('./matrix'),
   S: require('./stat'),
   F: require('./function'),
   C: require('./constant'),
-  // PointFunction: require('./PointFunction'),
+  argmax: require('./argmax'),
 }
 
-// Object.assign(ma6.M, require('./M/ext'))
-
-uu6.mixin(ma6, ma6.P, ma6.V, ma6.T, ma6.M, ma6.S, ma6.F, ma6.C, 
-  require('./point')
+uu6.mixin(ma6, ma6.R, ma6.V, ma6.T, ma6.M, ma6.S, ma6.F, ma6.C, 
+  require('./point'),
+  require('./complex'),
+  require('./calculus'),
+  require('./space'),
+  require('./entropy'),
 )
 
-},{"../../uu6":33,"./constant":13,"./function":14,"./matrix":16,"./point":17,"./prob":18,"./stat":19,"./tensor":20,"./vector":21}],16:[function(require,module,exports){
+},{"../../uu6":44,"./R":13,"./argmax":14,"./calculus":15,"./complex":16,"./constant":17,"./entropy":18,"./function":19,"./matrix":21,"./point":22,"./probability":24,"./space":25,"./stat":26,"./tensor":27,"./vector":28}],21:[function(require,module,exports){
 const uu6 = require("../../uu6")
 const V = require("./vector")
 const T = require("./tensor")
@@ -596,10 +862,36 @@ M.luSolve = function (LUP, b) {
 }
 
 M.solve = function (A,b) { return M.luSolve(M.lu(A), b) }
-
+/*
 class Matrix extends T.Tensor {
   constructor(v, shape) {
     super(v, shape)
+    uu6.be(shape.length == 2)
+  }
+
+  rows () { return this.shape[0] }
+  cols () { return this.shape[1] }
+
+  rowSum () {
+    let rows = this.rows(), cols = this.cols()
+    let s = V.array(rows), v = this.v
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        s[i] += v[i*cols+j]
+      }
+    }
+    return new T.Tensor(s)
+  }
+  
+  colSum () {
+    let rows = this.rows(), cols = this.cols()
+    let s = V.array(cols), v = this.v
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        s[j] += v[i*cols+j]
+      }
+    }
+    return T.Tensor(s)
   }
 
   transpose() {
@@ -648,13 +940,13 @@ class Matrix extends T.Tensor {
     return M.solve(a, b)
   }
 }
-
 Object.assign(M, {Matrix })
+*/
 
 // ============================ SVD =======================================================
 const Epsilon = 2.220446049250313e-16
 
-function svd(A) {
+M.svd = function svd(A) {
   var temp;
 //Compute the thin SVD from G. H. Golub and C. Reinsch, Numer. Math. 14, 403-420 (1970)
 var prec= Epsilon; //Math.pow(2,-52) // assumes double prec
@@ -945,13 +1237,14 @@ return {U:u,S:q,V:v}
 };
 
 
-},{"../../uu6":33,"./tensor":20,"./vector":21}],17:[function(require,module,exports){
+},{"../../uu6":44,"./tensor":27,"./vector":28}],22:[function(require,module,exports){
 const P = module.exports = {}
 
 const V = require('./vector')
+// const T = require('./tensor')
 
-class Point extends V.Vector {
-  constructor(o) { super(o) }
+class Point extends V.Vector { // extends V.Vector
+  constructor(v) { super(v) }
   static call(f, p) {
     return f(p.v)
   }
@@ -975,6 +1268,10 @@ class Point extends V.Vector {
 
   static distance(x, y) {
     return x.sub(y).norm()
+    /*
+    let v = V.sub(x.v, y.v)
+    return V.norm(v)
+    */
   }
   // be(d(x,y)>=0);
   // be(d(x,x)==0);
@@ -988,155 +1285,915 @@ class Point extends V.Vector {
 
 P.Point = Point
 
-},{"./vector":21}],18:[function(require,module,exports){
-const P = module.exports = {}
-const uu6 = require('../../uu6')
+},{"./vector":28}],23:[function(require,module,exports){
+const F = module.exports = {}
 
-// var J = require('jStat').jStat
-// var ncall = P.ncall
+// Log-gamma function
+F.gammaln = function gammaln(x) {
+  var j = 0;
+  var cof = [
+    76.18009172947146, -86.50532032941677, 24.01409824083091,
+    -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5
+  ];
+  var ser = 1.000000000190015;
+  var xx, y, tmp;
+  tmp = (y = xx = x) + 5.5;
+  tmp -= (xx + 0.5) * Math.log(tmp);
+  for (; j < 6; j++)
+    ser += cof[j] / ++y;
+  return Math.log(2.5066282746310005 * ser / xx) - tmp;
+};
 
-// ========== 離散分佈的 r, q 函數 ============
-P.qcdf = function (cdf, q, N, p) {
-  for (var i = 0; i <= N; i++) {
-    if (cdf(i, N, p) > q) return i
+
+// gamma of x
+F.gammafn = function gammafn(x) {
+  var p = [-1.716185138865495, 24.76565080557592, -379.80425647094563,
+           629.3311553128184, 866.9662027904133, -31451.272968848367,
+           -36144.413418691176, 66456.14382024054
+  ];
+  var q = [-30.8402300119739, 315.35062697960416, -1015.1563674902192,
+           -3107.771671572311, 22538.118420980151, 4755.8462775278811,
+           -134659.9598649693, -115132.2596755535];
+  var fact = false;
+  var n = 0;
+  var xden = 0;
+  var xnum = 0;
+  var y = x;
+  var i, z, yi, res, sum, ysq;
+  if (y <= 0) {
+    res = y % 1 + 3.6e-16;
+    if (res) {
+      fact = (!(y & 1) ? 1 : -1) * Math.PI / Math.sin(Math.PI * res);
+      y = 1 - y;
+    } else {
+      return Infinity;
+    }
   }
-  return N
-}
-
-P.rcdf = function (cdf, n, N, p) {
-  var a = []
-  for (var i = 0; i < n; i++) {
-    var q = Math.random()
-    a.push(cdf(q, N, p))
+  yi = y;
+  if (y < 1) {
+    z = y++;
+  } else {
+    z = (y -= n = (y | 0) - 1) - 1;
   }
-  return a
-}
+  for (var i = 0; i < 8; ++i) {
+    xnum = (xnum + p[i]) * z;
+    xden = xden * z + q[i];
+  }
+  res = xnum / xden + 1;
+  if (yi < y) {
+    res /= yi;
+  } else if (yi > y) {
+    for (var i = 0; i < n; ++i) {
+      res *= y;
+      y++;
+    }
+  }
+  if (fact) {
+    res = fact / res;
+  }
+  return res;
+};
 
-P.EPSILON = 0.0000000001
-// 均等分布 : Uniform Distribution(a,b)    1/(b-a)
-P.dunif = function (x, a = 0, b = 1) { return (x >= a && x <= b) ? 1 / (b - a) : 0 }
-P.punif = function (x, a = 0, b = 1) { return (x >= b) ? 1 : (x <= a) ? 0 : (x - a) / (b - a) }
-P.qunif = function (p, a = 0, b = 1) { return (p >= 1) ? b : (p <= 0) ? a : a + (p * (b - a)) }
-P.runif1 = function (a = 0, b = 1) { return P.random(a, b) }
-P.runif = function (n, a = 0, b = 1) { return ncall(n, P, 'random', a, b) }
-/*
-P.dunif=(x,a=0,b=1)=>J.uniform.pdf(x,a,b);
-P.punif=(q,a=0,b=1)=>J.uniform.cdf(q,a,b);
-P.qunif=(p,a=0,b=1)=>J.uniform.inv(p,a,b);
-P.runif=(n,a=0,b=1)=>ncall(n, J.uniform, 'sample', a, b);
-*/
-// 常態分布 : jStat.normal( mean, sd )
-P.dnorm = (x, mean = 0, sd = 1) => J.normal.pdf(x, mean, sd)
-P.pnorm = (q, mean = 0, sd = 1) => J.normal.cdf(q, mean, sd)
-P.qnorm = (p, mean = 0, sd = 1) => J.normal.inv(p, mean, sd)
-P.rnorm1 = function () { // generate random guassian distribution number. (mean : 0, standard deviation : 1)
-  var v1, v2, s
+
+// lower incomplete gamma function, which is usually typeset with a
+// lower-case greek gamma as the function symbol
+F.gammap = function gammap(a, x) {
+  return F.lowRegGamma(a, x) * F.gammafn(a);
+};
+
+
+// The lower regularized incomplete gamma function, usually written P(a,x)
+F.lowRegGamma = function lowRegGamma(a, x) {
+  var aln = F.gammaln(a);
+  var ap = a;
+  var sum = 1 / a;
+  var del = sum;
+  var b = x + 1 - a;
+  var c = 1 / 1.0e-30;
+  var d = 1 / b;
+  var h = d;
+  var i = 1;
+  // calculate maximum number of itterations required for a
+  var ITMAX = -~(Math.log((a >= 1) ? a : 1 / a) * 8.5 + a * 0.4 + 17);
+  var an, endval;
+
+  if (x < 0 || a <= 0) {
+    return NaN;
+  } else if (x < a + 1) {
+    for (; i <= ITMAX; i++) {
+      sum += del *= x / ++ap;
+    }
+    return (sum * Math.exp(-x + a * Math.log(x) - (aln)));
+  }
+
+  for (; i <= ITMAX; i++) {
+    an = -i * (i - a);
+    b += 2;
+    d = an * d + b;
+    c = b + an / c;
+    d = 1 / d;
+    h *= d * c;
+  }
+
+  return (1 - h * Math.exp(-x + a * Math.log(x) - (aln)));
+};
+
+// natural log factorial of n
+F.factorialln = function factorialln(n) {
+  return n < 0 ? NaN : F.gammaln(n + 1);
+};
+
+// factorial of n
+F.factorial = function factorial(n) {
+  return n < 0 ? NaN : F.gammafn(n + 1);
+};
+
+// combinations of n, m
+F.combination = function combination(n, m) {
+  // make sure n or m don't exceed the upper limit of usable values
+  return (n > 170 || m > 170)
+      ? Math.exp(F.combinationln(n, m))
+      : (F.factorial(n) / F.factorial(m)) / F.factorial(n - m);
+};
+
+
+F.combinationln = function combinationln(n, m){
+  return F.factorialln(n) - F.factorialln(m) - F.factorialln(n - m);
+};
+
+
+// permutations of n, m
+F.permutation = function permutation(n, m) {
+  return F.factorial(n) / F.factorial(n - m);
+};
+
+
+// beta function
+F.betafn = function betafn(x, y) {
+  // ensure arguments are positive
+  if (x <= 0 || y <= 0)
+    return undefined;
+  // make sure x + y doesn't exceed the upper limit of usable values
+  return (x + y > 170)
+      ? Math.exp(F.betaln(x, y))
+      : F.gammafn(x) * F.gammafn(y) / F.gammafn(x + y);
+};
+
+
+// natural logarithm of beta function
+F.betaln = function betaln(x, y) {
+  return F.gammaln(x) + F.gammaln(y) - F.gammaln(x + y);
+};
+
+
+// Evaluates the continued fraction for incomplete beta function by modified
+// Lentz's method.
+F.betacf = function betacf(x, a, b) {
+  var fpmin = 1e-30;
+  var m = 1;
+  var qab = a + b;
+  var qap = a + 1;
+  var qam = a - 1;
+  var c = 1;
+  var d = 1 - qab * x / qap;
+  var m2, aa, del, h;
+
+  // These q's will be used in factors that occur in the coefficients
+  if (Math.abs(d) < fpmin)
+    d = fpmin;
+  d = 1 / d;
+  h = d;
+
+  for (; m <= 100; m++) {
+    m2 = 2 * m;
+    aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+    // One step (the even one) of the recurrence
+    d = 1 + aa * d;
+    if (Math.abs(d) < fpmin)
+      d = fpmin;
+    c = 1 + aa / c;
+    if (Math.abs(c) < fpmin)
+      c = fpmin;
+    d = 1 / d;
+    h *= d * c;
+    aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+    // Next step of the recurrence (the odd one)
+    d = 1 + aa * d;
+    if (Math.abs(d) < fpmin)
+      d = fpmin;
+    c = 1 + aa / c;
+    if (Math.abs(c) < fpmin)
+      c = fpmin;
+    d = 1 / d;
+    del = d * c;
+    h *= del;
+    if (Math.abs(del - 1.0) < 3e-7)
+      break;
+  }
+
+  return h;
+};
+
+
+// Returns the inverse of the lower regularized inomplete gamma function
+F.gammapinv = function gammapinv(p, a) {
+  var j = 0;
+  var a1 = a - 1;
+  var EPS = 1e-8;
+  var gln = F.gammaln(a);
+  var x, err, t, u, pp, lna1, afac;
+
+  if (p >= 1)
+    return Math.max(100, a + 100 * Math.sqrt(a));
+  if (p <= 0)
+    return 0;
+  if (a > 1) {
+    lna1 = Math.log(a1);
+    afac = Math.exp(a1 * (lna1 - 1) - gln);
+    pp = (p < 0.5) ? p : 1 - p;
+    t = Math.sqrt(-2 * Math.log(pp));
+    x = (2.30753 + t * 0.27061) / (1 + t * (0.99229 + t * 0.04481)) - t;
+    if (p < 0.5)
+      x = -x;
+    x = Math.max(1e-3,
+                 a * Math.pow(1 - 1 / (9 * a) - x / (3 * Math.sqrt(a)), 3));
+  } else {
+    t = 1 - a * (0.253 + a * 0.12);
+    if (p < t)
+      x = Math.pow(p / t, 1 / a);
+    else
+      x = 1 - Math.log(1 - (p - t) / (1 - t));
+  }
+
+  for(; j < 12; j++) {
+    if (x <= 0)
+      return 0;
+    err = F.lowRegGamma(a, x) - p;
+    if (a > 1)
+      t = afac * Math.exp(-(x - a1) + a1 * (Math.log(x) - lna1));
+    else
+      t = Math.exp(-x + a1 * Math.log(x) - gln);
+    u = err / t;
+    x -= (t = u / (1 - 0.5 * Math.min(1, u * ((a - 1) / x - 1))));
+    if (x <= 0)
+      x = 0.5 * (x + t);
+    if (Math.abs(t) < EPS * x)
+      break;
+  }
+
+  return x;
+};
+
+
+// Returns the error function erf(x)
+F.erf = function erf(x) {
+  var cof = [-1.3026537197817094, 6.4196979235649026e-1, 1.9476473204185836e-2,
+             -9.561514786808631e-3, -9.46595344482036e-4, 3.66839497852761e-4,
+             4.2523324806907e-5, -2.0278578112534e-5, -1.624290004647e-6,
+             1.303655835580e-6, 1.5626441722e-8, -8.5238095915e-8,
+             6.529054439e-9, 5.059343495e-9, -9.91364156e-10,
+             -2.27365122e-10, 9.6467911e-11, 2.394038e-12,
+             -6.886027e-12, 8.94487e-13, 3.13092e-13,
+             -1.12708e-13, 3.81e-16, 7.106e-15,
+             -1.523e-15, -9.4e-17, 1.21e-16,
+             -2.8e-17];
+  var j = cof.length - 1;
+  var isneg = false;
+  var d = 0;
+  var dd = 0;
+  var t, ty, tmp, res;
+
+  if (x < 0) {
+    x = -x;
+    isneg = true;
+  }
+
+  t = 2 / (2 + x);
+  ty = 4 * t - 2;
+
+  for(; j > 0; j--) {
+    tmp = d;
+    d = ty * d - dd + cof[j];
+    dd = tmp;
+  }
+
+  res = t * Math.exp(-x * x + 0.5 * (cof[0] + ty * d) - dd);
+  return isneg ? res - 1 : 1 - res;
+};
+
+
+// Returns the complmentary error function erfc(x)
+F.erfc = function erfc(x) {
+  return 1 - F.erf(x);
+};
+
+
+// Returns the inverse of the complementary error function
+F.erfcinv = function erfcinv(p) {
+  var j = 0;
+  var x, err, t, pp;
+  if (p >= 2)
+    return -100;
+  if (p <= 0)
+    return 100;
+  pp = (p < 1) ? p : 2 - p;
+  t = Math.sqrt(-2 * Math.log(pp / 2));
+  x = -0.70711 * ((2.30753 + t * 0.27061) /
+                  (1 + t * (0.99229 + t * 0.04481)) - t);
+  for (; j < 2; j++) {
+    err = F.erfc(x) - pp;
+    x += err / (1.12837916709551257 * Math.exp(-x * x) - x * err);
+  }
+  return (p < 1) ? x : -x;
+};
+
+
+// Returns the inverse of the incomplete beta function
+F.ibetainv = function ibetainv(p, a, b) {
+  var EPS = 1e-8;
+  var a1 = a - 1;
+  var b1 = b - 1;
+  var j = 0;
+  var lna, lnb, pp, t, u, err, x, al, h, w, afac;
+  if (p <= 0)
+    return 0;
+  if (p >= 1)
+    return 1;
+  if (a >= 1 && b >= 1) {
+    pp = (p < 0.5) ? p : 1 - p;
+    t = Math.sqrt(-2 * Math.log(pp));
+    x = (2.30753 + t * 0.27061) / (1 + t* (0.99229 + t * 0.04481)) - t;
+    if (p < 0.5)
+      x = -x;
+    al = (x * x - 3) / 6;
+    h = 2 / (1 / (2 * a - 1)  + 1 / (2 * b - 1));
+    w = (x * Math.sqrt(al + h) / h) - (1 / (2 * b - 1) - 1 / (2 * a - 1)) *
+        (al + 5 / 6 - 2 / (3 * h));
+    x = a / (a + b * Math.exp(2 * w));
+  } else {
+    lna = Math.log(a / (a + b));
+    lnb = Math.log(b / (a + b));
+    t = Math.exp(a * lna) / a;
+    u = Math.exp(b * lnb) / b;
+    w = t + u;
+    if (p < t / w)
+      x = Math.pow(a * w * p, 1 / a);
+    else
+      x = 1 - Math.pow(b * w * (1 - p), 1 / b);
+  }
+  afac = -F.gammaln(a) - F.gammaln(b) + F.gammaln(a + b);
+  for(; j < 10; j++) {
+    if (x === 0 || x === 1)
+      return x;
+    err = F.ibeta(x, a, b) - p;
+    t = Math.exp(a1 * Math.log(x) + b1 * Math.log(1 - x) + afac);
+    u = err / t;
+    x -= (t = u / (1 - 0.5 * Math.min(1, u * (a1 / x - b1 / (1 - x)))));
+    if (x <= 0)
+      x = 0.5 * (x + t);
+    if (x >= 1)
+      x = 0.5 * (x + t + 1);
+    if (Math.abs(t) < EPS * x && j > 0)
+      break;
+  }
+  return x;
+};
+
+
+// Returns the incomplete beta function I_x(a,b)
+F.ibeta = function ibeta(x, a, b) {
+  // Factors in front of the continued fraction.
+  var bt = (x === 0 || x === 1) ?  0 :
+    Math.exp(F.gammaln(a + b) - F.gammaln(a) -
+             F.gammaln(b) + a * Math.log(x) + b *
+             Math.log(1 - x));
+  if (x < 0 || x > 1)
+    return false;
+  if (x < (a + 1) / (a + b + 2))
+    // Use continued fraction directly.
+    return bt * F.betacf(x, a, b) / a;
+  // else use continued fraction after making the symmetry transformation.
+  return 1 - bt * F.betacf(1 - x, b, a) / b;
+};
+
+
+// Returns a normal deviate (mu=0, sigma=1).
+// If n and m are specified it returns a object of normal deviates.
+F.randn = function randn(n, m) {
+  var u, v, x, y, q, mat;
+  if (!m)
+    m = n;
+  if (n)
+    return F.create(n, m, function() { return F.randn(); });
   do {
-    v1 = (2 * Math.random()) - 1   // -1.0 ~ 1.0 ??? ?
-    v2 = (2 * Math.random()) - 1   // -1.0 ~ 1.0 ??? ?
-    s = (v1 * v1) + (v2 * v2)
-  } while (s >= 1 || s === 0)
+    u = Math.random();
+    v = 1.7156 * (Math.random() - 0.5);
+    x = u - 0.449871;
+    y = Math.abs(v) + 0.386595;
+    q = x * x + y * (0.19600 * y - 0.25472 * x);
+  } while (q > 0.27597 && (q > 0.27846 || v * v > -4 * Math.log(u) * u * u));
+  return v / u;
+};
 
-  s = Math.sqrt((-2 * Math.log(s)) / s)
-  return v1 * s
+
+// Returns a gamma deviate by the method of Marsaglia and Tsang.
+F.randg = function randg(shape, n, m) {
+  var oalph = shape;
+  var a1, a2, u, v, x, mat;
+  if (!m)
+    m = n;
+  if (!shape)
+    shape = 1;
+  if (n) {
+    mat = F.zeros(n,m);
+    mat.alter(function() { return F.randg(shape); });
+    return mat;
+  }
+  if (shape < 1)
+    shape += 1;
+  a1 = shape - 1 / 3;
+  a2 = 1 / Math.sqrt(9 * a1);
+  do {
+    do {
+      x = F.randn();
+      v = 1 + a2 * x;
+    } while(v <= 0);
+    v = v * v * v;
+    u = Math.random();
+  } while(u > 1 - 0.331 * Math.pow(x, 4) &&
+          Math.log(u) > 0.5 * x*x + a1 * (1 - v + Math.log(v)));
+  // alpha > 1
+  if (shape == oalph)
+    return a1 * v;
+  // alpha < 1
+  do {
+    u = Math.random();
+  } while(u === 0);
+  return Math.pow(u, 1 / oalph) * a1 * v;
+};
+},{}],24:[function(require,module,exports){
+const uu6 = require('../../uu6')
+const V = require('./vector')
+const P = module.exports = require('./probFunction')
+let {exp, log, pow, sqrt, PI, tan, atan, min } = Math
+
+class Distribution {
+  pdf(arg) {}
+  cdf(arg) {}
+  inv(arg) { let {p} = arg; uu6.be(p>=0 && p<=1) }
+  mean(arg) {}
+  medium(arg) { return this.mean(arg) }
+  mode(arg) { return this.median(arg) } // 密度最大的點 -- https://en.wikipedia.org/wiki/Mode_(statistics)
+  sample(arg) {
+    let p = uu6.random(0, 1)
+    return this.inv(Object.assign({}, arg, {p}))
+  }
+  variance(arg) {}
+  sd(arg) { return sqrt(this.variance(arg)) }
 }
 
-P.rnorm = (n, mean = 0, sd = 1) => ncall(n, J.normal, 'sample', mean, sd)
-// F 分布 : jStat.centralF( df1, df2 )
-P.df = (x, df1, df2) => J.centralF.pdf(x, df1, df2)
-P.pf = (q, df1, df2) => J.centralF.cdf(q, df1, df2)
-P.qf = (p, df1, df2) => J.centralF.inv(p, df1, df2)
-P.rf = (n, df1, df2) => ncall(n, J.centralF, 'sample', df1, df2)
-// T 分布 : jStat.studentt( dof )
-P.dt = (x, dof) => J.studentt.pdf(x, dof)
-P.pt = (q, dof) => J.studentt.cdf(q, dof)
-P.qt = (p, dof) => J.studentt.inv(p, dof)
-P.rt = (n, dof) => ncall(n, J.studentt, 'sample', dof)
-// Beta 分布 : jStat.beta( alpha, beta )
-P.dbeta = (x, alpha, beta) => J.beta.pdf(x, alpha, beta)
-P.pbeta = (q, alpha, beta) => J.beta.cdf(q, alpha, beta)
-P.qbeta = (p, alpha, beta) => J.beta.inv(p, alpha, beta)
-P.rbeta = (n, alpha, beta) => ncalls(n, J.beta, 'sample', alpha, beta)
-// 柯西分布 : jStat.cauchy( local, scale )
-P.dcauchy = (x, local, scale) => J.cauchy.pdf(x, local, scale)
-P.pcauchy = (q, local, scale) => J.cauchy.cdf(q, local, scale)
-P.qcauchy = (p, local, scale) => J.cauchy.inv(q, local, scale)
-P.rcauchy = (n, local, scale) => ncall(n, J.cauchy, 'sample', local, scale)
-// chisquare 分布 : jStat.chisquare( dof )
-P.dchisq = (x, dof) => J.chisquare.pdf(x, dof)
-P.pchisq = (q, dof) => J.chisquare.cdf(q, dof)
-P.qchisq = (p, dof) => J.chisquare.inv(p, dof)
-P.rchisq = (n, dof) => ncall(n, J.chisquare, 'sample', dof)
-// 指數分布 : Exponential Distribution(b)  1/b e^{-x/b}
-P.dexp = function (x, rate) { return rate * Math.exp(-rate * x) }
-P.pexp = function (x, rate) { return x < 0 ? 0 : 1 - Math.exp(-rate * x) }
-P.qexp = function (p, rate) { return -Math.log(1 - p) / rate }
-P.rexp1 = function (rate) { return P.qexp(P.random(0, 1), rate) }
-P.rexp = function (n, rate) { return ncall(n, P, 'rexp1', rate) }
-/*
-P.dexp=(x,rate)=>J.exponential.pdf(x,rate);
-P.pexp=(q,rate)=>J.exponential.cdf(q,rate);
-P.qexp=(p,rate)=>J.exponential.inv(p,rate);
-P.rexp=(n,rate)=>ncall(n, J.exponential, 'sample', rate);
-*/
-// Gamma 分布 : jStat.gamma( shape, scale )
-P.dgamma = (x, shape, scale) => J.gamma.pdf(x, shape, scale)
-P.pgamma = (q, shape, scale) => J.gamma.cdf(q, shape, scale)
-P.qgamma = (p, shape, scale) => J.gamma.inv(p, shape, scale)
-P.rgamma = (n, shape, scale) => ncall(n, J.gamma, 'sample', shape, scale)
-// 反 Gamma 分布 : jStat.invgamma( shape, scale )
-P.rinvgamma = (n, shape, scale) => ncall(n, J.invgamma, 'sample', shape, scale)
-P.dinvgamma = (x, shape, scale) => J.invgamma.pdf(x, shape, scale)
-P.pinvgamma = (q, shape, scale) => J.invgamma.cdf(q, shape, scale)
-P.qinvgamma = (p, shape, scale) => J.invgamma.inv(p, shape, scale)
-// 對數常態分布 : jStat.lognormal( mu, sigma )
-P.dlognormal = (n, mu, sigma) => J.lognormal.pdf(x, sigma)
-P.plognormal = (n, mu, sigma) => J.lognormal.cdf(q, sigma)
-P.qlognormal = (n, mu, sigma) => J.lognormal.inv(p, sigma)
-P.rlognormal = (n, mu, sigma) => ncall(n, J.dlognormal, 'sample', mu, sigma)
-// Pareto 分布 : jStat.pareto( scale, shape )
-P.dpareto = (n, scale, shape) => J.pareto.pdf(x, scale, shape)
-P.ppareto = (n, scale, shape) => J.pareto.cdf(q, scale, shape)
-P.qpareto = (n, scale, shape) => J.pareto.inv(p, scale, shape)
-P.rpareto = (n, scale, shape) => ncall(n, J.pareto, 'sample', scale, shape)
-// Weibull 分布 jStat.weibull(scale, shape)
-P.dweibull = (n, scale, shape) => J.weibull.pdf(x, scale, shape)
-P.pweibull = (n, scale, shape) => J.weibull.cdf(q, scale, shape)
-P.qweibull = (n, scale, shape) => J.weibull.inv(p, scale, shape)
-P.rweibull = (n, scale, shape) => ncall(n, J.weibull, 'sample', scale, shape)
-// 三角分布 : jStat.triangular(a, b, c)
-P.dtriangular = (n, a, b, c) => J.triangular.pdf(x, a, b, c)
-P.ptriangular = (n, a, b, c) => J.triangular.cdf(q, a, b, c)
-P.qtriangular = (n, a, b, c) => J.triangular.inv(p, a, b, c)
-P.rtriangular = (n, a, b, c) => ncall(n, J.triangular, 'sample', a, b, c)
-// 類似 Beta 分布，但計算更簡單 : jStat.kumaraswamy(alpha, beta)
-P.dkumaraswamy = (n, alpha, beta) => J.kumaraswamy.pdf(x, alpha, beta)
-P.pkumaraswamy = (n, alpha, beta) => J.kumaraswamy.cdf(q, alpha, beta)
-P.qkumaraswamy = (n, alpha, beta) => J.kumaraswamy.inv(p, alpha, beta)
-P.rkumaraswamy = (n, alpha, beta) => ncalls(n, J.kumaraswamy, 'sample', alpha, beta)
+class Uniform extends Distribution {
+  pdf(arg) {
+    let {x, a, b} = arg
+    return (x < a || x > b) ? 0 : 1 / (b - a)
+  }
+  cdf(arg) {
+    let {x, a, b} = arg
+    if (x < a) return 0
+    else if (x < b) return (x - a) / (b - a)
+    return 1
+  }
+  inv(arg) {
+    let {p, a, b} = arg
+    return a + (p * (b - a))
+  }
+  mean(arg) {
+    let {a, b} = arg
+    return 0.5 * (a + b)
+  }
+  mode(arg) { throw new Error('Uniform has no mode() !') }
+  variance(arg) {
+    let {a, b} = arg
+    return pow(b - a, 2) / 12;
+  }
+}
 
-// ========== 離散分佈的 r, q 函數 ============
-// 二項分布 : jStat.binomial(n, p0)
-P.dbinom = (x, size, prob) => J.binomial.pdf(x, size, prob)
-P.pbinom = (q, size, prob) => J.binomial.cdf(q, size, prob)
-P.qbinom = (p, size, prob) => P.qcdf(P.pbinom, p, size, prob)
-P.rbinom = (n, size, prob) => P.rcdf(P.qbinom, n, size, prob)
-// 負二項分布 : jStat.negbin(r, p)
-P.dnbinom = (x, size, prob) => J.negbin.pdf(x, size, prob)
-P.pnbinom = (q, size, prob) => J.negbin.cdf(q, size, prob)
-P.qnbinom = (p, size, prob) => P.qcdf(P.pnbinom, p, size, prob)
-P.rnbinom = (n, size, prob) => P.rcdf(P.qnbinom, n, size, prob)
-// 超幾何分布 : jStat.hypgeom(N, m, n)
-P.dhyper = (x, m, n, k) => J.hypgeom.pdf(k, m, n, k)
-P.phyper = (q, m, n, k) => J.hypgeom.cdf(q, m, n, k)
-P.qhyper = (p, m, n, k) => P.qcdf(P.phyper, p, m, n, k)
-P.rhyper = (nn, m, n, k) => P.rcdf(P.qhyper, nn, m, n, k)
-// 布瓦松分布 : jStat.poisson(l)
-P.dpois = (x, lambda) => J.poisson.pdf(x, lambda)
-P.ppois = (q, lambda) => J.poisson.cdf(q, lambda)
-P.qpois = (p, lambda) => P.qcdf(P.ppois, p, lambda)
-P.rpois = (n, lambda) => P.rcdf(P.qpois, n, lambda)
-},{"../../uu6":33}],19:[function(require,module,exports){
+class Exp extends Distribution {
+  pdf(arg) {
+    let {x, rate} = arg
+    return (x<0) ? 0: rate*exp(-rate*x)
+  }
+  cdf(arg) {
+    let {x, rate} = arg
+    return (x<0) ? 0: 1-exp(-rate*x)
+  }
+  inv(arg) {
+    let {p, rate} = arg
+    return -log(1-p)/rate
+  }
+  mean(arg) {
+    let {rate} = arg
+    return 1/rate
+  }
+  medium(arg) {
+    let {rate} = arg
+    return (1 / rate) * log(2)
+  }
+  mode(arg) { return 0 }
+  variance(arg) {
+    let {rate} = arg
+    return 1/(rate*rate)
+  }
+}
+
+class Normal extends Distribution {
+  pdf(arg) {
+    let {x, mu, sd} = arg
+    let d = x-mu
+    return 1/(sqrt(2*PI)*sd) * exp(-(d*d)/(2*sd*sd))
+  }
+  cdf(arg) {
+    let {x, mu, sd} = arg
+    return 0.5 * (1 + P.erf((x - mu) / sqrt(2*sd*sd)))
+  }
+  inv(arg) {
+    let {p, mu, sd} = arg
+    return -1.41421356237309505 * sd * P.erfcinv(2*p) + mu
+  }
+  mean(arg) {
+    let {mu, sd} = arg
+    return mu
+  }
+  variance(arg) {
+    let {mu, sd} = arg
+    return sd*sd
+  }
+}
+
+class Beta extends Distribution {
+  pdf(arg) {
+    let {x, alpha, beta} = arg
+    if (x > 1 || x < 0) return 0 // PDF is zero outside the support
+    if (alpha == 1 && beta == 1) return 1 // PDF is one for the uniform case
+    if (alpha < 512 && beta < 512) {
+      return (pow(x, alpha - 1) * pow(1 - x, beta - 1)) / P.betafn(alpha, beta)
+    } else {
+      return exp((alpha - 1) * log(x) +
+                      (beta - 1) * log(1 - x) -
+                      P.betaln(alpha, beta))
+    }
+  }
+  cdf(arg) {
+    let {x, alpha, beta} = arg
+    return (x > 1 || x < 0) ? (x > 1) * 1 : P.ibeta(x, alpha, beta)
+  }
+  inv(arg) {
+    let {p, alpha, beta} = arg
+    return P.ibetainv(p, alpha, beta)
+  }
+  mean(arg) {
+    let {alpha, beta} = arg
+    return alpha / (alpha + beta)
+  }
+  median(arg) {
+    let {alpha, beta} = arg
+    return P.ibetainv(0.5, alpha, beta)
+  }
+  mode(arg) {
+    let {alpha, beta} = arg
+    return (alpha - 1 ) / ( alpha + beta - 2)
+  }
+  variance(arg) {
+    let {alpha, beta} = arg
+    return (alpha * beta) / (pow(alpha + beta, 2) * (alpha + beta + 1));
+  }
+}
+
+class F extends Distribution {
+  pdf(arg) {
+    let {x, df1, df2} = arg
+    var p, q, f;
+    if (x < 0) return 0
+    if (df1 <= 2) {
+      if (x === 0 && df1 < 2) return Infinity
+      if (x === 0 && df1 === 2) return 1;
+      return (1 / P.betafn(df1 / 2, df2 / 2)) *
+              pow(df1 / df2, df1 / 2) *
+              pow(x, (df1/2) - 1) *
+              pow((1 + (df1 / df2) * x), -(df1 + df2) / 2)
+    }
+    p = (df1 * x) / (df2 + x * df1)
+    q = df2 / (df2 + x * df1)
+    f = df1 * q / 2.0
+    return f * P.binomial.pdf({k:(df1 - 2) / 2, n:(df1 + df2 - 2) / 2, p})
+  }
+  cdf(arg) {
+    let {x, df1, df2} = arg
+    if (x < 0) return 0
+    return P.ibeta((df1 * x) / (df1 * x + df2), df1 / 2, df2 / 2)
+  }
+  inv(arg) {
+    let {p, df1, df2} = arg
+    return df2 / (df1 * (1 / P.ibetainv(p, df1 / 2, df2 / 2) - 1))
+  }
+  mean(arg) {
+    let {df1, df2} = arg
+    return (df2 > 2) ? df2 / (df2 - 2) : undefined
+  }
+  variance(arg) {
+    let {df1, df2} = arg
+    if (df2 <= 4) return undefined
+    return 2 * df2 * df2 * (df1 + df2 - 2) / (df1 * (df2 - 2) * (df2 - 2) * (df2 - 4))
+  }
+}
+
+class Cauchy extends Distribution {
+  pdf(arg) {
+    let {x, local, scale} = arg
+    if (scale < 0) return 0
+    return (scale / (pow(x - local, 2) + pow(scale, 2))) / PI
+  }
+  cdf(arg) {
+    let {x, local, scale} = arg
+    return atan((x - local) / scale) / PI + 0.5
+  }
+  inv(arg) {
+    let {p, local, scale} = arg
+    return local + scale * tan(PI * (p - 0.5));
+  }
+  mean(arg) {
+    let {local, scale} = arg
+    return local
+  }
+}
+
+class ChiSquare extends Distribution {
+  pdf(arg) {
+    let {x, dof} = arg
+    if (x < 0) return 0
+    return (x === 0 && dof === 2) ? 0.5 :
+      exp((dof / 2 - 1) * log(x) - x / 2 - (dof / 2) * log(2) - P.gammaln(dof / 2))
+  }
+  cdf(arg) {
+    let {x, dof} = arg
+    if (x < 0) return 0
+    return P.lowRegGamma(dof / 2, x / 2)
+  }
+  inv(arg) {
+    let {p, dof} = arg
+    return 2 * P.gammapinv(p, 0.5 * dof)
+  }
+  mean(arg) {
+    let {dof} = arg
+    return dof
+  }
+  median(arg) {
+    let {dof} = arg
+    return dof * pow(1 - (2 / (9 * dof)), 3)
+  }
+  mode(arg) {
+    let {dof} = arg
+    return (dof - 2 > 0) ? dof - 2 : 0
+  }
+  variance(arg) {
+    let {dof} = arg
+    return 2 * dof
+  }
+}
+
+class Gamma extends Distribution {
+  pdf(arg) {
+    let {x, shape, scale} = arg
+    if (x < 0) return 0
+    return (x === 0 && shape === 1) ? 1 / scale :
+          exp((shape - 1) * log(x) - x / scale - P.gammaln(shape) - shape * log(scale));
+  }
+  cdf(arg) {
+    let {x, shape, scale} = arg
+    if (x < 0) return 0
+    return P.lowRegGamma(shape, x / scale)
+  }
+  inv(arg) {
+    let {p, shape, scale} = arg
+    return P.gammapinv(p, shape) * scale
+  }
+  mean(arg) {
+    let {shape, scale} = arg
+    return shape * scale
+  }
+  mode(arg) {
+    let {shape, scale} = arg
+    if(shape > 1) return (shape - 1) * scale;
+    return undefined;
+  }
+  variance(arg) {
+    let {shape, scale} = arg
+    return shape * scale * scale
+  }
+}
+
+class InvGamma extends Distribution {
+  pdf(arg) {
+    let {x, shape, scale} = arg
+    if (x <= 0) return 0
+    return exp(-(shape + 1) * log(x) - scale / x - P.gammaln(shape) + shape * log(scale))
+  }
+  cdf(arg) {
+    let {x, shape, scale} = arg
+    if (x <= 0) return 0
+    return 1 - P.lowRegGamma(shape, scale / x)
+  }
+  inv(arg) {
+    let {p, shape, scale} = arg
+    return scale / P.gammapinv(1 - p, shape)
+  }
+  mean(arg) {
+    let {shape, scale} = arg
+    return (shape > 1) ? scale / (shape - 1) : undefined
+  }
+  mode(arg) {
+    let {shape, scale} = arg
+    return scale / (shape + 1)
+  }
+  variance(arg) {
+    let {shape, scale} = arg
+    if (shape <= 2) return undefined
+    return scale * scale / ((shape - 1) * (shape - 1) * (shape - 2))
+  }
+}
+
+class T extends Distribution {
+  pdf(arg) {
+    let {x, dof} = arg
+    dof = dof > 1e100 ? 1e100 : dof
+    return (1/(sqrt(dof) * P.betafn(0.5, dof/2))) * pow(1 + ((x * x) / dof), -((dof + 1) / 2))
+  }
+  cdf(arg) {
+    let {x, dof} = arg
+    var dof2 = dof / 2;
+    return P.ibeta((x + sqrt(x * x + dof)) /
+                   (2 * sqrt(x * x + dof)), dof2, dof2)
+  }
+  inv(arg) {
+    let {p, dof} = arg
+    var x = P.ibetainv(2 * min(p, 1 - p), 0.5 * dof, 0.5)
+    x = sqrt(dof * (1 - x) / x)
+    return (p > 0.5) ? x : -x
+  }
+  mean(arg) {
+    let {dof} = arg
+    return (dof > 1) ? 0 : undefined
+  }
+  median(arg) { return 0 }
+  mode(arg) { return 0 }
+  variance(arg) {
+    let {dof} = arg
+    return (dof  > 2) ? dof / (dof - 2) : (dof > 1) ? Infinity : undefined
+  }
+}
+
+class Weibull extends Distribution {
+  pdf(arg) {
+    let {x, scale, shape} = arg
+    if (x < 0 || scale < 0 || shape < 0)
+      return 0;
+    return (shape / scale) * pow((x / scale), (shape - 1)) * exp(-(pow((x / scale), shape)))
+  }
+  cdf(arg) {
+    let {x, scale, shape} = arg
+    return x < 0 ? 0 : 1 - exp(-pow((x / scale), shape))
+  }
+  inv(arg) {
+    let {p, scale, shape} = arg
+    return scale * pow(-log(1 - p), 1 / shape)
+  }
+  mean(arg) {
+    let {scale, shape} = arg
+    return scale * P.gammafn(1 + 1 / shape)
+  }
+  median(arg) {
+    let {scale, shape} = arg
+    return scale * pow(log(2), 1 / shape)
+  }
+  mode(arg) {
+    let {scale, shape} = arg
+    if (shape <= 1) return 0
+    return scale * pow((shape - 1) / shape, 1 / shape)
+  }
+  variance(arg) {
+    let {scale, shape} = arg
+    return scale * scale * P.gammafn(1 + 2 / shape) -
+        pow(P.weibull.mean(scale, shape), 2)
+  }
+}
+
+class Binomial extends Distribution {
+  pdf(arg) {
+    let {k, p, n} = arg
+    return (p === 0 || p === 1) ?
+      ((n * p) === k ? 1 : 0) :
+      P.combination(n, k) * pow(p, k) * pow(1 - p, n - k)
+  }
+  cdf(arg) {
+    let {x, p, n} = arg
+    if (x < 0) return 0
+    if (x < n) {
+      let binomarr = []
+      for (let k=0; k <= x; k++) {
+        binomarr[k] = this.pdf({k, p, n})
+      }
+      return V.sum(binomarr)
+    }
+    return 1;
+  }
+}
+
+class NegBinomial extends Distribution {
+  pdf(arg) {
+    let {k, p, r} = arg
+    if (k !== k >>> 0) return false
+    if (k < 0) return 0
+    return P.combination(k + r - 1, r - 1) * pow(1 - p, k) * pow(p, r);
+  }
+  cdf(arg) {
+    let {x, p, r} = arg
+    if (x < 0) return 0
+    let sum = 0
+    for (let k=0; k <= x; k++) {
+      sum += P.negBinomial.pdf({k, r, p})
+    }
+    return sum
+  }
+}
+
+class Poisson extends Distribution {
+  pdf(arg) {
+    let {k, l} = arg
+    if (l < 0 || (k % 1) !== 0 || k < 0) return 0
+    return pow(l, k) * exp(-l) / P.factorial(k)
+  }
+  cdf(arg) {
+    let {x, l} = arg
+    var sumarr = [], k = 0;
+    if (x < 0) return 0;
+    for (; k <= x; k++) {
+      sumarr.push(P.poisson.pdf({k, l}))
+    }
+    return V.sum(sumarr)
+  }
+  mean(arg) { return 1 }
+  variance(arg) { return 1 }
+}
+
+P.uniform = new Uniform()
+P.exp = new Exp()
+P.normal = new Normal()
+P.beta = new Beta()
+P.f = new F()
+P.chiSquare = new ChiSquare()
+P.cauchy = new Cauchy()
+P.gamma = new Gamma()
+P.invGamma = new InvGamma()
+P.t = new T()
+P.weibull = new Weibull()
+P.binomial = new Binomial()
+P.negBinomial = new NegBinomial()
+// P.hyperGenomial = new HyperGenomial()
+P.poisson = new Poisson()
+
+Object.assign(P, {Distribution, Uniform, Exp, Normal, 
+  Beta, F, ChiSquare, Cauchy, Gamma, InvGamma, T, Weibull, 
+  Binomial, NegBinomial, Poisson })
+
+},{"../../uu6":44,"./probFunction":23,"./vector":28}],25:[function(require,module,exports){
+const S = module.exports = {}
+const V = require('./vector')
+
+S.euclidDistance = function (v1, v2) { // sqrt((v1-v2)*(v1-v2)T)
+  let dv = V.sub(v1, v2)
+  return Math.sqrt(V.dot(dv, dv))
+}
+
+/*
+
+S.euclidDistance = function (v1, v2) { // sqrt((v1-v2)*(v1-v2)T)
+  let dv = v1.sub(v2)
+  return Math.sqrt(dv.dot(dv))
+}
+
+S.cosineSimilarity = function (v1, v2) {
+  return v1.vdot(v2) / (v1.norm() * v2.norm())
+}
+
+S.manhattanDistance = function (v1, v2) { // sum(|v1-v2|)
+  return v1.sub(v2).abs().sum()
+}
+
+S.chebyshevDistance = function (v1, v2) { // max(|v1-v2|)
+  return v1.sub(v2).abs().max()
+}
+*/
+},{"./vector":28}],26:[function(require,module,exports){
 const S = module.exports = {}
 
 S.random = function (a = 0, b = 1) {
@@ -1210,11 +2267,12 @@ S.hist = function (a, from, to, step = 1) {
 S.ihist = function (a) {
   return S.hist(a, a.min() - 0.5, a.max() + 0.5, 1)
 }
-},{}],20:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 const T = module.exports = {}
 
 const uu6 = require('../../uu6')
 const V   = require('./vector')
+const M   = require('./matrix')
 
 T.size = function (shape) {
   return V.product(shape)
@@ -1269,12 +2327,12 @@ T.sliceNdarray = function (v, shape, lo, hi) {
 
 T.tensor2ndarray = function (v, shape, lo, hi) {
   return T.sliceNdarray(v, shape, V.array(shape.length), shape)
-} 
+}
 
 T.ndarray2tensor = function (nd) {
   let t = null
-  if (!uu6.type(nd, 'array')) {
-    t = { v: nd, shape:[] }
+  if (!Array.isArray(nd[0])) {
+    t = { v: nd, shape: [nd.length] }
     return t
   }
   let rows = nd.length
@@ -1289,21 +2347,17 @@ T.ndarray2tensor = function (nd) {
   return {v: v, shape: t.shape }
 }
 
-class Tensor extends V.Vector {
+class Tensor extends V.Vector { // 
+  // ================== Tensor =========================
   constructor(v, shape) {
     super()
     uu6.be(v || shape)
     if (v && !shape) {
-      // if (typeof v === 'number') { // v = 1d size
-      //   this.v = V.zeros(v)
-      // } else { // from ndarray
-        let nd = v
-        let t = T.ndarray2tensor(nd)
-        this.v = t.v
-        this.shape = t.shape  
-      // }
+      let nd = v
+      let t = T.ndarray2tensor(nd)
+      this.v = t.v
+      this.shape = t.shape  
     } else {
-      // console.log('Tensor():shape=', shape)
       this.v = v || uu6.array(T.size(shape))
       this.shape = shape || [this.v.length]
       uu6.be(T.size(this.shape) === this.v.length)
@@ -1317,9 +2371,8 @@ class Tensor extends V.Vector {
     this.v[T.offset(this.shape, idx)] = o
   }
   slice(v, shape, lo, hi) {
-
-    this.lo = lo
-    this.hi = hi
+    this.lo = (!lo) ? lo : V.add(this.lo, lo)
+    this.hi = (!lo) ? hi : V.add(this.lo, hi)
   }
   reshape(shape) {
     uu6.be(uu6.type(shape, 'array') && T.size(shape) === this.v.length)
@@ -1329,26 +2382,105 @@ class Tensor extends V.Vector {
   ndarray() {
     return T.tensor2ndarray(this.v, this.shape)
   }
-  clone() {
-    return new Tensor(this.v.slice(0), this.shape)
+  clone(v) {
+    let vt = v || this.v
+    return new Tensor(vt.slice(0), this.shape)
   }
   toString() {
-    // return uu6.json({shape:this.shape, v:this.v})
     return uu6.json(this.ndarray())
+  }
+  dim() { return this.shape.length }
+
+  // ================== Matrix =============================
+  beMatrix() { uu6.be(this.dim() == 2) }
+  rows () { this.beMatrix(); return this.shape[0] }
+  cols () { this.beMatrix(); return this.shape[1] }
+
+  rowSum () { this.beMatrix();
+    let rows = this.rows(), cols = this.cols()
+    let s = V.array(rows), v = this.v
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        s[i] += v[i*cols+j]
+      }
+    }
+    return new Tensor(s)
+  }
+  rowMean() { return this.rowSum().divc(this.cols()) }
+  
+  colSum () { this.beMatrix();
+    let rows = this.rows(), cols = this.cols()
+    let s = V.array(cols), v = this.v
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        s[j] += v[i*cols+j]
+      }
+    }
+    return Tensor(s)
+  }
+  colMean() { return this.colSum().divc(this.rows()) }
+
+  transpose() { this.beMatrix();
+    let a = this.ndarray()
+    return new Tensor(M.transpose(a))
+  }
+
+  dot (b) { this.beMatrix();
+    let ax = this.ndarray(), bx = b.ndarray()
+    return new Tensor(M.dot(ax, bx))
+  }
+
+  diag () { this.beMatrix();
+    let a = this, av = a.v, [rows, cols] = a.shape
+    let r = new Tensor(a.v, a.shape), rv = r.v
+    let v = V.array(rows)
+    for (let i = 0; i < rows; i++) {
+      v[i] = av[i][i]
+    }
+    return v
+  }
+
+  inv () { this.beMatrix();
+    let a = this.ndarray()
+    let ia = M.inv(a)
+    return new Tensor(ia)
+  }
+
+  det() { this.beMatrix();
+    let a = this.ndarray()
+    return M.det(a)
+  }
+
+  lu() { this.beMatrix();
+    let a = this.ndarray()
+    return M.lu(a)
+  }
+
+  svd() { this.beMatrix();
+    let a = this.ndarray()
+    return M.svd(a)
+  }
+
+  solve(b) { this.beMatrix();
+    let a = this.ndarray()
+    return M.solve(a, b)
   }
 }
 
 T.Tensor = Tensor
+T.Matrix = Tensor
 
 T.tensor = function (v, shape) {
   return new Tensor(v, shape)
 }
 
-},{"../../uu6":33,"./vector":21}],21:[function(require,module,exports){
+},{"../../uu6":44,"./matrix":21,"./vector":28}],28:[function(require,module,exports){
 const uu6 = require('../../uu6')
 const V = module.exports = {}
 
 V.array = uu6.array
+
+V.range = uu6.range
 
 V.random = function (r, min=0, max=1) {
   let len = r.length
@@ -1473,21 +2605,28 @@ V.op1 = function (a, f1) {
 
 V.neg = function (a) { return V.op1(a, V.oneg) }
 V.abs = function (a) { return V.op1(a, V.oabs) }
-/*
-V.neg = function (a) {
-  let len = a.length
-  let r = new Array(len)
-  for (let i=0; i<len; i++) {
-    r[i] = -a[i]
-  }
-  return r
-}
-*/
+
 V.dot = function (a,b) {
   let len = a.length
   let r = 0
   for (let i=0; i<len; i++) {
     r += a[i] * b[i]
+  }
+  return r
+}
+
+V.min = function (a) {
+  let len = a.length, r = a[0]
+  for (let i=1; i<len; i++) {
+    if (a[i] < r) r = a[i]
+  }
+  return r
+}
+
+V.max = function (a) {
+  let len = a.length, r = a[0]
+  for (let i=1; i<len; i++) {
+    if (a[i] > r) r = a[i]
   }
   return r
 }
@@ -1526,6 +2665,24 @@ V.sd = function (a) {
   return Math.sqrt(V.sum(d2)/(a.length-1))
 }
 
+const EPSILON = 0.00000001
+
+V.hist = function (a, from = Math.floor(V.min(a)), to=Math.ceil(V.max(a)), step = 1) {
+  // from = (from==null) ?  : from
+  // to   = (to==null) ?  : to
+  var n = Math.ceil((to - from + EPSILON) / step)
+  var xc = V.range(from + step / 2.0, to, step)
+  var bins = V.array(n, 0)
+  let len = a.length
+  for (let i=0; i<len; i++) {
+    var slot = Math.floor((a[i] - from) / step)
+    if (slot >= 0 && slot < n) {
+      bins[slot]++
+    }
+  }
+  return {type: 'histogram', xc: xc, bins: bins, from: from, to: to, step: step}
+}
+
 class Vector {
   constructor(o) { this.v = (Array.isArray(o))?o.slice(0):new Array(o) }
   static random(n, min=0, max=1) { return new Vector(V.random(n, min, max)) }
@@ -1544,15 +2701,17 @@ class Vector {
   subc(c) { let a=this; return a.clone(V.subc(a.v,c)) } 
   powc(c) { let a=this; return a.clone(V.powc(a.v,c)) }
   neg() { let a=this; return a.clone(V.neg(a.v)) }
-  dot(b) { let a=this; return V.dot(a.v,b.v) } 
+  dot(b) { let a=this; return V.dot(a.v,b.v) }
+  min() { let a=this; return V.min(a.v) }
+  max() { let a=this; return V.max(a.v) }
   sum() { let a=this; return V.sum(a.v) }
   norm() { let a=this; return V.norm(a.v)  }
   mean() { let a=this; return V.mean(a.v) }
   sd() { let a=this; return V.sd(a.v) }
   toString() { return this.v.toString() }
   clone(v) { return new Vector(v||this.v) }
+  hist(from, to, step) { let a = this; return V.hist(a.v, from, to, step) }
   get length() { return this.v.length }
-  // size() { return this.v.length }
 }
 
 V.Vector = Vector
@@ -1590,9 +2749,107 @@ V.random = function (len, min=0, max=1) {
 }
 */
 
-},{"../../uu6":33}],22:[function(require,module,exports){
+},{"../../uu6":44}],29:[function(require,module,exports){
+module.exports = require('./src/ml6')
+
+},{"./src/ml6":32}],30:[function(require,module,exports){
+// ref : https://dotblogs.com.tw/dragon229/2013/02/04/89919
+const ma6 = require('../../ma6')
+const uu6 = require('../../uu6')
+const V = ma6.V, M = ma6.M
+const KMean = module.exports = {}
+
+KMean.loadData = function (data) {
+  KMean.data = data
+}
+
+KMean.initialize = function (k) {
+  KMean.k = k
+  KMean.centers = uu6.samples(KMean.data, k)
+}
+
+KMean.grouping = function (distance) {
+  var data = KMean.data
+  var k = KMean.k
+  var groups = Array(k).fill(0)
+  var totalDist = 0
+  for (var di = 0; di < data.length; di++) {
+    var minDist = Number.MAX_VALUE
+    var minGroup = 0
+    for (var gi = 0; gi < k; gi++) {
+      var dist = distance(KMean.centers[gi], data[di])
+      if (dist < minDist) {
+        minDist = dist
+        minGroup = gi
+      }
+    }
+    groups[di] = minGroup
+    totalDist += minDist
+  }
+  console.log('totalDist = %d', totalDist)
+  return groups
+}
+
+KMean.centering = function () {
+  var data = KMean.data
+  var groups = KMean.groups
+  var k = KMean.k
+  var counts = Array(k).fill(0)
+  var newCenters = M.new(k, data[0].length) // j6.M.new(k, data[0].length)
+  for (let i = 0; i < data.length; i++) {
+    var gi = groups[i]
+    newCenters[gi] = V.add(newCenters[gi], data[i])
+    counts[gi] ++
+  }
+  for (let gi = 0; gi < k; gi++) {
+    if (counts[gi] > 0) { // 如果 counts[gi] == 0 不能除，這一群沒有人！
+      newCenters[gi] = V.divc(newCenters[gi], counts[gi])
+    }
+  }
+  return newCenters
+}
+
+KMean.run = function (data, k, maxLoop) {
+  KMean.loadData(data)
+  KMean.initialize(k)
+  for (var i = 0; i < maxLoop; i++) {
+    console.log('============== loop ' + i + '================')
+    KMean.groups = KMean.grouping(ma6.euclidDistance)
+    console.log('groups=%j', KMean.groups)
+    KMean.centers = KMean.centering()
+    console.log('centers=%j', KMean.centers)
+  }
+  return KMean.data
+}
+
+},{"../../ma6":11,"../../uu6":44}],31:[function(require,module,exports){
+let KNN = module.exports = {}
+
+KNN.loadQA = function (QA) {
+  KNN.QA = QA
+}
+
+KNN.kNearestNeighbors = function (item, distance, k = 1) {
+  var QA = KNN.QA
+  var d = []
+  for (var i = 0; i < QA.length; i++) {
+    d.push({dist: distance(item, QA[i].Q), qa: QA[i]})
+  }
+  d.sort((o1, o2) => o1.dist > o2.dist)
+  return d.slice(0, k)
+}
+
+
+},{}],32:[function(require,module,exports){
+const ml6 = module.exports = {
+  kmean: require('./kmean'),
+  knn: require('./knn'),
+}
+
+
+},{"./kmean":30,"./knn":31}],33:[function(require,module,exports){
 module.exports = require('./src/nn6')
-},{"./src/nn6":27}],23:[function(require,module,exports){
+},{"./src/nn6":38}],34:[function(require,module,exports){
 const N = require('./node')
 const G = require('./gate')
 const L = require('./layer')
@@ -1777,7 +3034,7 @@ module.exports = class Net {
   }
 }
 
-},{"../../ma6":11,"../../uu6":33,"./func":24,"./gate":25,"./layer":26,"./node":28}],24:[function(require,module,exports){
+},{"../../ma6":11,"../../uu6":44,"./func":35,"./gate":36,"./layer":37,"./node":39}],35:[function(require,module,exports){
 var F = module.exports = {}
 
 F.near = function (a, b, diff=0.000001) {
@@ -1921,7 +3178,7 @@ F.dsoftmax = function (x, o) {
 }
 
 
-},{}],25:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 module.exports = G = {}
 
 class Gate {}
@@ -1965,7 +3222,7 @@ class Gate2 extends Gate {
 
 Object.assign(G, {Gate, Gate1, Gate2 })
 
-},{}],26:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 const L = module.exports = {}
 const uu6 = require('../../uu6')
 const ma6 = require('../../ma6')
@@ -2451,7 +3708,7 @@ Object.assign(L, {
   InputLayer, RegressionLayer, SoftmaxLayer, PoolLayer, DropoutLayer, ConvLayer
 })
 
-},{"../../ma6":11,"../../uu6":33,"./func":24,"./node":28}],27:[function(require,module,exports){
+},{"../../ma6":11,"../../uu6":44,"./func":35,"./node":39}],38:[function(require,module,exports){
 module.exports = nn6 = {
   N: require('./node'),
   G: require('./gate'),
@@ -2461,7 +3718,7 @@ module.exports = nn6 = {
 
 Object.assign(nn6, nn6.N, nn6.G, nn6.L)
 
-},{"./Net":23,"./gate":25,"./layer":26,"./node":28}],28:[function(require,module,exports){
+},{"./Net":34,"./gate":36,"./layer":37,"./node":39}],39:[function(require,module,exports){
 const ma6 = require('../../ma6')
 const uu6 = require('../../uu6')
 const V = ma6.V
@@ -2527,10 +3784,10 @@ class TensorConstant extends TensorNode {
 module.exports = Object.assign(N, {
   Constant, Variable, TensorVariable, TensorConstant
 })
-},{"../../ma6":11,"../../uu6":33}],29:[function(require,module,exports){
+},{"../../ma6":11,"../../uu6":44}],40:[function(require,module,exports){
 module.exports = require('./src/se6')
 
-},{"./src/se6":31}],30:[function(require,module,exports){
+},{"./src/se6":42}],41:[function(require,module,exports){
 const E = module.exports = {}
 const uu6 = require('../../uu6')
 
@@ -2548,6 +3805,13 @@ class Expect {
     let cond = f(this.o)
     if (this.check(cond)) return this
     throw Error('Expect.pass fail!')
+  }
+
+  each(f) {
+    let o = this.o
+    for (let k in o) {
+      if (!f(o[k])) throw Error('Expect.each fail! key='+k)
+    }
   }
 
   equal(o) {
@@ -2611,6 +3875,7 @@ p.property = p.contain
 p.include = p.contain
 p.包含 = p.include
 p.通過 = p.pass
+p.每個 = p.each
 p.等於 = p.equal
 p.靠近 = p.near
 p.型態 = p.type
@@ -2618,17 +3883,17 @@ p.是 = p.a
 p.有 = p.contain
 p.屬性 = p.property
 
-},{"../../uu6":33}],31:[function(require,module,exports){
+},{"../../uu6":44}],42:[function(require,module,exports){
 const se6 = module.exports = {}
 
 Object.assign(se6, require('./expect'))
 
-},{"./expect":30}],32:[function(require,module,exports){
+},{"./expect":41}],43:[function(require,module,exports){
 module.exports = {}
 
-},{}],33:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 module.exports = require('./src/uu6')
-},{"./src/uu6":41}],34:[function(require,module,exports){
+},{"./src/uu6":52}],45:[function(require,module,exports){
 const A = module.exports = {}
 
 A.defaults = function (args, defs) {
@@ -2639,7 +3904,7 @@ A.defaults = function (args, defs) {
   return r
 }
 
-},{}],35:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 const U = module.exports = {}
 
 U.array = function (n, value=0) {
@@ -2650,12 +3915,31 @@ U.array = function (n, value=0) {
 }
 
 U.repeats = function (n, f) {
-  let r = []
+  let r = new Array(n)
   for (let i=0; i<n; i++) {
-    r.push(f())
+    r[i] = f()
   }
   return r
 }
+
+U.range = function (begin, end, step=1) {
+  let len = Math.floor((end-begin)/step)
+  let a = new Array(len)
+  let i = 0
+  for (let t=begin; t<end; t+=step) {
+    a[i++] = t
+  }
+  return a
+}
+
+U.steps = U.range
+
+/* 改用 array
+U.repeats = function (n, value = 0) {
+  let a = new Array(n)
+  return a.fill(value)
+}
+*/
 
 U.last = function (a) {
   return a[a.length-1]
@@ -2685,26 +3969,12 @@ U.amap2 = function (a, b, f) {
   return c
 }
 
-U.repeats = function (n, value = 0) {
-  let a = new Array(n)
-  return a.fill(value)
-}
 
-U.range = function (begin, end, step=1) {
-  let len = Math.floor((end-begin)/step)
-  let a = new Array(len)
-  let i = 0
-  for (let t=begin; t<end; t+=step) {
-    a[i++] = t
-  }
-  return a
-}
-
-},{}],36:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 const U = module.exports = {}
 
 
-},{}],37:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 const U = module.exports = {}
 
 U.assert = function (cond, msg='assert fail!') {
@@ -2714,7 +3984,7 @@ U.assert = function (cond, msg='assert fail!') {
 U.be = U.assert 
 
 
-},{}],38:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 const U = module.exports = {}
 
 U.eq = function (o1, o2) {
@@ -2752,7 +4022,9 @@ U.clone = function (o) {
 U.type = function (o, type) { // U.is
   if (typeof o === type) return true
   if (type==='array' && Array.isArray(o)) return true
-  if (typeof o === 'object' && o instanceof type) return true
+  if (typeof o === 'object') {
+    if (typeof type === 'object' && o instanceof type) return true
+  }
   return false
 }
 
@@ -2795,7 +4067,7 @@ U.key2value = function (o) {
 
 U.mixin = Object.assign
 
-},{}],39:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 const U = module.exports = {}
 
 U.random = function (min=0, max=1) {
@@ -2810,7 +4082,15 @@ U.randomChoose = function (a) {
   return a[U.randomInt(0, a.length)]
 }
 
-},{}],40:[function(require,module,exports){
+U.samples = function (a, n) {
+  let s = new Array(n)
+  for (let i=0; i<n; i++) {
+    s[i] = U.randomChoose(a)
+  }
+  return s
+}
+
+},{}],51:[function(require,module,exports){
 const U = module.exports = {
   precision: 4,
   tab: undefined
@@ -2823,7 +4103,7 @@ U.json = function (o, tab, n) {
   }, tab)
 }
 
-},{}],41:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 const uu6 = module.exports = require('./object')
 
 uu6.mixin(uu6, 
@@ -2834,4 +4114,4 @@ uu6.mixin(uu6,
   require('./control'),
   require('./args'),
 )
-},{"./args":34,"./array":35,"./control":36,"./error":37,"./object":38,"./random":39,"./string":40}]},{},[1]);
+},{"./args":45,"./array":46,"./control":47,"./error":48,"./object":49,"./random":50,"./string":51}]},{},[1]);

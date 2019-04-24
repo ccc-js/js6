@@ -25,6 +25,8 @@ U.range = function (begin, end, step=1) {
   return a
 }
 
+U.steps = U.range
+
 /* 改用 array
 U.repeats = function (n, value = 0) {
   let a = new Array(n)
