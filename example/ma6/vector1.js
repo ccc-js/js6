@@ -17,3 +17,5 @@ console.log('dot(a,b)=', a.dot(b))
 console.log('sum(a)=',   a.sum())
 console.log('mean(a)=',  a.mean())
 console.log('sd(a)=',    a.sd())
+
+console.log('a.mulc(c).add(b).add(a)=', a.mulc(c).add(b).add(a))

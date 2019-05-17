@@ -30,7 +30,7 @@ class Complex {
   add(b) { let {r,i} = this; return new Complex(r+b.r, i+b.i) }
   sub(b) { let {r,i} = this; return new Complex(r-b.r, i-b.i) }
   mul(b) { let {r,i} = this; return new Complex(r*b.r-i*b.i, r*b.i+i*b.r) }
-	div(b) { return this.mul(b.power(-1)) }
+	div(b) { return this.mul(b.pow(-1)) }
   clone() {  let {r,i} = this; return new Complex(r, i) }
   toString() {
     let {r,i} = this
@@ -45,13 +45,13 @@ class Complex {
     return {r:d, theta:theta}
   }
   
-  power(k) {
+  pow(k) {
     let p = this.toPolar()
     return C.polarToComplex(Math.pow(p.r, k), k*p.theta)
   }
   
   sqrt() {
-    return this.power(1/2)
+    return this.pow(1/2)
   }
 
   toFixed(digits=4) {
@@ -60,6 +60,18 @@ class Complex {
     c.i = parseFloat(c.i.toFixed(digits))
     return C.parseComplex(c.toString())
   }
+}
+
+C.complex = function (s) { return C.parseComplex(s) }
+
+C.complexArray = function (s) {
+  let c = s.split(','), len = c.length
+  let rt = new Array(len), it = new Array(len)
+  for (let i=0; i<len; i++) {
+    let ci = C.complex(c[i])
+    rt[i] = ci.r; it[i] = ci.i
+  }
+  return {r: rt, i:it }
 }
 
 Object.assign(C, { Complex })

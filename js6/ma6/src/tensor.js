@@ -146,7 +146,7 @@ class Tensor extends V.Vector { //
         s[j] += v[i*cols+j]
       }
     }
-    return Tensor(s)
+    return new Tensor(s)
   }
   colMean() { return this.colSum().divc(this.rows()) }
 
@@ -196,6 +196,9 @@ class Tensor extends V.Vector { //
     return M.solve(a, b)
   }
 }
+
+let p = Tensor.prototype
+p.tr = p.transpose
 
 T.Tensor = Tensor
 T.Matrix = Tensor
