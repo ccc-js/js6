@@ -65,6 +65,8 @@ module.exports = class Net {
   // op1
   neg (x) { return this.op1(x, (x)=>-x, (x)=>-1) }
   rev (x) { return this.op1(x, (x)=>1/x, (x)=>-1/(x*x)) }
+  sin (x) { return this.op1(x, (x)=>Math.sin(x), (x)=>Math.cos(x)) }
+
   /* 這些要從輸出值 o 回饋 
   exp (x) { return this.op1(x, F.exp, F.dexp) }
   relu (x, leaky=0) { return this.op1(x, (x)=>F.relu(x, leaky), (x)=>F.drelu(x, leaky)) }
@@ -105,7 +107,7 @@ module.exports = class Net {
   }
 
   backward() { // 反向傳遞計算梯度
-    if (typeof this.o.g === 'number') this.o.g = 1 // 單變數輸出，非向量，這是優化問題，直接將梯度設為 1
+    if (this.out == null) this.o.g = 1 // 沒有設定輸出 out，這是優化問題，直接將輸出梯度設為 1
     let len = this.gates.length
     for (let i=len-1; i>=0; i--) { // 反向傳遞計算每個節點 Node 的梯度 g
       let gate = this.gates[i]
@@ -120,14 +122,21 @@ module.exports = class Net {
     }
   }
 
-  setInput(input) { this.gates[0].setInput(input) }
-  setOutput(out) { this.lastGate().setOutput(out) }
+  setInput(input) {
+    if (input == null) return
+    this.gates[0].setInput(input)
+  }
+  
+  setOutput(out) {
+    this.out = out
+    this.lastGate().setOutput(out)
+  }
 
   lastGate() { return this.gates[this.gates.length-1] }
   predict() { return this.lastGate().predict }
   loss() { return this.lastGate().loss }
 
-  learn(input, out) {
+  learn(input = null, out = null) {
     this.setInput(input)
     this.setOutput(out)
     this.forward()
@@ -148,8 +157,10 @@ module.exports = class Net {
   }
 
   optimize(p) {
+    p.inputs = p.inputs || [ null ]
+    p.outs = p.outs || [ null ]
     let {inputs, outs, gap, minLoops, maxLoops} = p
-    uu6.be(inputs && outs)
+    // uu6.be(inputs && outs)
     gap = gap || 0.00001
     let len = inputs.length
     let loss0 = Number.MAX_VALUE

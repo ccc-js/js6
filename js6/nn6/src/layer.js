@@ -3,6 +3,7 @@ const uu6 = require('../../uu6')
 const ma6 = require('../../ma6')
 const F = require('./func')
 const N = require('./node')
+const G = require('./gate')
 const V = ma6.V
 
 class Layer {
@@ -11,6 +12,8 @@ class Layer {
     this.p = uu6.clone(p)
     console.log('p=', p, 'this.p=', this.p)
   }
+
+  setOutput(y) { this.y = y }
 
   forward() {
     let {o, x} = this
@@ -211,10 +214,6 @@ class RegressionLayer extends Layer {
     this.o = new N.TensorVariable(null, [1])
   }
 
-  setOutput(y) {
-    this.y = y
-  }
-
   forward() {
     super.forward() // 清除梯度 g
     let {o, x, y} = this
@@ -246,10 +245,6 @@ class SoftmaxLayer extends Layer {
   constructor(x, p) {
     super(x, p)
     this.o = new N.TensorVariable(null, [1])
-  }
-
-  setOutput(y) { // y 是正確的那個輸出
-    this.y = y
   }
 
   forward() {

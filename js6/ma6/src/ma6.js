@@ -10,6 +10,7 @@ const ma6 = module.exports = {
   F: require('./function'),
   C: require('./constant'),
   D: require('./calculus'),
+  // AD: require('../../nn6/src/autoDiff'),
   argmax: require('./argmax'),
 }
 

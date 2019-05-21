@@ -3,6 +3,7 @@ module.exports = nn6 = {
   G: require('./gate'),
   L: require('./layer'),
   Net: require('./Net'),
+  AD: require('./autoDiff'),
 }
 
-Object.assign(nn6, nn6.N, nn6.G, nn6.L)
+Object.assign(nn6, nn6.N, nn6.G, nn6.L, nn6.AD)

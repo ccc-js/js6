@@ -1,25 +1,26 @@
 const ma6 = require('../../js6/ma6')
-const {V, D} = ma6
+const {D} = ma6
+const {diff, diff2, diffn} = D
+const {cos, sin, PI} = Math
 
-// p0 質點所產生的重力場方程式
-let p0 = [0,0,0], c= 1 // C=G*m0*m 
+// 一次數值微分
+console.log('=========== 一次微分 ==============')
+let dsin1 = diff(sin, PI/4)
+console.log('diff(sin,pi/4)=', dsin1)
+console.log('cos(pi/4)=', cos(PI/4))
 
-let f = function (p) {
-  let v = V.sub(p, p0)
-  let r = V.norm(v) // distance(p,p0)
-  return 1/r
+// 二次數值微分
+console.log('=========== 二次微分 ==============')
+let dsin2 = diff2(sin, PI/4)
+console.log('diff2(sin,pi/4)=', dsin2)
+console.log('-sin(pi/4)=', -sin(PI/4))
+
+const dsin = [sin, cos, (x)=>-sin(x), (x)=>-cos(x)]
+// n 次數值微分 : 有嚴重的誤差擴散
+console.log('=========== n 次微分 ==============')
+for (let n=0; n<10; n++) {
+  console.log('數值微分: diffn(sin, %d, pi/4)=%d', n, diffn(sin, n, PI/4))
+  console.log('算式微分：dsin^%d/dx(sin,pi/4)=%d', n, n, dsin[n%4](PI/4))
 }
 
-let p = [1,0,0]
 
-console.log('p=%j', p)
-console.log('f(p)=%j', f(p))
-let gfp = D.grad(f, p)
-console.log('grad(f, p)=%j', gfp)
-let gf = D.fgrad(f, 3)
-console.log('fgrad(f, 3)=', gf)
-console.log('div(grad(f,p))=%j', D.div(gf, p)) // 注意：這裡用數值微分只取到一階，無法反映《引力場的拉普拉斯應該為 0》 的特性。若用自動微分應該就會是 0。
-console.log('curl(grad(f,p))=', D.curl(gf, p))
-
-D.theoremDivGradEqLaplace(f, p)
-D.theoremCurlGradZero(f, p)

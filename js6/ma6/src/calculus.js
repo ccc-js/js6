@@ -7,8 +7,31 @@ const uu6 = require('../../uu6')
 F.h = 0.01
 
 // 微分 differential calculus
-F.df = F.diff = function (f, x, h = F.h) {
-  return (f(x+h) - f(x-h))/(2*h)
+F.df = F.diff = function (f, x=null, h = F.h) {
+  if (x == null) {
+    return function (x) { return (f(x+h) - f(x-h))/(2*h) }
+  } else {
+    return (f(x+h) - f(x-h))/(2*h)
+  }
+}
+
+// 二次微分 differential calculus，比連續用兩次一階微分更準確
+F.df2 = F.diff2 = function (f, x=null, h = F.h) {
+  if (x == null) {
+    return function (x) { return ((f(x+h) - 2*f(x) + f(x-h))/h)/h }
+  } else {
+    return ((f(x+h) - 2*f(x) + f(x-h))/h)/h
+  }
+}
+
+// n 次微分
+F.diffn = function (f, n, x=null, h=F.h) {
+  uu6.member(n >= 0)
+  if (n === 0) return f(x)
+  if (n === 1) return F.diff(f,x)
+  if (n === 2) return F.diff2(f,x)
+  var x1 = (x==null) ? null : x+h
+  return (F.diffn(f,n-1,x1) - F.diffn(f,n-1,x))/h
 }
 
 // 積分 integral calculus
@@ -20,27 +43,56 @@ F.i = F.integral = function (f, a, b, h = F.h) {
   return area
 }
 
-// 偏微分 partial differential calculus
+// 偏導數 partial differential calculus
 // f([x1,x2,...])
-F.pdiff = function (f, v, i, h = F.h) { // F.pdifferential = 
-  let v2 = v.slice(0)
-  v2[i] += h
-  return (f(v2)-f(v))/h
+F.pdiff = function (f, i, v=null, h = F.h) {
+  if (v == null) { // v == null 時傳回函數版
+    return function(v) {
+      let v2 = v.slice(0)
+      v2[i] += h
+      return (f(v2)-f(v))/h
+    }
+  } else { // 否則傳回數值計算結果
+    let v2 = v.slice(0)
+    v2[i] += h
+    return (f(v2)-f(v))/h
+  }
 }
 
-F.pdiffn = function (f, v, i, n, h=F.h) {
-  if (n === 1) return F.pdiff(f,v,i)
-  let v2 = v.slice(0)
-  v2[i] += h
-  return (F.pdiffn(f,v2,i,n-1) - F.pdiffn(f,v,i,n-1))/h
+// 二階偏導數逼近，比連續使用一階準確
+F.pdiff2 = function (f, i, v=null, h = F.h) {
+  if (v == null) {
+    return function (v) {
+      let v1 = v.slice(0), v_1 = v.slice(0)
+      v1[i] += h; v_1[i] -= h
+      return ((f(v1)-2*f(v)+f(v_1))/h)/h
+    }
+  } else {
+    let v1 = v.slice(0), v_1 = v.slice(0)
+    v1[i] += h; v_1[i] -= h
+    return ((f(v1)-2*f(v)+f(v_1))/h)/h
+  }
+}
+
+// n 階偏導數
+F.pdiffn = function (f, i, n, v, h=F.h) {
+  if (n === 1) return F.pdiff(f,i,v)
+  if (n === 2) return F.pdiff2(f,i,v)
+  var v2 = null
+  if (v != null) {
+    v2 = v.slice(0);
+    v2[i] += h
+  }
+  return (F.pdiffn(f,i,n-1,v2) - F.pdiffn(f,i,n-1,v))/h
 }
 
 // 梯度 gradient : grad(f,x)=[pdiff(f,x,0), .., pdiff(f,x,n)]
 F.grad = function (f, v, h=F.h) {
-  let len = v.length, fv = f(v)
+  let len = (typeof v == 'number') ? v : v.length
+  let vt =  (typeof v == 'number') ? null : v
   let g = new Array(len)
   for (let i=0; i<len; i++) {
-    g[i] = F.pdiff(f, v, i) // 對第 i 個變數取偏導數後，放入梯度向量 g 中
+    g[i] = F.pdiff(f, i, vt) // 對第 i 個變數取偏導數後，放入梯度向量 g 中
   }
   return g
 }
@@ -51,7 +103,7 @@ F.div = function (fv, v) {
   console.log('div:fv=', fv)
   let len = v.length, d = new Array(len)
   for (var i = 0; i < len; i++) {
-    d[i] = F.pdiff(fv[i], v, i)
+    d[i] = F.pdiff(fv[i], i, v)
   }
   return V.sum(d)
 }
@@ -65,7 +117,7 @@ F.is3D = function (fv, v) {
 // 旋度 curl : curl(fv, x) = [pf32-pf23,pf13-pf31,pf21-pf12]
 F.curl = F.curlance = function (fv, v) {
   F.is3D(fv, v);
-  let pf = function (i,j) { return F.fpdiff(fv[i],j) }
+  let pf = function (i,j) { return F.pdiff(fv[i],j) }
   return [pf(2,1)(v)-pf(1,2)(v),
           pf(0,2)(v)-pf(2,0)(v),
           pf(1,0)(v)-pf(0,1)(v)]
@@ -75,22 +127,23 @@ F.curl = F.curlance = function (fv, v) {
 F.laplaceOperator = function(f, v) {
   let len = v.length, df2=new Array(len)
   for (let i=0; i<len; i++) {
-    df2[i] = F.pdiffn(f, v, i, 2)
+    df2[i] = F.pdiffn(f, i, 2, v)
   }
   return V.sum(df2)
 }
 
 F.jocobian = function (fv, v) {
-  let len = v.length
+  let len = fv.length
   let J = M.new(len, len)
   for (let i=0; i<len; i++) {
     for (let j=0; j<len; j++) {
-      J[i][j] = F.pdiff(fv[i], v, j)
+      J[i][j] = F.pdiff(fv[i], j, v)
     }
   }
   return J
 }
 
+/*
 // ===================== 函數陣列的版本 =============================
 
 // 函數版偏微分
@@ -119,6 +172,7 @@ F.fJocobian = function (fv) {
   }
   return J
 }
+*/
 
 // ============================ 積分 ================================
 // 線積分： int F●dr = int F(r(t))●r'(t) dt
@@ -142,7 +196,7 @@ F.pintegral = function (f, a, b) {
 // 注意：這裡用數值微分只取到一階，無法反映《引力場的拉普拉斯應該為 0》 的特性。若用自動微分應該就會是 0。
 F.theoremDivGradEqLaplace = function (f, v) {
   let len = v.length
-  let divGrad = F.divergence(F.fgrad(f, len), v)
+  let divGrad = F.divergence(F.grad(f, len), v)
   let laplace = F.laplaceOperator(f, v)
   console.log('div(grad(f,v))=', divGrad, ' laplace=', laplace)
   uu6.near(divGrad, laplace)
@@ -151,7 +205,7 @@ F.theoremDivGradEqLaplace = function (f, v) {
 // 定理：梯度的旋度 = 零
 F.theoremCurlGradZero = function (f, v) {
   let len = v.length
-  let r= F.curl(F.fgrad(f, len), v)
+  let r= F.curl(F.grad(f, len), v)
   console.log('curl(grad(f,v))=', r)
   uu6.near(r, V.array(len, 0))
 }
