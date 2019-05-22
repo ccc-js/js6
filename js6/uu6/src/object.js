@@ -78,4 +78,13 @@ U.key2value = function (o) {
   return r
 }
 
-U.mixin = Object.assign
+// U.mixin = Object.assign
+
+U.mixin = function (target, ...args) {
+  for (let source of args) {
+    Object.getOwnPropertyNames(source).forEach(function(property) {
+      target[property] = source[property]; 
+    })
+    // Object.assign(target, source)
+  }
+}

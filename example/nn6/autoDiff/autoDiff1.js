@@ -7,10 +7,12 @@ const AD = nn6.AD
 // let r = AD.compile('sin(x)')
 // let r = AD.compile('2*sin(3*x)')
 // let r = AD.compile('x^2')
-let r = AD.compile('sin(x)^2')
+// let r = AD.compile('sin(x)^2')
+let r = AD.compile('exp(x)')
 let x = r.symTable['x']
 // x.v = 3
-x.v = Math.PI/4
+// x.v = Math.PI/4
+x.v = 1
 
 console.log('r=', r)
 console.log('r.call()=', r.call())

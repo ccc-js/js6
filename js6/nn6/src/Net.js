@@ -66,6 +66,8 @@ module.exports = class Net {
   neg (x) { return this.op1(x, (x)=>-x, (x)=>-1) }
   rev (x) { return this.op1(x, (x)=>1/x, (x)=>-1/(x*x)) }
   sin (x) { return this.op1(x, (x)=>Math.sin(x), (x)=>Math.cos(x)) }
+  cos (x) { return this.op1(x, (x)=>Math.cos(x), (x)=>-Math.sin(x)) }
+  exp (x) { return this.op1(x, (x)=>Math.exp(x), (x)=>Math.exp(x)) }
 
   /* 這些要從輸出值 o 回饋 
   exp (x) { return this.op1(x, F.exp, F.dexp) }
