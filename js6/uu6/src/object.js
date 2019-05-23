@@ -35,6 +35,7 @@ U.clone = function (o) {
 U.type = function (o, type) { // U.is
   if (typeof o === type) return true
   if (type==='array' && Array.isArray(o)) return true
+  if (type==='number') return !isNaN(parseFloat(o)) && !isNaN(o - 0) // 參考 -- https://stackoverflow.com/questions/1303646/check-whether-variable-is-number-or-string-in-javascript
   if (typeof o === 'object') {
     if (typeof type === 'object' && o instanceof type) return true
   }

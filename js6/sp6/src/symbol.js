@@ -1,4 +1,4 @@
-const S = module.exports = require('./symDiffer')
+const S = module.exports = require('./symDiff')
 const uu6 = require('../../uu6')
 
 S.call = function (exp, context) {

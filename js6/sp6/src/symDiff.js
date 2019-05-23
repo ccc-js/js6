@@ -1,12 +1,8 @@
-const Generator = require('./GeneratorExp')
+const Generator = require('./Generator')
 const compiler = require('./exp')
+const uu6 = require('../../uu6')
 
 const S = module.exports = {}
-
-// 參考 -- https://stackoverflow.com/questions/1303646/check-whether-variable-is-number-or-string-in-javascript
-function isNumber(n) {
-  return !isNaN(parseFloat(n)) && !isNaN(n - 0)
-}
 
 function s1(op, diff) {
   var r, d1 = diff.toString()
@@ -19,14 +15,14 @@ function s1(op, diff) {
 
 function s2(a, op, b) {
   var r = null
-  if (isNumber(a) && isNumber(b)) {
+  if (uu6.type(a, 'number') && uu6.type(b, 'number')) {
     r = (op==='^') ? Math.pow(a,b) : eval(a+op+b)
   }
   // console.log('typeof a=', typeof a, 'typeof b=', typeof b)
   if (r == null) {
     switch (op) {
       case '+':
-      case '-': r = (isNumber(a) && isNumber(b)) ? eval(a+op+b) :
+      case '-': r = (uu6.type(a, 'number') && uu6.type(b, 'number')) ? eval(a+op+b) :
                     (a==0) ? b : 
                     (b==0) ? a : [a, op, b]
                 break 
@@ -73,7 +69,7 @@ class SymGenerator extends Generator {
         argStr += ','+b
         d = (b==0) ? 0 :  // a^0 = 1, df = 0
             (a==1) ? 0 :  // 1^n, df = 0
-            (isNumber(b)) ? b+'*pow('+a+','+(b-1)+')' : // a^n, df = n a^(n-1)
+            (uu6.type(b, 'number')) ? b+'*pow('+a+','+(b-1)+')' : // a^n, df = n a^(n-1)
             'pow('+a+','+b+')*('+b+'*ln('+da+')+'+db+'*ln('+a+')'
         break;
         // case '^': if (d2 == '0') d = s2(e2, '*', s2(e1, '^', s2(e2, '-', 1))); break;

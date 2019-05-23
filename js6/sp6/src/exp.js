@@ -14,28 +14,25 @@ var E = function() {
   return t1
 }
 
-// T=F ([*/^] F)*
+// T=P ([*/^] P)*
 var T = function() {
-  let t1 = F()
+  let t1 = P()
   while (isNext(/[\*\/\^]/)) {
     let op = next(/[\*\/\^]/)
-    let t2 = F()
+    let t2 = P()
     let t = g.op2(op, t1, t2)
     t1 = t
   }
   return t1
 }
 
-var CALL = function (id) {
-  next("(")
-  let args = []
-  while (!isNext(")")) {
-    let e = E()
-    args.push(e)
-    if (isNext(",")) next(",")
+var P=function() {
+  if (isNext("-")) {
+    next("-");
+    let f = F();
+    return g.op1('-', f)
   }
-  next(")")
-  return g.call(id, args)
+  return F()
 }
 
 var F=function() {  // F= ( E ) | NUMBER | ID | ID(ELIST) | -E 
@@ -53,12 +50,24 @@ var F=function() {  // F= ( E ) | NUMBER | ID | ID(ELIST) | -E
     } else {
       return g.variable(id)
     }
-  } else if (isNext("-")) {
+  } /* else if (isNext("-")) {
     next("-");
     let e = E();
     f = g.op1('-', e)
-  }
+  }*/
   return f
+}
+
+var CALL = function (id) {
+  next("(")
+  let args = []
+  while (!isNext(")")) {
+    let e = E()
+    args.push(e)
+    if (isNext(",")) next(",")
+  }
+  next(")")
+  return g.call(id, args)
 }
 
 let g = null

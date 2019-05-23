@@ -1,7 +1,10 @@
 const Net = require('./Net')
 
 class NetFunction extends Net {
-  constructor() { super() }
+  constructor() {
+    super()
+    this.symTable = {}
+  }
 
   call() { return this.forward().v }
 
