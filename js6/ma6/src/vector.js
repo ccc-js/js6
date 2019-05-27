@@ -4,6 +4,7 @@ const V = module.exports = {}
 V.array = uu6.array
 
 V.range = uu6.range
+V.steps = uu6.steps
 
 V.random = function (r, min=0, max=1) {
   let len = r.length
@@ -56,8 +57,59 @@ V.opow = function (r, a, b, len = a.length) {
   for (let i = 0; i < len; i++) r[i] = Math.pow(a[i], b[i])
 }
 
+// logical
+V.oand = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] && b[i]
+}
+
+V.oor  = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] || b[i]
+}
+
+V.oxor  = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = ( a[i] || b[i] ) && !( a[i] && b[i] )
+}
+
+// compare
+V.olt = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] < b[i]
+}
+
+V.ogt = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] > b[i]
+}
+
+V.oeq = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] === b[i]
+}
+
+V.oneq = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] !== b[i]
+}
+
+V.oleq = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] <= b[i]
+}
+
+V.ogeq = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] >= b[i]
+}
+
+// bit operator
+V.oband = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] & b[i]
+}
+
+V.obor = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] | b[i]
+}
+
+V.obxor = function (r, a, b, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = a[i] ^ b[i]
+}
+
 V.op2 = function (a, b, f2) {
-  uu6.be(a.length === b.length)
+  uu6.be(Array.isArray(a) && a.length === b.length)
   let len = a.length
   let r = new Array(len)
   f2(r, a, b, len)
@@ -70,6 +122,18 @@ V.mul = function (a, b) { return V.op2(a, b, V.omul) }
 V.div = function (a, b) { return V.op2(a, b, V.odiv) }
 V.mod = function (a, b) { return V.op2(a, b, V.omod) }
 V.pow = function (a, b) { return V.op2(a, b, V.opow) }
+V.and = function (a, b) { return V.op2(a, b, V.oand) }
+V.or  = function (a, b) { return V.op2(a, b, V.oor) }
+V.xor = function (a, b) { return V.op2(a, b, V.oxor) }
+V.eq  = function (a, b) { return V.op2(a, b, V.oeq) }
+V.neq = function (a, b) { return V.op2(a, b, V.oneq) }
+V.lt  = function (a, b) { return V.op2(a, b, V.olt) }
+V.gt  = function (a, b) { return V.op2(a, b, V.ogt) }
+V.leq = function (a, b) { return V.op2(a, b, V.oleq) }
+V.geq = function (a, b) { return V.op2(a, b, V.ogeq) }
+V.band= function (a, b) { return V.op2(a, b, V.oband) }
+V.bor = function (a, b) { return V.op2(a, b, V.obor) }
+V.bxor= function (a, b) { return V.op2(a, b, V.obxor) }
 
 // Constant Operation
 V.oaddc = function (r, a, c, len = a.length) {
@@ -96,7 +160,40 @@ V.opowc = function (r, a, c, len) {
   for (let i = 0; i < len; i++) r[i] = Math.pow(a[i], c)
 }
 
+V.oandc = function (r, a, c, len) {
+  for (let i = 0; i < len; i++) r[i] = a[i] && c
+}
+
+V.ocadd = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = c + a[i]
+}
+
+V.ocsub = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = c - a[i]
+}
+
+V.ocmul = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = c * a[i]
+}
+
+V.ocdiv = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = c / a[i]
+}
+
+V.ocmod = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = c % a[i]
+}
+
+V.ocpow = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = Math.pow(c, a[i])
+}
+
+V.ocand = function (r, a, c, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = c && a[i]
+}
+
 V.opc = function (a, c, fc) {
+  uu6.be(Array.isArray(a) && !Array.isArray(c))
   let len = a.length
   let r = new Array(len)
   fc(r, a, c, len)
@@ -109,6 +206,17 @@ V.mulc = function (a, c) { return V.opc(a, c, V.omulc) }
 V.divc = function (a, c) { return V.opc(a, c, V.odivc) }
 V.modc = function (a, c) { return V.opc(a, c, V.omodc) }
 V.powc = function (a, c) { return V.opc(a, c, V.opowc) }
+V.andc = function (a, c) { return V.opc(a, c, V.oandc) }
+V.ltc = function (a, c) { return V.opc(a, c, V.oltc) }
+
+V.cadd = function (c, a) { return V.opc(a, c, V.ocadd) }
+V.csub = function (c, a) { return V.opc(a, c, V.ocsub) }
+V.cmul = function (c, a) { return V.opc(a, c, V.ocmul) }
+V.cdiv = function (c, a) { return V.opc(a, c, V.ocdiv) }
+V.cmod = function (c, a) { return V.opc(a, c, V.ocmod) }
+V.cpow = function (c, a) { return V.opc(a, c, V.ocpow) }
+V.cand = function (c, a) { return V.opc(a, c, V.ocand) }
+V.clt  = function (c, a) { return V.opc(a, c, V.oclt) }
 
 // Uniary Operation
 V.oneg = function (r, a, len = a.length) {
@@ -117,6 +225,14 @@ V.oneg = function (r, a, len = a.length) {
 
 V.oabs = function (r, a, len = a.length) {
   for (let i = 0; i < len; i++) r[i] = Math.abs(a[i])
+}
+
+V.olog = function (r, a, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = Math.log(a[i])
+}
+
+V.onot = function (r, a, len = a.length) {
+  for (let i = 0; i < len; i++) r[i] = !a[i]
 }
 
 V.op1 = function (a, f1) {
@@ -128,6 +244,8 @@ V.op1 = function (a, f1) {
 
 V.neg = function (a) { return V.op1(a, V.oneg) }
 V.abs = function (a) { return V.op1(a, V.oabs) }
+V.log = function (a) { return V.op1(a, V.olog) }
+V.not = function (a) { return V.op1(a, V.onot) }
 
 V.dot = function (a,b) {
   let len = a.length
@@ -154,6 +272,22 @@ V.max = function (a) {
   return r
 }
 
+V.any = function (a) {
+  let len = a.length
+  for (let i=0; i<len; i++) {
+    if (a[i]) return true
+  }
+  return false
+}
+
+V.all = function (a) {
+  let len = a.length
+  for (let i=0; i<len; i++) {
+    if (!a[i]) return false
+  }
+  return true
+}
+
 V.sum = function(a) {
   let len = a.length
   let r = 0
@@ -176,6 +310,17 @@ V.norm = function (a) {
   let a2 = V.powc(a, 2)
   return Math.sqrt(V.sum(a2))
 }
+
+V.norminf = function (a) {
+  let len = a.length
+  let r = 0
+  for (let i=0; i<len; i++) {
+    r = Math.max(r, Math.abs(a[i]))
+  }
+  return r
+}
+
+// norminf: ['accum = max(accum,abs(xi));','var accum = 0, max = Math.max, abs = Math.abs;'],
 
 V.mean = function(a) {
   return V.sum(a)/a.length

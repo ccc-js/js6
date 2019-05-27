@@ -6,4 +6,4 @@ function argmax(list) {
   return {max, index}
 }
 
-module.exports = argmax
+module.exports = {argmax}

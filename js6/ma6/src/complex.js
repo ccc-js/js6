@@ -1,68 +1,70 @@
 const C = module.exports = {}
 
-C.toComplex = function (o) {
-  if (typeof o === 'number')
-    return new Complex(o, 0);
-  else if (o instanceof Complex)
-    return o;
-  throw Error('toComplex fail');
-}
-
-C.polarToComplex = function (r,theta) {
-  let cr = r*Math.cos(theta), ci = r*Math.sin(theta)
-  return new Complex(cr, ci)
-}
-
-C.parseComplex = function(s) {
+C.complex = function(s) {
   let m = s.match(/^([^\+]*)(\+(.*))?$/)
   let r = parseFloat(m[1])
   let i = typeof m[3]==='undefined' ? 1 : parseFloat(m[3])
-  return new Complex(r, i)
+  return {r, i}
+}
+
+C.polarToComplex = function (p) {
+  return {r: p.radius*Math.cos(p.theta), i: p.radius*Math.sin(p.theta)}
+}
+
+C.complexToPolar = function (a) {
+  let {r, i}=a
+  let d=Math.sqrt(r*r+i*i)
+  let theta = Math.acos(r/d)
+  return {radius:d, theta:theta}
+}
+
+C.conj = function (a) { return {r:a.r, i:-a.i} }
+C.neg = function (a) { return {r:-a.r, i:-a.i} }
+C.add = function (a,b) { return {r:a.r+b.r, i:a.i+b.i} }
+C.sub = function (a,b) { return {r:a.r-b.r, i:a.i-b.i} }
+C.mul = function (a,b) { return {r:a.r*b.r-a.i*b.i, i:a.r*b.i+a.i*b.r} }
+C.div = function (a,b) { return C.mul(a, C.pow(b, -1)) }
+C.pow = function (a,k) {
+  let p = C.complexToPolar(a)
+  return C.polarToComplex({radius:Math.pow(p.radius, k), theta:k*p.theta })
+}
+C.sqrt = function (a) {
+  return C.pow(a, 1/2)
+}
+C.str = function (a, digits=4) {
+  let r = a.r.toFixed(digits)
+  let i = a.i.toFixed(digits)
+  let op = (a.i < 0)?'':'+'
+  return r + op + i + 'i'
 }
 
 class Complex {
-  constructor(r,i) {
-    this.r = r; this.i = i
+  constructor(a) {
+    if (typeof a === 'string') return new Complex(C.complex(a))
+    this.r = a.r; this.i = a.i
   }
-
-  conj() { let {r,i} = this; return new Complex(r, -i) }
-  neg() { let {r,i} = this; return new Complex(-r, -i) }
-  add(b) { let {r,i} = this; return new Complex(r+b.r, i+b.i) }
-  sub(b) { let {r,i} = this; return new Complex(r-b.r, i-b.i) }
-  mul(b) { let {r,i} = this; return new Complex(r*b.r-i*b.i, r*b.i+i*b.r) }
-	div(b) { return this.mul(b.pow(-1)) }
-  clone() {  let {r,i} = this; return new Complex(r, i) }
-  toString() {
-    let {r,i} = this
-    let op = (i < 0)?'':'+'
-    return r + op + i + 'i'
-  }
-  
-  toPolar() {
-    let {r, i}=this
-    let d=Math.sqrt(r*r+i*i)
-    let theta = Math.acos(r/d)
-    return {r:d, theta:theta}
-  }
-  
-  pow(k) {
-    let p = this.toPolar()
-    return C.polarToComplex(Math.pow(p.r, k), k*p.theta)
-  }
-  
-  sqrt() {
-    return this.pow(1/2)
-  }
-
+  conj() { return new Complex(C.conj(this)) }
+  neg() { return new Complex(C.neg(this)) }
+  add(b) { return new Complex(C.add(this, b)) }
+  sub(b) { return new Complex(C.sub(this, b)) }
+  mul(b) { return new Complex(C.mul(this, b)) }
+	div(b) { return new Complex(C.div(this, b)) }
+  clone() { return new Complex(this) }
+  toString() { return C.str(this) }
+  toPolar() { return C.complexToPolar(this) }
+  pow(k) { return new Complex(C.pow(this, k)) }
+  sqrt() { return new Complex(C.sqrt(this)) }
+  /*
   toFixed(digits=4) {
     let c = this.clone()
     c.r = parseFloat(c.r.toFixed(digits))
     c.i = parseFloat(c.i.toFixed(digits))
     return C.parseComplex(c.toString())
   }
+  */
 }
 
-C.complex = function (s) { return C.parseComplex(s) }
+// C.complex = function (s) { return C.parseComplex(s) }
 
 C.complexArray = function (s) {
   let c = s.split(','), len = c.length

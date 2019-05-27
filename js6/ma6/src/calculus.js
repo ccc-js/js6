@@ -99,7 +99,7 @@ F.grad = function (f, v, h=F.h) {
 
 // 散度 divergence : div(fv,x) = sum(pdiff(fv[i],v,i))
 // 說明： fv=[f1,f2,...,fn] 可微分向量函數
-F.div = function (fv, v) {
+F.divergence = function (fv, v) {
   console.log('div:fv=', fv)
   let len = v.length, d = new Array(len)
   for (var i = 0; i < len; i++) {
@@ -108,7 +108,7 @@ F.div = function (fv, v) {
   return V.sum(d)
 }
 
-F.divergence = F.div
+// F.divergence = F.div
 
 F.is3D = function (fv, v) {
   if (fv.length !== 3 || v.length !== 3) throw Error('curl(fv, v): dimension should be 3')

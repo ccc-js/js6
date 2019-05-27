@@ -4,6 +4,6 @@ module.exports = class Group extends Set {
   inv(a)  { throw Error('Group.inv() not defined!') }
 
   static test() {
-    rule([close, assoc, ident, inver], this)
+    rules([close, assoc, ident, inver], this)
   }
 }

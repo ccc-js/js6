@@ -1,34 +1,34 @@
 const F = module.exports = {}
 
 F.neg = function (fx) {
-  return function (v) { return -1 * fx(v) }
+  return function (...arg) { return -1 * fx(...arg) }
 }
 
 F.inv = function (fx) {
-  return function (v) { return 1 / fx(v) }
+  return function (...arg) { return 1 / fx(...arg) }
 }
 
 F.add = function (fx, fy) {
-  return function (v) { return fx(v).add(fy(v)) }
+  return function(...arg) { return fx(...arg)+fy(...arg) }
 }
 
 F.sub = function (fx, fy) {
-  return function (v) { return fx(v).sub(fy(v)) }
+  return function(...arg) { return fx(...arg)-fy(...arg) }
 }
 
 F.mul = function (fx, fy) {
-  return function (v) { return fx(v).mul(fy(v)) }
+  return function(...arg) { return fx(...arg)*fy(...arg) }
 }
 
 F.div = function (fx, fy) {
-  return function (v) { return fx(v).div(fy(v)) }
+  return function(...arg) { return fx(...arg)/fy(...arg) }
 }
 
 F.compose = function (fx, fy) {
-  return function (v) { return fx(fy(v)) }
+  return function(...arg) { return fx(fy(...arg)) }
 }
 
-F.eval = function (f, x) { return f(x) }
+F.eval = function (f, ...arg) { return f(...arg) }
 
 // f=(x,y)=>x*y+x*x;
 // f0=fa(f); f0([x,y]);
@@ -63,4 +63,12 @@ F.gcd = function (a, b) {
 
 F.lcm = function (a, b) {
   return (a * b) / F.gcd(a, b)
+}
+
+F.factorial = function (n) {
+  let r = 1
+  for (let i=2; i<=n; i++) {
+    r *= i
+  }
+  return r
 }

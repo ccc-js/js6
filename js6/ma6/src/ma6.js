@@ -9,16 +9,23 @@ const ma6 = module.exports = {
   S: require('./stat'),
   F: require('./function'),
   C: require('./constant'),
-  D: require('./calculus'),
+  // D: require('./calculus'),
   // AD: require('../../nn6/src/autoDiff'),
-  argmax: require('./argmax'),
+  // argmax: require('./argmax'),
 }
 
-uu6.mixin(ma6, ma6.R, ma6.V, ma6.T, ma6.M, ma6.S, ma6.F, ma6.C, ma6.D,
+uu6.mixin(ma6, ma6.R, ma6.V, ma6.T, ma6.M, ma6.S, ma6.F, ma6.C, 
+  require('./calculus'),
   require('./point'),
   require('./complex'),
   require('./calculus'),
   require('./space'),
   require('./entropy'),
   require('./transform'),
+  require('./optimize'),
+  require('./series'),
+  require('./ratio'),
+  require('./ode'),
+  Math,
 )
+

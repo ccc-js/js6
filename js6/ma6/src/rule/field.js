@@ -13,6 +13,6 @@ module.exports = class Field {
   static test (f) {
     Group.test(f.gadd)
     Group.test(f.gmul)
-    rule([distr], f)
+    rules([distr], f)
   }
 }
