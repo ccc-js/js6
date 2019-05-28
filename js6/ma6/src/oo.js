@@ -33,7 +33,7 @@ O.obj = function (o) {
   if (O.all(o, ['r', 'i'])) return {type:'complex', v:o}
   if (O.all(o, ['a', 'b'])) return {type:'ratio', v:o}
   if (O.all(o, ['v', 'shape'])) return {type:'tensor', v:o}
-  console.log('obj:o=%j', o)
+  // console.log('obj:o=%j', o)
   throw Error('oo: fail! o='+o)
 }
 
@@ -62,17 +62,28 @@ function op2(x, y, op) {
   if (xt==='complex' && yt==='complex') return oo(C[op](xv,yv))
   if (xt==='number' && yt==='number') return oo(V[op](xv,yv))
   let nv = ['number', 'tensor']
-  if (xt === 'tensor') { xshape = xv.shape; xv = xv.v }
+  if (xt === 'tensor') { xshape = xv.shape; xv = xv.v } 
   if (yt === 'tensor') { yshape = yv.shape; yv = yv.v }
   if (has(nv, xt) && has(nv, yt)) return oo({v:V[op](xv,yv), shape:xshape||yshape})
+}
+
+function t1 (o, op) {
+  let r = T[op](o.v)
+  try { return new OO(r) } catch (e) { return r }
+}
+
+function t2 (a, b, op) {
+  let r = T[op](a.v, b.v)
+  try { return new OO(r) } catch (e) { return r }
 }
 
 class OO {
   constructor(v) {
     let o = O.obj(v)
     this.v = o.v
-    this.type = o.type
+    this.type = o.type 
   }
+  // vector
   add(b) { return op2(this, b, 'add') }
   sub(b) { return op2(this, b, 'sub') }
   mul(b) { return op2(this, b, 'mul') }
@@ -91,6 +102,24 @@ class OO {
   gt(b)  { return op2(this, b, 'gt') }
   leq(b) { return op2(this, b, 'leq') }
   geq(b) { return op2(this, b, 'geq') }
+  // matrix : op1
+  diag() { return t1(this, 'diag') }
+  inv() { return t1(this, 'inv') }
+  transpose() { return t1(this, 'transpose') }
+  det() { return t1(this, 'det') }
+  lu() { return t1(this, 'lu') }
+  svd() { return t1(this, 'svd') }
+  rows() { return t1(this, 'rows') }
+  cols() { return t1(this, 'cols') }
+  rowSum() { return t1(this, 'rowSum') }
+  rowMean() { return t1(this, 'rowMean') }
+  colSum() { return t1(this, 'colSum') }
+  colMean() { return t1(this, 'colMean') }
+  // matrix : op2
+  mdot(b) { return t2(this, b, 'mdot') }
+  solve(b) { return t2(this, b, 'solve') }
+
+  // solve(b) { return t2(this, 'solve') }
   toString(digits=4) {
     var {type, v} = this
     switch (type) {

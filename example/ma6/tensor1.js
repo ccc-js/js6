@@ -4,34 +4,27 @@ const {T, V} = ma6
 
 let shape = [2,2,3], idx=[1,1,2]
 let v = uu6.range(0,12)
-console.log('v=', v)
+console.log('v=%j', v)
 
-let t = ma6.tensor(v, shape)
-console.log('t.get(%j)=', idx, t.get(...idx))
+let t = {v:v, shape:shape}
+console.log('t.get(%j)=', idx, T.get(t, ...idx))
+console.log('t=%s', T.str(t))
 
-t.reshape([3,4])
+T.reshape(t, [3,4])
 
-console.log('t=', t)
+console.log('t=%s', T.str(t))
 
-let nd = t.ndarray()
-console.log('nd=', nd)
+let nd = T.tensor2ndarray(t)
+console.log('nd=%j', nd)
 
-console.log('t.ndarray()=', uu6.json(t.ndarray()))
+let t2 = T.ndarray2tensor(nd)
+console.log('t2=%j', t2)
 
-let t2 = T.tensor(nd)
-console.log('t2=', t2)
+let t3 = T.add(t, t)
+console.log('t3=%j', t3)
 
-/*
-console.log('t.ndarray()=', uu6.json(t.ndarray()))
-
-let nd = [[1,2],[3,4]]
-console.log('nd=', nd)
-t = new Tensor(nd)
-console.log('t=', t)
-
-let nd2 = t.ndarray()
-console.log('nd2=', nd2)
-*/
+let t4 = T.sub(t, t)
+console.log('t4=%j', t4)
 
 
-// console.log('t.slice([1,1],[3,3]=', t.slice([1,1], [3,3]))
+

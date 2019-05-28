@@ -1,17 +1,17 @@
-const {OO, RA} = require('../../js6/ma6')
-
+const {OO} = require('../../js6/ma6')
+const {oo} = OO
 console.log('==================vector============')
-let a = [2,4,3]
-let b = [1,2,3]
-let c = 2
+let a = oo([2,4,3])
+let b = oo([1,2,3])
+let c = oo(2)
 console.log('a=', a, '\nb=', b, '\nc=', c)
-console.log('add(a,b)=%j', OO.add(a,b))
-console.log('add(a,c)=%j', OO.add(a,c))
-console.log('add(c,b)=%j', OO.add(c,b))
-console.log('add(c,c)=%j', OO.add(c,c))
+console.log('add(a,b)=%s', a.add(b))
+console.log('add(a,c)=%s', a.add(c))
+console.log('add(c,b)=%s', c.add(b))
+console.log('add(c,c)=%j', c.add(c))
 
 console.log('==================ratio============')
-a = RA.ratio('3/5'), b=RA.ratio('5/3')
+a = oo('3/5'), b = oo('5/3')
 console.log('a=', a, 'b=', b)
-console.log('add(a,b)=', OO.add(a,b))
-console.log('mul(a,b)=', OO.mul(a,b))
+console.log('add(a,b)=', a.add(b))
+console.log('mul(a,b)=', a.mul(b))

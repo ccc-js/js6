@@ -4,11 +4,14 @@ const uu6 = require('../../uu6')
 const V   = require('./vector')
 const M   = require('./matrix')
 
-T.size = function (shape) {
-  return V.product(shape)
+T.dim = function (o) { return o.shape.length }
+
+T.size = function (o) {
+  return V.product(o.shape)
 }
 
-T.offset = function (shape, idx, lo) {
+T.offset = function (o, idx, lo) {
+  let {v, shape} = o
   let len = shape.length
   lo = lo || V.array(len)
   let offset = idx[0]+lo[0]
@@ -18,7 +21,21 @@ T.offset = function (shape, idx, lo) {
   return offset
 }
 
-T.sliceNdarray = function (v, shape, lo, hi) {
+T.get = function (o, ...idx) {
+  return o.v[T.offset(o, idx)]
+}
+
+T.set = function (o, ...idx) {
+  let item = idx.pop()
+  o.v[T.offset(o.shape, idx)] = item
+}
+
+T.reshape = function (o, shape) {
+  o.shape = shape
+}
+
+T.sliceNdarray = function (o, lo, hi) {
+  let {v, shape} = o
   let dim = shape.length
   let [wi,wj,wk] = shape
   let [wi2,wj2,wk2] = [hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]]
@@ -55,8 +72,8 @@ T.sliceNdarray = function (v, shape, lo, hi) {
   throw Error('sliceNdarray():dim > 3')
 }
 
-T.tensor2ndarray = function (v, shape, lo, hi) {
-  return T.sliceNdarray(v, shape, V.array(shape.length), shape)
+T.tensor2ndarray = function (o) {
+  return T.sliceNdarray(o, V.array(o.shape.length), o.shape)
 }
 
 T.ndarray2tensor = function (nd) {
@@ -78,135 +95,105 @@ T.ndarray2tensor = function (nd) {
 }
 
 T.str = function (o) {
-  return uu6.json(T.tensor2ndarray(o.v, o.shape))
+  return uu6.json(T.tensor2ndarray(o))
 }
 
-class Tensor extends V.Vector { // 
-  // ================== Tensor =========================
-  constructor(v, shape) {
-    super()
-    uu6.be(v || shape)
-    if (v && !shape) {
-      let nd = v
-      let t = T.ndarray2tensor(nd)
-      this.v = t.v
-      this.shape = t.shape  
-    } else {
-      this.v = v || uu6.array(T.size(shape))
-      this.shape = shape || [this.v.length]
-      uu6.be(T.size(this.shape) === this.v.length)
+// ============================= vector ==================================
+T.op2 = function (a, b, op) { return {v: V[op](a.v, b.v), shape: a.shape || b.shape}}
+T.add = (a, b) => T.op2(a, b, 'add')
+T.sub = (a, b) => T.op2(a, b, 'sub')
+T.mul = (a, b) => T.op2(a, b, 'mul')
+T.div = (a, b) => T.op2(a, b, 'div')
+T.mod = (a, b) => T.op2(a, b, 'mod')
+T.pow = (a, b) => T.op2(a, b, 'pow')
+T.and = (a, b) => T.op2(a, b, 'and')
+T.or  = (a, b) => T.op2(a, b, 'or')
+T.xor = (a, b) => T.op2(a, b, 'xor')
+T.band= (a, b) => T.op2(a, b, 'band')
+T.bor = (a, b) => T.op2(a, b, 'bor')
+T.bxor= (a, b) => T.op2(a, b, 'bxor')
+T.eq  = (a, b) => T.op2(a, b, 'eq')
+T.neq = (a, b) => T.op2(a, b, 'neq')
+T.lt  = (a, b) => T.op2(a, b, 'lt')
+T.gt  = (a, b) => T.op2(a, b, 'gt')
+T.leq = (a, b) => T.op2(a, b, 'leq')
+T.geq = (a, b) => T.op2(a, b, 'geq')
+
+// ============================= matrix ==================================
+let beMatrix = T.beMatrix = function (o) { uu6.be(T.dim(o) == 2) }
+T.rows = function (o) { beMatrix(o); return o.shape[0] }
+T.cols = function (o) { beMatrix(o); return o.shape[1] }
+T.rowSum = function (o) { beMatrix(o)
+  let rows = T.rows(o), cols = T.cols(o)
+  let s = V.array(rows), v = o.v
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      s[i] += v[i*cols+j]
     }
   }
-  get(...idx) {
-    return this.v[T.offset(this.shape, idx)]
-  }
-  set(...idx) { // ...idx, o
-    let o = idx.pop()
-    this.v[T.offset(this.shape, idx)] = o
-  }
-  slice(v, shape, lo, hi) {
-    this.lo = (!lo) ? lo : V.add(this.lo, lo)
-    this.hi = (!lo) ? hi : V.add(this.lo, hi)
-  }
-  reshape(shape) {
-    uu6.be(uu6.type(shape, 'array') && T.size(shape) === this.v.length)
-    this.shape = shape
-    return this
-  }
-  ndarray() {
-    return T.tensor2ndarray(this.v, this.shape)
-  }
-  clone(v) {
-    let vt = v || this.v
-    return new Tensor(vt.slice(0), this.shape)
-  }
-  toString() {
-    return uu6.json(this.ndarray())
-  }
-  dim() { return this.shape.length }
-
-  // ================== Matrix =============================
-  beMatrix() { uu6.be(this.dim() == 2) }
-  rows () { this.beMatrix(); return this.shape[0] }
-  cols () { this.beMatrix(); return this.shape[1] }
-
-  rowSum () { this.beMatrix();
-    let rows = this.rows(), cols = this.cols()
-    let s = V.array(rows), v = this.v
-    for (let i = 0; i < rows; i++) {
-      for (let j = 0; j < cols; j++) {
-        s[i] += v[i*cols+j]
-      }
-    }
-    return new Tensor(s)
-  }
-  rowMean() { return this.rowSum().divc(this.cols()) }
-  
-  colSum () { this.beMatrix();
-    let rows = this.rows(), cols = this.cols()
-    let s = V.array(cols), v = this.v
-    for (let i = 0; i < rows; i++) {
-      for (let j = 0; j < cols; j++) {
-        s[j] += v[i*cols+j]
-      }
-    }
-    return new Tensor(s)
-  }
-  colMean() { return this.colSum().divc(this.rows()) }
-
-  transpose() { this.beMatrix();
-    let a = this.ndarray()
-    return new Tensor(M.transpose(a))
-  }
-
-  dot (b) { this.beMatrix();
-    let ax = this.ndarray(), bx = b.ndarray()
-    return new Tensor(M.dot(ax, bx))
-  }
-
-  diag () { this.beMatrix();
-    let a = this, av = a.v, [rows, cols] = a.shape
-    let r = new Tensor(a.v, a.shape), rv = r.v
-    let v = V.array(rows)
-    for (let i = 0; i < rows; i++) {
-      v[i] = av[i][i]
-    }
-    return v
-  }
-
-  inv () { this.beMatrix();
-    let a = this.ndarray()
-    let ia = M.inv(a)
-    return new Tensor(ia)
-  }
-
-  det() { this.beMatrix();
-    let a = this.ndarray()
-    return M.det(a)
-  }
-
-  lu() { this.beMatrix();
-    let a = this.ndarray()
-    return M.lu(a)
-  }
-
-  svd() { this.beMatrix();
-    let a = this.ndarray()
-    return M.svd(a)
-  }
-
-  solve(b) { this.beMatrix();
-    let a = this.ndarray()
-    return M.solve(a, b)
-  }
+  return {v:s, shape:[rows]}
 }
 
-let p = Tensor.prototype
-p.tr = p.transpose
+T.rowMean = function (o) { beMatrix(o)
+  let cols = T.cols(o);
+  return {v: V.div(T.rowSum(o).v, cols), shape:[cols] }
+}
 
-T.Tensor = Tensor
-T.Matrix = Tensor
+T.colSum = function (o) { beMatrix(o)
+  let rows = T.rows(o), cols = T.cols(o)
+  let s = V.array(cols), v = o.v
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      s[j] += v[i*cols+j]
+    }
+  }
+  return {v:s, shape:[cols]}
+}
+T.colMean = function (o) { beMatrix(o)
+  return V.div(T.colSum(o), T.rows(o))
+}
 
-T.tensor = function (v, shape) {
-  return new Tensor(v, shape)
+T.transpose = function (o) { beMatrix(o)
+  let a = T.tensor2ndarray(o)
+  return T.ndarray2tensor(M.transpose(a))
+}
+
+T.mdot = function (a, b) { beMatrix(a)
+  let ax = T.tensor2ndarray(a), bx = T.tensor2ndarray(b)
+  return T.ndarray2tensor(M.dot(ax, bx))
+}
+
+T.diag = function (o) { beMatrix(o)
+  let a = o, av = a.v, [rows, cols] = a.shape
+  let v = V.array(rows)
+  for (let i = 0; i < rows; i++) {
+    v[i] = av[i][i]
+  }
+  return v
+}
+
+T.inv = function (o) { beMatrix(o)
+  let a = T.tensor2ndarray(o)
+  let ia = M.inv(a)
+  return T.ndarray2tensor(ia)
+}
+
+T.det = function (o) { beMatrix(o)
+  let a = T.tensor2ndarray(o)
+  return M.det(a)
+}
+
+T.lu = function (o) { beMatrix(o)
+  let a = T.tensor2ndarray(o)
+  return M.lu(a)
+}
+
+T.svd = function (o) { beMatrix(o)
+  let a = T.tensor2ndarray(o)
+  return M.svd(a)
+}
+
+T.solve = function (o, b) { beMatrix(o)
+  let a = T.tensor2ndarray(o)
+  return M.solve(a, b)
 }
