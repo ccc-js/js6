@@ -37,11 +37,19 @@ C.str = function (a, digits=4) {
   let op = (a.i < 0)?'':'+'
   return r + op + i + 'i'
 }
+C.toFixed = function (c) {
+  c.r = parseFloat(c.r.toFixed(digits))
+  c.i = parseFloat(c.i.toFixed(digits))
+  return C.complex(c.toString())
+}
 
 class Complex {
   constructor(a) {
-    if (typeof a === 'string') return new Complex(C.complex(a))
-    this.r = a.r; this.i = a.i
+    let t = typeof a
+    if (t === 'string') { a = C.complex(a); t = typeof a }
+    if (t === 'object') { this.r = a.r; this.i = a.i; return }
+    // console.log('Complex:a=%j', a)
+    throw Error('Complex.constructor error: a='+a.toString())
   }
   conj() { return new Complex(C.conj(this)) }
   neg() { return new Complex(C.neg(this)) }
@@ -54,6 +62,7 @@ class Complex {
   toPolar() { return C.complexToPolar(this) }
   pow(k) { return new Complex(C.pow(this, k)) }
   sqrt() { return new Complex(C.sqrt(this)) }
+  toFixed(digits=4) { return C.toFixed(this) }
   /*
   toFixed(digits=4) {
     let c = this.clone()

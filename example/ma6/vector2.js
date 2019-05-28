@@ -1,0 +1,52 @@
+const {V} = require('../../js6/ma6')
+
+let a = [2,4,3]
+let b = [1,2,3]
+let c = 2
+console.log('a=', a, '\nb=', b, '\nc=', c)
+console.log('add(a,b)=', V.add(a,b))
+console.log('add(a,c)=', V.add(a,c))
+console.log('add(c,b)=', V.add(c,b))
+console.log('add(c,c)=', V.add(c,c))
+console.log('==================================')
+console.log('a=', a, '\nb=', b)
+console.log('add(a,b)=', V.add(a,b))
+console.log('sub(a,b)=', V.sub(a,b))
+console.log('mul(a,b)=', V.mul(a,b))
+console.log('div(a,b)=', V.div(a,b))
+console.log('mod(a,b)=', V.mod(a,b))
+console.log('pow(a,b)=', V.pow(a,b))
+console.log('band(a,b)=',V.band(a,b))
+console.log('bor(a,b)=', V.bor(a,b))
+console.log('bxor(a,b)=',V.bxor(a,b))
+console.log('eq(a,b)=' , V.eq(a,b))
+console.log('neq(a,b)=', V.neq(a,b))
+console.log('lt(a,b)=' , V.lt(a,b))
+console.log('gt(a,b)=' , V.gt(a,b))
+console.log('leq(a,b)=', V.leq(a,b))
+console.log('geq(a,b)=', V.geq(a,b))
+console.log('==================================')
+a = [true,false,true]
+b = [false, false, true]
+console.log('a=', a, '\nb=', b)
+console.log('and(a,b)=', V.and(a,b))
+console.log('or(a,b)=' , V.or(a,b))
+console.log('xor(a,b)=', V.xor(a,b))
+console.log('eq(a,b)=' , V.eq(a,b))
+console.log('neq(a,b)=', V.neq(a,b))
+/*
+console.log('neg(a)=',   a.neg())
+console.log('add(a,b)=', a.add(b))
+console.log('sub(a,b)=', a.sub(b))
+console.log('mul(a,b)=', a.mul(b))
+console.log('div(a,b)=', a.div(b))
+console.log('mod(a,b)=', a.mod(b))
+console.log('powc(a,c)=',a.powc(c))
+console.log('mulc(a,c)=',a.mulc(c))
+console.log('dot(a,b)=', a.dot(b))
+console.log('sum(a)=',   a.sum())
+console.log('mean(a)=',  a.mean())
+console.log('sd(a)=',    a.sd())
+
+console.log('a.mulc(c).add(b).add(a)=', a.mulc(c).add(b).add(a))
+*/

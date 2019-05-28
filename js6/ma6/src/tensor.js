@@ -77,6 +77,10 @@ T.ndarray2tensor = function (nd) {
   return {v: v, shape: t.shape }
 }
 
+T.str = function (o) {
+  return uu6.json(T.tensor2ndarray(o.v, o.shape))
+}
+
 class Tensor extends V.Vector { // 
   // ================== Tensor =========================
   constructor(v, shape) {

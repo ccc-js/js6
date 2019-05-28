@@ -16,9 +16,14 @@ R.reduce = function (x) {
 
 R.ratio = function (s) {
   var m = s.match(/^(\d+)(\/(\d+))?$/);
+  if (m == null) return
   var a = parseInt(m[1]);
   var b = typeof m[3]==='undefined'?1:parseInt(m[3]);
   return {a, b}
+}
+
+R.number = function (x) {
+  return x.a/x.b
 }
 
 class Ratio {

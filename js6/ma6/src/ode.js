@@ -1,7 +1,5 @@
 const V = require('./vector')
-const {norminf, any} = V
-const {add, sub, mul, and, lt } = require('./op')
-
+const {norminf, any, add, sub, mul, and, lt } = V
 const O = {}
 // 10. Ode solver (Dormand-Prince)
 O.Dopri = function Dopri(x,y,f,ymid,iterations,msg,events) {

@@ -4,11 +4,11 @@ const Complex = ma6.Complex
 
 describe('ma6 test', function() {
   it('Complex test', function() {
-    let a = new Complex(1, 2)
-    let b = new ma6.parseComplex('2+1i')
+    let a = new Complex('1+2i')
+    let b = ma6.complex('2+1i')
     expect(a.add(b).sub(b)).to.equal(a)
-    let e = a.mul(b).div(b).toFixed(4)
-    expect(e).to.equal(a)
+    let e = a.mul(b).div(b) // .toFixed(4)
+    expect(e.r).to.near(a.r)
   })
 })
 

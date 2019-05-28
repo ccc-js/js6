@@ -9,6 +9,8 @@ const ma6 = module.exports = {
   S: require('./stat'),
   F: require('./function'),
   C: require('./constant'),
+  OO: require('./oo'),
+  RA: require('./ratio')
   // D: require('./calculus'),
   // AD: require('../../nn6/src/autoDiff'),
   // argmax: require('./argmax'),

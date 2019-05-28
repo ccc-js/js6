@@ -2,6 +2,7 @@ const uu6 = require('../../uu6')
 const V = module.exports = {}
 
 V.array = uu6.array
+
 V.range = uu6.range
 V.steps = uu6.steps
 
@@ -32,260 +33,6 @@ V.normalize = function (r) {
   return r
 }
 
-function op2(op) { // 這個函數強調速度，所以會比較長 ...
-  let text = `
-  var ai, bi, i, c
-  let aA = Array.isArray(a)
-  let bA = Array.isArray(b)
-  let len = a.length || b.length
-  if (aA && bA) {
-    c = new Array(len)
-    for (let i=0; i<len; i++) {
-      ai=a[i]
-      bi=b[i]
-      c[i] = ${op}
-    }
-    return c
-  }
-  if (!aA && !bA) { ai=a; bi=b; return ${op} }
-  c = new Array(len)
-  for (let i=0; i<len; i++) {
-    ai=(aA) ? a[i] : a
-    bi=(bA) ? b[i] : b
-    c[i] = ${op}
-  }
-  return c
-  `
-  return new Function('a', 'b', text)
-}
-
-V.add = op2('ai+bi')
-V.sub = op2('ai-bi')
-V.mul = op2('ai*bi')
-V.div = op2('ai/bi')
-V.mod = op2('ai%bi')
-V.pow = op2('Math.pow(ai,bi)')
-V.and = op2('ai&&bi')
-V.or  = op2('ai||bi')
-V.xor = op2('(ai || bi) && !(ai && bi)')
-V.band= op2('ai&bi')
-V.bor = op2('ai|bi')
-V.bxor= op2('ai^bi')
-V.eq  = op2('ai==bi')
-V.neq = op2('ai!=bi')
-V.lt  = op2('ai<bi')
-V.gt  = op2('ai>bi')
-V.leq = op2('ai<=bi')
-V.geq = op2('ai>=bi')
-
-
-// Uniary Operation
-V.op1 = function (op) {
-  let text = `
-  var ai
-  let aA = Array.isArray(a)
-  if (!aA) { ai=a; return ${op} }
-  let len = a.length
-  let c = new Array(len)
-  for (let i=0; i<len; i++) {
-    ai=a[i]
-    c[i] = ${op}
-  }
-  return c
-  `
-  return new Function('a', text)
-}
-
-V.neg = V.op1('-ai')
-V.abs = V.op1('Math.abs(ai)')
-V.log = V.op1('Math.log(ai)')
-V.not = V.op1('!ai')
-
-// 累積性運算
-V.dot = function (a,b) {
-  let len = a.length
-  let r = 0
-  for (let i=0; i<len; i++) {
-    r += a[i] * b[i]
-  }
-  return r
-}
-
-V.min = function (a) {
-  let len = a.length, r = a[0]
-  for (let i=1; i<len; i++) {
-    if (a[i] < r) r = a[i]
-  }
-  return r
-}
-
-V.max = function (a) {
-  let len = a.length, r = a[0]
-  for (let i=1; i<len; i++) {
-    if (a[i] > r) r = a[i]
-  }
-  return r
-}
-
-V.any = function (a) {
-  let len = a.length
-  for (let i=0; i<len; i++) {
-    if (a[i]) return true
-  }
-  return false
-}
-
-V.all = function (a) {
-  let len = a.length
-  for (let i=0; i<len; i++) {
-    if (!a[i]) return false
-  }
-  return true
-}
-
-V.sum = function(a) {
-  let len = a.length
-  let r = 0
-  for (let i=0; i<len; i++) {
-    r += a[i]
-  }
-  return r
-}
-
-V.product = function(a) {
-  let len = a.length
-  let r = 1
-  for (let i=0; i<len; i++) {
-    r *= a[i]
-  }
-  return r
-}
-
-V.norm = function (a) {
-  let a2 = V.pow(a, 2)
-  return Math.sqrt(V.sum(a2))
-}
-
-V.norminf = function (a) {
-  let len = a.length
-  let r = 0
-  for (let i=0; i<len; i++) {
-    r = Math.max(r, Math.abs(a[i]))
-  }
-  return r
-}
-
-// norminf: ['accum = max(accum,abs(xi));','var accum = 0, max = Math.max, abs = Math.abs;'],
-
-V.mean = function(a) {
-  return V.sum(a)/a.length
-}
-
-V.sd = function (a) {
-  let m = V.mean(a)
-  let diff = V.sub(a, m)
-  let d2 = V.pow(diff, 2)
-  return Math.sqrt(V.sum(d2)/(a.length-1))
-}
-
-const EPSILON = 0.00000001
-
-V.hist = function (a, from = Math.floor(V.min(a)), to=Math.ceil(V.max(a)), step = 1) {
-  // from = (from==null) ?  : from
-  // to   = (to==null) ?  : to
-  var n = Math.ceil((to - from + EPSILON) / step)
-  var xc = V.range(from + step / 2.0, to, step)
-  var bins = V.array(n, 0)
-  let len = a.length
-  for (let i=0; i<len; i++) {
-    var slot = Math.floor((a[i] - from) / step)
-    if (slot >= 0 && slot < n) {
-      bins[slot]++
-    }
-  }
-  return {type: 'histogram', xc: xc, bins: bins, from: from, to: to, step: step}
-}
-
-class Vector {
-  constructor(o) { this.v = (Array.isArray(o))?o.slice(0):new Array(o) }
-  static random(n, min=0, max=1) { return new Vector(V.random(n, min, max)) }
-  static range(begin, end, step=1) { return new Vector(V.range(begin, end, step)) }
-  static zero(n) { return new Vector(n) }
-  assign(o) { let a=this; V.assign(a.v, o); return a }
-  random(min=0, max=1) { this.v = V.random(n, min, max) }
-  add(b) { let a=this; return a.clone(V.add(a.v,b.v)) }
-  sub(b) { let a=this; return a.clone(V.sub(a.v,b.v)) } 
-  mul(b) { let a=this; return a.clone(V.mul(a.v,b.v)) } 
-  div(b) { let a=this; return a.clone(V.div(a.v,b.v)) } 
-  mod(b) { let a=this; return a.clone(V.mod(a.v,b.v)) }
-  neg() { let a=this; return a.clone(V.neg(a.v)) }
-  dot(b) { let a=this; return V.dot(a.v,b.v) }
-  min() { let a=this; return V.min(a.v) }
-  max() { let a=this; return V.max(a.v) }
-  sum() { let a=this; return V.sum(a.v) }
-  norm() { let a=this; return V.norm(a.v)  }
-  mean() { let a=this; return V.mean(a.v) }
-  sd() { let a=this; return V.sd(a.v) }
-  toString() { return this.v.toString() }
-  clone(v) { return new Vector(v||this.v) }
-  hist(from, to, step) { let a = this; return V.hist(a.v, from, to, step) }
-  get length() { return this.v.length }
-}
-
-V.Vector = Vector
-
-V.vector = function (o) {
-  return new Vector(o)
-}
-
-/*
-V.new = function (n, value = 0) {
-  let a = new Array(n)
-  return a.fill(value)
-}
-
-V.fill = function (a, value = 0) {
-  return a.fill(value)
-}
-
-V.range = function (begin, end, step=1) {
-  let len = Math.floor((end-begin)/step)
-  let a = new Array(len)
-  let i = 0
-  for (let t=begin; t<end; t+=step) {
-    a[i++] = t
-  }
-  return a
-}
-
-V.random = function (len, min=0, max=1) {
-  let r = new Array(len)
-  for (var i = 0; i < len; i++) {
-    r[i] = R.random(min, max)
-  }
-  return r
-}
-*/
-
-/*
-V.op = function (a, b, f) {
-  let aisa = Array.isArray(a)
-  let bisa = Array.isArray(b)
-  if (!aisa && !bisa) return f(a,b)
-  let len = a.length || b.length
-  let r = new Array(len)
-  for (let i=0; i<len; i++) {
-    let ai = aisa ? a[i] : a
-    let bi = bisa ? b[i] : b
-    r[i] = f(ai, bi)
-  }
-  return r
-}
-
-V.add = (a,b)=>V.op(a,b,(x,y)=>x+y)
-*/
-
-/*
 V.oadd = function (r, a, b, len = a.length) {
   for (let i = 0; i < len; i++) r[i] = a[i] + b[i]
 }
@@ -499,4 +246,173 @@ V.neg = function (a) { return V.op1(a, V.oneg) }
 V.abs = function (a) { return V.op1(a, V.oabs) }
 V.log = function (a) { return V.op1(a, V.olog) }
 V.not = function (a) { return V.op1(a, V.onot) }
+
+V.dot = function (a,b) {
+  let len = a.length
+  let r = 0
+  for (let i=0; i<len; i++) {
+    r += a[i] * b[i]
+  }
+  return r
+}
+
+V.min = function (a) {
+  let len = a.length, r = a[0]
+  for (let i=1; i<len; i++) {
+    if (a[i] < r) r = a[i]
+  }
+  return r
+}
+
+V.max = function (a) {
+  let len = a.length, r = a[0]
+  for (let i=1; i<len; i++) {
+    if (a[i] > r) r = a[i]
+  }
+  return r
+}
+
+V.any = function (a) {
+  let len = a.length
+  for (let i=0; i<len; i++) {
+    if (a[i]) return true
+  }
+  return false
+}
+
+V.all = function (a) {
+  let len = a.length
+  for (let i=0; i<len; i++) {
+    if (!a[i]) return false
+  }
+  return true
+}
+
+V.sum = function(a) {
+  let len = a.length
+  let r = 0
+  for (let i=0; i<len; i++) {
+    r += a[i]
+  }
+  return r
+}
+
+V.product = function(a) {
+  let len = a.length
+  let r = 1
+  for (let i=0; i<len; i++) {
+    r *= a[i]
+  }
+  return r
+}
+
+V.norm = function (a) {
+  let a2 = V.powc(a, 2)
+  return Math.sqrt(V.sum(a2))
+}
+
+V.norminf = function (a) {
+  let len = a.length
+  let r = 0
+  for (let i=0; i<len; i++) {
+    r = Math.max(r, Math.abs(a[i]))
+  }
+  return r
+}
+
+// norminf: ['accum = max(accum,abs(xi));','var accum = 0, max = Math.max, abs = Math.abs;'],
+
+V.mean = function(a) {
+  return V.sum(a)/a.length
+}
+
+V.sd = function (a) {
+  let m = V.mean(a)
+  let diff = V.subc(a, m)
+  let d2 = V.powc(diff, 2)
+  return Math.sqrt(V.sum(d2)/(a.length-1))
+}
+
+const EPSILON = 0.00000001
+
+V.hist = function (a, from = Math.floor(V.min(a)), to=Math.ceil(V.max(a)), step = 1) {
+  // from = (from==null) ?  : from
+  // to   = (to==null) ?  : to
+  var n = Math.ceil((to - from + EPSILON) / step)
+  var xc = V.range(from + step / 2.0, to, step)
+  var bins = V.array(n, 0)
+  let len = a.length
+  for (let i=0; i<len; i++) {
+    var slot = Math.floor((a[i] - from) / step)
+    if (slot >= 0 && slot < n) {
+      bins[slot]++
+    }
+  }
+  return {type: 'histogram', xc: xc, bins: bins, from: from, to: to, step: step}
+}
+
+class Vector {
+  constructor(o) { this.v = (Array.isArray(o))?o.slice(0):new Array(o) }
+  static random(n, min=0, max=1) { return new Vector(V.random(n, min, max)) }
+  static range(begin, end, step=1) { return new Vector(V.range(begin, end, step)) }
+  static zero(n) { return new Vector(n) }
+  assign(o) { let a=this; V.assign(a.v, o); return a }
+  random(min=0, max=1) { this.v = V.random(n, min, max) }
+  add(b) { let a=this; return a.clone(V.add(a.v,b.v)) }
+  sub(b) { let a=this; return a.clone(V.sub(a.v,b.v)) } 
+  mul(b) { let a=this; return a.clone(V.mul(a.v,b.v)) } 
+  div(b) { let a=this; return a.clone(V.div(a.v,b.v)) } 
+  mod(b) { let a=this; return a.clone(V.mod(a.v,b.v)) } 
+  mulc(c) { let a=this; return a.clone(V.mulc(a.v,c)) } 
+  divc(c) { let a=this; return a.clone(V.divc(a.v,c)) } 
+  addc(c) { let a=this; return a.clone(V.addc(a.v,c)) } 
+  subc(c) { let a=this; return a.clone(V.subc(a.v,c)) } 
+  powc(c) { let a=this; return a.clone(V.powc(a.v,c)) }
+  neg() { let a=this; return a.clone(V.neg(a.v)) }
+  dot(b) { let a=this; return V.dot(a.v,b.v) }
+  min() { let a=this; return V.min(a.v) }
+  max() { let a=this; return V.max(a.v) }
+  sum() { let a=this; return V.sum(a.v) }
+  norm() { let a=this; return V.norm(a.v)  }
+  mean() { let a=this; return V.mean(a.v) }
+  sd() { let a=this; return V.sd(a.v) }
+  toString() { return this.v.toString() }
+  clone(v) { return new Vector(v||this.v) }
+  hist(from, to, step) { let a = this; return V.hist(a.v, from, to, step) }
+  get length() { return this.v.length }
+}
+
+V.Vector = Vector
+
+V.vector = function (o) {
+  return new Vector(o)
+}
+
+/*
+V.new = function (n, value = 0) {
+  let a = new Array(n)
+  return a.fill(value)
+}
+
+V.fill = function (a, value = 0) {
+  return a.fill(value)
+}
+
+V.range = function (begin, end, step=1) {
+  let len = Math.floor((end-begin)/step)
+  let a = new Array(len)
+  let i = 0
+  for (let t=begin; t<end; t+=step) {
+    a[i++] = t
+  }
+  return a
+}
+
+V.random = function (len, min=0, max=1) {
+  let r = new Array(len)
+  for (var i = 0; i < len; i++) {
+    r[i] = R.random(min, max)
+  }
+  return r
+}
 */
