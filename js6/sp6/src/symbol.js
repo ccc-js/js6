@@ -1,4 +1,12 @@
 /*
+Python SymPy : 
+
+ODE : https://docs.sympy.org/latest/modules/solvers/ode.html
+Source : https://docs.sympy.org/latest/_modules/sympy/solvers/ode.html
+
+PDE : https://docs.sympy.org/latest/modules/solvers/pde.html
+Source : https://docs.sympy.org/latest/_modules/sympy/solvers/pde.html
+
 考慮使用 http://algebrite.org/ 做更複雜的事情！
 
 Other Javascript CAS are:
@@ -18,6 +26,8 @@ https://github.com/jiggzson/nerdamer (讚! 但沒有微分方程求解)
 繪圖 : https://mauriciopoppe.github.io/function-plot/
 
 */
+
+
 const S = module.exports = require('./symDiff')
 const uu6 = require('../../uu6')
 const ma6 = require('../../ma6')
