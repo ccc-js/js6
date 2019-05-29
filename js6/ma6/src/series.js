@@ -57,7 +57,18 @@ let sinSeries = (x0) => new TylorSeries(function (i) {
   return [sin, cos, (x)=>-sin(x), (x)=>-cos(x)][i%4]
 }, x0)
 
+// https://en.wikipedia.org/wiki/Fourier_series
+class FourierSeries extends Series {
+  constructor(f) {
+    super(f, null)
+    this.p = function (n) {
+      return function (x) { return C.exp(C.mul({i:n}, x)) }
+    }
+  }
+}
+
 module.exports = { 
   Series, PolynomialSeries, Polynomial, 
-  TylorSeries, expSeries, sinSeries
+  TylorSeries, expSeries, sinSeries, 
+  FourierSeries,
 }

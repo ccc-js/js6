@@ -40,7 +40,7 @@ KMean.centering = function () {
   var groups = KMean.groups
   var k = KMean.k
   var counts = Array(k).fill(0)
-  var newCenters = M.new(k, data[0].length) // j6.M.new(k, data[0].length)
+  var newCenters = M.new(k, data[0].length)
   for (let i = 0; i < data.length; i++) {
     var gi = groups[i]
     newCenters[gi] = V.add(newCenters[gi], data[i])
@@ -48,7 +48,7 @@ KMean.centering = function () {
   }
   for (let gi = 0; gi < k; gi++) {
     if (counts[gi] > 0) { // 如果 counts[gi] == 0 不能除，這一群沒有人！
-      newCenters[gi] = V.divc(newCenters[gi], counts[gi])
+      newCenters[gi] = V.div(newCenters[gi], counts[gi])
     }
   }
   return newCenters
