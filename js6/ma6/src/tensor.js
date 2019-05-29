@@ -1,17 +1,23 @@
+// tensor = {r, i, shape} ，若 i!=[] 則是複數張量
 const T = module.exports = {}
 
 const uu6 = require('../../uu6')
-const V   = require('./vector')
-const M   = require('./matrix')
+const be = {uu6}
+const V = require('./vector')
+const M = require('./matrix')
+const C = require('./complex')
+const RA = require('./ratio') 
+
+T.new = function (o) {
+  return {r:o.r||[], i:o.i||[], shape:o.shape}
+}
 
 T.dim = function (o) { return o.shape.length }
 
-T.size = function (o) {
-  return V.product(o.shape)
-}
+T.size = function (o) { return V.product(o.shape) }
 
 T.offset = function (o, idx, lo) {
-  let {v, shape} = o
+  let {r, shape} = o
   let len = shape.length
   lo = lo || V.array(len)
   let offset = idx[0]+lo[0]
@@ -22,90 +28,119 @@ T.offset = function (o, idx, lo) {
 }
 
 T.get = function (o, ...idx) {
-  return o.v[T.offset(o, idx)]
+  let j = T.offset(o, idx)
+  return {r: o.r[j], i: o.i[j]}
 }
 
 T.set = function (o, ...idx) {
-  let item = idx.pop()
-  o.v[T.offset(o.shape, idx)] = item
+  let v = idx.pop() // idx 的最後一個是 value
+  let j = T.offset(o.shape, idx)
+  if (typeof v === 'number') {
+    o.r[j] = v
+  } else {
+    o.r[j] = v.r; o.i[j] = v.i
+  }
 }
 
 T.reshape = function (o, shape) {
+  be(T.size(o) === T.size({shape}))
   o.shape = shape
 }
 
-T.sliceNdarray = function (o, lo, hi) {
-  let {v, shape} = o
-  let dim = shape.length
+function slice1d(v, shape, lo, hi) {
+  if (v == null) return
   let [wi,wj,wk] = shape
   let [wi2,wj2,wk2] = [hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]]
+  let rv = new Array(wi2)
+  for (let ri = 0, i=lo[0]; i<hi[0]; ri++, i++) rv[ri] = v[i]
+  return rv
+}
 
-  if (dim === 1) {
-    let rv = new Array(wi2)
-    for (let ri = 0, i=lo[0]; i<hi[0]; ri++, i++) rv[ri] = v[i]
-    return rv
+function slice2d(v, shape, lo, hi) {
+  if (v == null) return
+  let [wi,wj,wk] = shape
+  let [wi2,wj2,wk2] = [hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]]
+  let rv = new Array(wi2)
+  for (let ri=0, i=lo[0]; i<hi[0]; ri++, i++) {
+    let rvi = rv[ri] = new Array(wj2)
+    for (let rj=0, j=lo[1]; j<hi[1]; rj++, j++) {
+      rvi[rj] = v[i*wj+j]
+    }
   }
-  if (dim === 2) {
-    let rv = new Array(wi2)
-    for (let ri=0, i=lo[0]; i<hi[0]; ri++, i++) {
-      let rvi = rv[ri] = new Array(wj2)
-      for (let rj=0, j=lo[1]; j<hi[1]; rj++, j++) {
-        rvi[rj] = v[i*wj+j]
+  return rv
+}
+
+function slice3d(v, shape, lo, hi) {
+  if (v == null) return
+  let [wi,wj,wk] = shape
+  let [wi2,wj2,wk2] = [hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]]
+  let rv = new Array(wi2)
+  for (let ri=0, i=lo[0]; i<hi[0]; ri++, i++) {
+    let rvi = rv[ri] = new Array(wj2)
+    for (let rj=0, j=lo[1]; j<hi[1]; rj++, j++) {
+      let rvj = rvi[rj] = new Array(wk2)
+      for (let rk=0, k=lo[2]; k<hi[2]; rk++, k++) {
+        rvj[rk] = v[(i*wj+j)*wk+k]
       }
     }
-    return rv
   }
+  return rv
+}
 
-  if (dim === 3) {
-    let rv = new Array(wi2)
-    for (let ri=0, i=lo[0]; i<hi[0]; ri++, i++) {
-      let rvi = rv[ri] = new Array(wj2)
-      for (let rj=0, j=lo[1]; j<hi[1]; rj++, j++) {
-        let rvj = rvi[rj] = new Array(wk2)
-        for (let rk=0, k=lo[2]; k<hi[2]; rk++, k++) {
-          rvj[rk] = v[(i*wj+j)*wk+k]
-        }
-      }
-    }
-    return rv
-  }
+T.sliceNdarray = function (o, lo, hi) {
+  let {r, i, shape} = o
+  let dim = shape.length
+  if (dim === 1) return {r: slice1d(r, shape, lo, hi), i: slice1d(i, shape, lo, hi)}
+  if (dim === 2) return {r: slice2d(r, shape, lo, hi), i: slice2d(i, shape, lo, hi)}
+  if (dim === 3) return {r: slice3d(r, shape, lo, hi), i: slice3d(i, shape, lo, hi)}
   throw Error('sliceNdarray():dim > 3')
 }
 
 T.tensor2ndarray = function (o) {
-  return T.sliceNdarray(o, V.array(o.shape.length), o.shape)
+  return T.sliceNdarray(o, V.array(o.shape.length), o.shape).r
 }
 
 T.ndarray2tensor = function (nd) {
   let t = null
   if (!Array.isArray(nd[0])) {
-    t = { v: nd, shape: [nd.length] }
+    t = { r: nd, shape: [nd.length] }
     return t
   }
   let rows = nd.length
   uu6.be(rows > 0)
-  let v = [], cols = nd[0].length
+  let r = [], cols = nd[0].length
   for (let i=0; i<rows; i++) {
     uu6.be(nd[i].length === cols)
     t = T.ndarray2tensor(nd[i])
-    v = v.concat(t.v)
+    r = r.concat(t.r)
   }
   t.shape.unshift(nd.length)
-  return {v: v, shape: t.shape }
+  return {r: r, i:[], shape: t.shape }
 }
 
 T.str = function (o) {
   return uu6.json(T.tensor2ndarray(o))
 }
 
+function toComplex(o) {
+  if (typeof o === 'number') return {r:o, i:0}
+  return o
+}
+
 // ============================= vector ==================================
-T.op2 = function (a, b, op) { return {v: V[op](a.v, b.v), shape: a.shape || b.shape}}
+T.op2 = function (a, b, op) {
+  a = toComplex(a); b = toComplex(b)
+  // be(a.r.length === b.r.length && a.i.length === b.i.length)
+  return {
+    r: V[op](a.r, b.r),
+    i: V[op](a.i, b.i),
+    shape: a.shape || b.shape
+  }
+}
+
 T.add = (a, b) => T.op2(a, b, 'add')
 T.sub = (a, b) => T.op2(a, b, 'sub')
-T.mul = (a, b) => T.op2(a, b, 'mul')
-T.div = (a, b) => T.op2(a, b, 'div')
 T.mod = (a, b) => T.op2(a, b, 'mod')
-T.pow = (a, b) => T.op2(a, b, 'pow')
 T.and = (a, b) => T.op2(a, b, 'and')
 T.or  = (a, b) => T.op2(a, b, 'or')
 T.xor = (a, b) => T.op2(a, b, 'xor')
@@ -119,57 +154,98 @@ T.gt  = (a, b) => T.op2(a, b, 'gt')
 T.leq = (a, b) => T.op2(a, b, 'leq')
 T.geq = (a, b) => T.op2(a, b, 'geq')
 
+T.cOp2 = function (a, b, op) {
+  let aT = (a.shape == null), bT = (b.shape == null)
+  if (!aT && !bT) return C[op](a, b)
+  if (a.i.length === 0 && b.i.length === 0) return {r:T.op2(a.r, b.r, op), i:[], shape: a.shape}
+  let len = a.r.length, t = T.new({r:new Array(len), i:new Array(len), shape:a.shape || b.shape})
+  for (let j=0; j<len; j++) {
+    let aj = aT ? {r: a.r[j]||0, i: a.i[j]||0} : a
+    let bj = bT ? {r: b.r[j]||0, i: b.i[j]||0} : b
+    let tj = C[op](aj, bj)
+    t.r[j] = tj.r; t.i[j] = tj.i
+  }
+  return t
+}
+
+T.mul = function (a, b) { return T.cOp2(a, b, 'mul') }
+T.pow = function (a, b) { return T.cOp2(a, b, 'pow') }
+T.div = function (a, b) { return T.cOp2(a, b, 'div') }
+
 // ============================= matrix ==================================
 let beMatrix = T.beMatrix = function (o) { uu6.be(T.dim(o) == 2) }
 T.rows = function (o) { beMatrix(o); return o.shape[0] }
 T.cols = function (o) { beMatrix(o); return o.shape[1] }
 T.rowSum = function (o) { beMatrix(o)
   let rows = T.rows(o), cols = T.cols(o)
-  let s = V.array(rows), v = o.v
+  let s = V.array(rows), r = o.r
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
-      s[i] += v[i*cols+j]
+      s[i] += r[i*cols+j]
     }
   }
-  return {v:s, shape:[rows]}
+  return {r:s, shape:[rows]}
 }
 
 T.rowMean = function (o) { beMatrix(o)
   let cols = T.cols(o);
-  return {v: V.div(T.rowSum(o).v, cols), shape:[cols] }
+  return {r: V.div(T.rowSum(o).r, cols), shape:[cols] }
 }
 
 T.colSum = function (o) { beMatrix(o)
   let rows = T.rows(o), cols = T.cols(o)
-  let s = V.array(cols), v = o.v
+  let s = V.array(cols), r = o.r
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
-      s[j] += v[i*cols+j]
+      s[j] += r[i*cols+j]
     }
   }
-  return {v:s, shape:[cols]}
+  return {r:s, shape:[cols]}
 }
+
 T.colMean = function (o) { beMatrix(o)
   return V.div(T.colSum(o), T.rows(o))
 }
 
 T.transpose = function (o) { beMatrix(o)
+  let rows = T.rows(o), cols=T.cols(o)
+  let t = T.new({shape:[cols, rows], r: V.array(rows*cols) })
+  for (let i=0; i<rows; i++) {
+    for (let j=0; j<cols; j++) {
+      t.r[j*rows+i] = o.r[i*cols+j]
+    }
+  }
+  return t
+  /*
   let a = T.tensor2ndarray(o)
   return T.ndarray2tensor(M.transpose(a))
+  */
 }
 
-T.mdot = function (a, b) { beMatrix(a)
+T.mdot = function (a, b) { beMatrix(a); beMatrix(b)
+  let arows = T.rows(a), acols=T.cols(a), bcols = T.cols(b)
+  let t = T.new({shape:[arows, bcols], r: V.array(arows*bcols) })
+  for (let i = 0; i < arows; i++) {
+    for (let j = 0; j < acols; j++) {
+      for (let k=0; k<bcols; k++) {
+        t.r[i*acols+k] += a.r[i*acols+j] * b.r[j*bcols+k]
+      }
+    }
+  }
+  return t
+  /*
   let ax = T.tensor2ndarray(a), bx = T.tensor2ndarray(b)
   return T.ndarray2tensor(M.dot(ax, bx))
+  */
 }
 
 T.diag = function (o) { beMatrix(o)
-  let a = o, av = a.v, [rows, cols] = a.shape
-  let v = V.array(rows)
+  let a = o, ar = a.r, [rows, cols] = a.shape
+  let r = V.array(rows)
   for (let i = 0; i < rows; i++) {
-    v[i] = av[i][i]
+    r[i] = ar[i][i]
   }
-  return v
+  return r
 }
 
 T.inv = function (o) { beMatrix(o)

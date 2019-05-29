@@ -24,7 +24,7 @@ C.add = function (a,b) { return {r:a.r+b.r, i:a.i+b.i} }
 C.sub = function (a,b) { return {r:a.r-b.r, i:a.i-b.i} }
 C.mul = function (a,b) { return {r:a.r*b.r-a.i*b.i, i:a.r*b.i+a.i*b.r} }
 C.div = function (a,b) { return C.mul(a, C.pow(b, -1)) }
-C.pow = function (a,k) {
+C.pow = function (a,k) { // https://math.stackexchange.com/questions/476968/complex-power-of-a-complex-number
   let p = C.complexToPolar(a)
   return C.polarToComplex({radius:Math.pow(p.radius, k), theta:k*p.theta })
 }

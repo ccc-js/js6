@@ -3,7 +3,7 @@ const {oo} = OO
 
 console.log('==================vector============')
 let a = oo([2,4,3])
-let b = [1,2,3]
+let b = oo([1,2,3])
 let c = oo(2)
 console.log('a=', a, '\nb=', b, '\nc=', c)
 console.log('add(a,b)=%s', a.add(b))
@@ -24,7 +24,7 @@ console.log('add(a,b)=%s', a.add(b))
 console.log('mul(a,b)=%s', a.mul(b))
 
 console.log('==================tensor============')
-a = oo({v:[1,2,3,4], shape:[2,2]}), b=oo({v:[1,1,1,1], shape:[2,2]})
+a = oo({r:[1,2,3,4], shape:[2,2]}), b=oo({r:[1,1,1,1], shape:[2,2]})
 console.log('a=', a, 'b=', b)
 console.log('add(a,b)=%s', a.add(b))
 console.log('sub(a,b)=%s', a.sub(b))
@@ -40,7 +40,7 @@ console.log('leq(a,b)=%s', a.leq(b))
 console.log('geq(a,b)=%s', a.geq(b))
 
 console.log('==================bool tensor============')
-a = oo({v:[true, false, false, true], shape:[2,2]}), b=oo({v:[true, true, true, false], shape:[2,2]})
+a = oo({r:[true, false, false, true], shape:[2,2]}), b=oo({r:[true, true, true, false], shape:[2,2]})
 console.log('a=', a, 'b=', b)
 console.log('and(a,b)=%s', a.and(b))
 console.log('or(a,b)=%s',  a.or(b))
