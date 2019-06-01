@@ -2,6 +2,39 @@ const {isNext, next, tokenize} = require('./lexer')
 const reNumber = /\d+/
 const reId = /[a-zA-Z]\w*/
 
+// EQS = EQ([;] EQ)*
+var EQS = function() {
+  let eqs = ['eqs']
+  let e = EQ()
+  eqs.push(e)
+  g.eq(e)
+  while (isNext(/[;]/)) {
+    next(/[;]/)
+    e = EQ()
+    eqs.push(e)
+    g.eq(e)
+  }
+  return eqs
+}
+
+// EQ= E([=] E)*
+var EQ = function() {
+  let t1 = E()
+  let op = next(/[=]/)
+  let t2 = E()
+  let t = g.op2('=', t1, t2)
+  return t
+/*
+  while (isNext(/[=]/)) {
+    let op = next(/[=]/)
+    let t2 = E()
+    let t = g.op2(op, t1, t2)
+    t1 = t
+  }
+  return t1
+*/
+}
+
 // E=T ([+-] T)*
 var E = function() {
   let t1 = T()
@@ -75,8 +108,8 @@ let g = null
 var compile=function(text, g0) {
   g = g0
   let tokens = tokenize(text)
-  // console.log('tokens=', tokens)
-  return E()
+  // console.log('tokens=%j', tokens)
+  return EQS()
 }
 
 module.exports = { compile }

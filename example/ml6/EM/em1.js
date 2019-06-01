@@ -5,14 +5,14 @@
 // 5th:  Coin A, {THHHTHHHTH}, 7H,3T
 // so, from MLE: pA(heads) = 0.80 and pB(heads)=0.45
 
-const EM = require('./EM')
+const ml6 = require('../../../js6/ml6')
 const ma6 = require('../../../js6/ma6')
 const {V} = ma6
 
 var e = [ [5,5], [9,1], [8,2], [4,6], [7,3] ];
 var pA = [0.6,0.4], pB = [0.5,0.5];
 
-class EM1 extends EM {
+class EM1 extends ml6.EM {
   estimate () {
     var sumA=[0,0], sumB=[0,0];
     for (var i in e) {
@@ -20,13 +20,13 @@ class EM1 extends EM {
       var lB = ma6.xplog(e[i], pB)
       var a  = Math.exp(lA), b = Math.exp(lB)
       var wA = a/(a+b), wB=b/(a+b)
-      var eA = V.mulc(e[i], wA)
-      var eB = V.mulc(e[i], wB)
+      var eA = V.mul(e[i], wA)
+      var eB = V.mul(e[i], wB)
       sumA   = V.add(sumA, eA)
       sumB   = V.add(sumB, eB)
     }
-    var npA = V.mulc(sumA, 1.0/V.sum(sumA))
-    var npB = V.mulc(sumB, 1.0/V.sum(sumB))
+    var npA = V.mul(sumA, 1.0/V.sum(sumA))
+    var npB = V.mul(sumB, 1.0/V.sum(sumB))
     return {npA, npB}
   }
   

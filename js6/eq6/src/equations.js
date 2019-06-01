@@ -27,20 +27,75 @@ https://github.com/jiggzson/nerdamer (讚! 但沒有微分方程求解)
 
 */
 
-
-const S = module.exports = require('./symDiff')
+const S = module.exports = {} // require('./symDiff')
+const sp6 = require('../../sp6')
 const uu6 = require('../../uu6')
 const ma6 = require('../../ma6')
+const F = require('./functions')
 
-S.call = function (exp, context) {
-  let c = {...context}, $r = null // 加 $ 是為了避免 exp 裏有變數 r 的名稱。
-  uu6.mixin(c, ma6)
-  eval(`with (c) { $r = ${exp} }`)
+class EqParser extends sp6.Parser {
+  constructor() {
+    super()
+    this.varMap = {}
+  }
+  addVars(name, obj) {
+    if (F[name] != null) return obj
+    this.varMap[name] = obj
+    return obj
+  }
+  call (fname, args) {
+    return this.addVars(fname, ['call', fname, args.length])
+  }
+  variable (name) {
+    return this.addVars(name, ['variable', name])
+  }
+}
+
+class Equations {
+  constructor(exps) {
+    let g = new EqParser()
+    this.exps = exps
+    this.eqTrees = sp6.compile(exps, g)
+    this.eList = []
+    let eArray = exps.split(';')
+    for (let e of eArray) {
+      this.eList.push(e.split("="))
+    }
+    this.varMap = g.varMap
+    this.vars = Object.keys(g.varMap)
+  }
+  eval(binds) {
+    let vList = [], loss = 0
+    for (let e of this.eList) {
+      let v0 = S.call(e[0], binds)
+      let v1 = S.call(e[1], binds)
+      vList.push([v0, v1])
+      loss += Math.abs(v0-v1)
+    }
+    return {vList, loss}
+  }
+}
+
+let expandFunctions = function (binds) {
+  let codes = []
+  for (let name in binds) {
+    let value = binds[name]
+    if (typeof value === 'string') {
+      codes.push(`var ${name}=eval("${value}")`)
+    }
+  }
+  return codes.join(';')
+}
+
+S.call = function (exp, binds) {
+  let ctx = {...binds}, $r = null // 加 $ 是為了避免 exp 裏有變數 r 的名稱。
+  uu6.mixin(ctx, F) // uu6.mixin(ctx, Math) // uu6.mixin(ctx, ma6)
+  let code = `with (ctx) { ${expandFunctions(binds)}; $r = ${exp} }`
+  eval(code)
   return $r
 }
 
-// 將 D(exp) 中的 exp 展開
-S.expand = function (exp, x) {
-
+S.equations = function (exps) {
+  return new Equations(exps)
 }
 

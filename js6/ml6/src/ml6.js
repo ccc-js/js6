@@ -3,3 +3,5 @@ const ml6 = module.exports = {
   knn: require('./knn'),
 }
 
+Object.assign(ml6, require('./em'))
+

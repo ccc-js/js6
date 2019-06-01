@@ -1,10 +1,13 @@
 const Generator = require('./Generator')
-const compiler = require('./exp')
+const compiler = require('./compiler')
 const uu6 = require('../../uu6')
 
 class Parser extends Generator {
   constructor() {
     super()
+  }
+  eq (t) {
+    return ['eq', t]
   }
   op1 (op, t) {
     return ['op1', op, t]

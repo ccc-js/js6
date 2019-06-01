@@ -1,3 +1,7 @@
+// https://en.wikipedia.org/wiki/Parker%E2%80%93Sochacki_method
+// Parker–Sochacki method (2006年發展出來的常微分方程解法)
+// http://educ.jmu.edu/~sochacjs/PSM.html
+
 const V = require('./vector')
 const {norminf, any, add, sub, mul, and, lt } = V
 const O = {}

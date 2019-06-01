@@ -73,6 +73,14 @@ U.omap2 = function (o1, o2, f) {
   return o
 }
 
+U.map2array = function (map) {
+  let a = []
+  for (let k in map) {
+    a.push({key:k, value:map[k]})
+  }
+  return a
+}
+
 U.array2map = function (a) {
   let map = {}
   for (let i in a) {

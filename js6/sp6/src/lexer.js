@@ -1,5 +1,5 @@
 // 本來應該用 .*? 來比對 /*...*/ 註解的，但 javascript 的 . 並不包含 \n, 因此用 \s\S 代替 . 就可以了。
-const rexp = /(\/\*[\s\S]*?\*\/)|(\/\/[^\r\n])|(\d+)|([a-zA-Z]\w*)|(\r?\n)|(.)/gm // *?, +? non greedy, m for multiline
+const rexp = /(\/\*[\s\S]*?\*\/)|(\/\/[^\r\n])|(\d+)|([a-zA-Z]\w*)|([<=>]+)|(\r?\n)|(.)/gm // *?, +? non greedy, m for multiline
 
 let tokenIdx, tokens = null
 

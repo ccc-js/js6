@@ -21,4 +21,4 @@ class EM {
   }
 }
 
-module.exports = EM
+module.exports = {EM}

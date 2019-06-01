@@ -28,7 +28,7 @@ F.compose = function (fx, fy) {
   return function(...arg) { return fx(fy(...arg)) }
 }
 
-F.eval = function (f, ...arg) { return f(...arg) }
+F.call = function (f, ...arg) { return f(...arg) }
 
 // f=(x,y)=>x*y+x*x;
 // f0=fa(f); f0([x,y]);
