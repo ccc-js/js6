@@ -6,6 +6,7 @@ const ma6 = require('../../ma6')
 const uu6 = require('../../uu6')
 
 module.exports = class Net {
+  /*
   static call(net, p) {
     let o = net.forward()
     return o.v
@@ -22,7 +23,7 @@ module.exports = class Net {
     }
     return gnet
   }
-
+*/
   constructor (p={}) {
     this.gates = []
     this.vars = []
@@ -138,7 +139,7 @@ module.exports = class Net {
   predict() { return this.lastGate().predict }
   loss() { return this.lastGate().loss }
 
-  learn(input = null, out = null) {
+  improve(input = null, out = null) {
     this.setInput(input)
     this.setOutput(out)
     this.forward()
@@ -146,6 +147,8 @@ module.exports = class Net {
     this.adjust(this.step, this.moment)
     return this.loss()
   }
+
+  learn(input, out) { return this.improve(input, out) }
 
   dump(p) {
     let {inputs, outs} = p
@@ -158,7 +161,7 @@ module.exports = class Net {
     }
   }
 
-  optimize(p) {
+  optimize(p = {maxLoops:10000, gap:0.0001}) {
     p.inputs = p.inputs || [ null ]
     p.outs = p.outs || [ null ]
     let {inputs, outs, gap, minLoops, maxLoops} = p
@@ -169,7 +172,7 @@ module.exports = class Net {
     for (let loops=0; loops < maxLoops; loops++) {
       let loss = 0
       for (let i=0; i<len; i++) {
-        loss += this.learn(inputs[i], outs[i])
+        loss += this.improve(inputs[i], outs[i])
       }
       if (loss < loss0 - gap)
         loss0 = loss
@@ -178,6 +181,14 @@ module.exports = class Net {
       console.log(loops+': loss=', loss)
     }
     this.dump(p)
+  }
+
+  gradientDescendent(p = {maxLoops:1000, gap:0.0001, debug:false}) {
+    let {gap, maxLoops, debug} = p
+    for (let loops=0; loops < maxLoops; loops++) {
+      this.improve()
+      if (debug) console.log('%d: o=%j', loops, this.o.v)
+    }
   }
 
   watch (nodeMap) {

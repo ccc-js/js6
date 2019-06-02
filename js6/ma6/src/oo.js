@@ -64,7 +64,9 @@ class OO {
     this.v = o.v
     this.type = o.type 
   }
-  // basic operation
+  // basic operation : op1
+  neg() { return op1(this, 'neg') }
+  // basic operation : op2
   add(b) { return op2(this, b, 'add') }
   sub(b) { return op2(this, b, 'sub') }
   mul(b) { return op2(this, b, 'mul') }
@@ -83,6 +85,14 @@ class OO {
   gt(b)  { return op2(this, b, 'gt') }
   leq(b) { return op2(this, b, 'leq') }
   geq(b) { return op2(this, b, 'geq') }
+  // tensor
+  get(...idx) { return T.get(this.v, ...idx) }
+  reshape(shape) { T.reshape(this.v, shape); return this }
+  ndarray() { return T.tensor2ndarray(this.v) }
+
+  // vector
+  hist(from, to, step) { return V.hist(this.v.r, from, to, step) }
+
   // matrix : op1
   diag() { return op1(this, 'diag') }
   inv() { return op1(this, 'inv') }

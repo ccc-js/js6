@@ -1,13 +1,17 @@
 const expect = require('../../js6/se6').expect
 const ma6 = require('../../js6/ma6')
-const {M, Matrix} = ma6
-let a = new Matrix([1,2,3,4], [2,2])
+const {M} = ma6
+// let a = new Matrix([1,2,3,4], [2,2])
+let a = [[1,2],[3,4]]
+var at = null
 
 describe('Matrix test', function() {
+
   it('transpose test', function() {
-    let at = a.transpose()
-    console.log('at=', at)
-    expect(at.v).to.equal([1,3, 2,4])
+    console.log('a=%j', a)
+    at = M.transpose(a)
+    console.log('at=%j', at)
+    expect(at).to.equal([[1,3], [2,4]])
   })
   it('diag test', function() {
     let D = M.diag([1,2,3])
@@ -18,33 +22,41 @@ describe('Matrix test', function() {
     expect(M.flatten(I)).to.equal([1,0,0, 0,1,0, 0,0,1])
   })
   it('dot test', function() {
-    let at = a.transpose()
-    console.log('at=', at)
-    let aat = a.dot(at)
-    console.log('aat=', aat)
-    expect(aat.v).to.equal([5,11, 11,25])
+    console.log('a=%j', a)
+    let aat = M.dot(a, at)
+    console.log('aat=%j', aat)
+    expect(aat).to.equal([[5,11], [11,25]])
   })
   it('inv test', function() {
-    let b = a.inv()
-    let ab = a.dot(b)
-    expect(ab.v).to.near([1,0, 0,1])
+    // let a = [[0,1],[1,0]]
+    console.log('a=%j', a)
+    let b = M.inv(a)
+    console.log('a=%j', a)
+    console.log('b=%j', b)
+    let ab = M.dot(a, b)
+    console.log('ab=%j', ab)
+    console.log('a=%j', a)
+    expect(M.flatten(ab)).to.near([1,0, 0,1])
   })
   it('det test', function() {
-    let d = a.det()
+    console.log('a=%j', a)
+    let d = M.det(a)
+    console.log('d=%d', d)
     expect(d).to.near(-2)
   })
   it('LU test', function() {
-    let lup = a.lu()
+    let lup = M.lu(a)
     console.log('lup=', lup)
     expect(M.flatten(lup.LU)).to.near([3, 4, 0.3333, 0.6667])
     let b = [17, 39]
     let x = [5, 6]
     let s = M.luSolve(lup, b)
+    console.log('s=', s)
     expect(s).to.near(x)
-    expect(a.solve(b)).to.near(x)
+    // expect(a.solve(b).v.r).to.near(x)
   })
   it('svd test', function() {
-    let svd = a.svd()
+    let svd = M.svd(a)
     console.log('svd=', svd)
     let {U, S, V} = svd
     let Ut = M.transpose(U)
@@ -58,8 +70,9 @@ describe('Matrix test', function() {
     let US = M.dot(U, M.diag(S))
     let USVt = M.dot(US, Vt)
     console.log('USV=', USVt)
-    expect(M.flatten(USVt)).to.near(a.v)
+    expect(M.flatten(USVt)).to.near(M.flatten(a))
   })
+  /*
   it('Matrix from Vector, Tensor test', function() {
     let a3 = a.addc(3)
     let a0 = a3.subc(3)
@@ -69,6 +82,7 @@ describe('Matrix test', function() {
     let a2m = a.mulc(2)
     expect(a2a.v).to.equal(a2m.v)
   })
+  */
 })
 
   /*

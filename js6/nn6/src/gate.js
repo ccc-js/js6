@@ -52,7 +52,7 @@ class Gate2 extends Gate {
   }
 
   adjust(step, moment) {
-    let {x,y} = this.p
+    let {x,y,o} = this.p
     x.v += step * x.g
     y.v += step * y.g
     x.g = y.g = o.g = 0

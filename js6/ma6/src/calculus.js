@@ -6,85 +6,34 @@ const uu6 = require('../../uu6')
 // =========== Calculus =================
 F.h = 0.01
 
-// 微分 differential calculus
-F.df = F.diff = function (f, x=null, h = F.h) {
-  if (x == null) {
-    return function (x) { return (f(x+h) - f(x-h))/(2*h) }
-  } else {
-    return (f(x+h) - f(x-h))/(2*h)
-  }
-}
-
-// 二次微分 differential calculus，比連續用兩次一階微分更準確
-F.df2 = F.diff2 = function (f, x=null, h = F.h) {
-  if (x == null) {
-    return function (x) { return ((f(x+h) - 2*f(x) + f(x-h))/h)/h }
-  } else {
-    return ((f(x+h) - 2*f(x) + f(x-h))/h)/h
-  }
-}
-
-// n 次微分
+// n 次微分 : 參考 https://en.wikipedia.org/wiki/Finite_difference
 F.diffn = function (f, n, x=null, h=F.h) {
   uu6.member(n >= 0)
   if (n === 0) return f(x)
-  if (n === 1) return F.diff(f,x)
-  if (n === 2) return F.diff2(f,x)
+  h = h/2 // 讓 1, 2, .... n 次微分的最大距離都一樣
   var x1 = (x==null) ? null : x+h
-  return (F.diffn(f,n-1,x1) - F.diffn(f,n-1,x))/h
+  var x_1 = (x==null) ? null : x-h
+  return (F.diffn(f,n-1,x1) - F.diffn(f,n-1,x_1))/(2*h)
 }
 
-// 積分 integral calculus
-F.i = F.integral = function (f, a, b, h = F.h) {
-  var area = 0.0
-  for (var x = a; x < b; x = x + h) {
-    area = area + f(x) * h
-  }
-  return area
-}
-
-// 偏導數 partial differential calculus
-// f([x1,x2,...])
-F.pdiff = function (f, i, v=null, h = F.h) {
-  if (v == null) { // v == null 時傳回函數版
-    return function(v) {
-      let v2 = v.slice(0)
-      v2[i] += h
-      return (f(v2)-f(v))/h
-    }
-  } else { // 否則傳回數值計算結果
-    let v2 = v.slice(0)
-    v2[i] += h
-    return (f(v2)-f(v))/h
-  }
-}
-
-// 二階偏導數逼近，比連續使用一階準確
-F.pdiff2 = function (f, i, v=null, h = F.h) {
-  if (v == null) {
-    return function (v) {
-      let v1 = v.slice(0), v_1 = v.slice(0)
-      v1[i] += h; v_1[i] -= h
-      return ((f(v1)-2*f(v)+f(v_1))/h)/h
-    }
-  } else {
-    let v1 = v.slice(0), v_1 = v.slice(0)
-    v1[i] += h; v_1[i] -= h
-    return ((f(v1)-2*f(v)+f(v_1))/h)/h
-  }
-}
+F.diff = function (f, x, h=F.h) { return F.diffn(f, 1, x, h) }
 
 // n 階偏導數
 F.pdiffn = function (f, i, n, v, h=F.h) {
-  if (n === 1) return F.pdiff(f,i,v)
-  if (n === 2) return F.pdiff2(f,i,v)
-  var v2 = null
-  if (v != null) {
-    v2 = v.slice(0);
-    v2[i] += h
+  if (n === 0) return f(v)
+  h = h/2 // 讓 1, 2, .... n 次微分的最大距離都一樣
+  let d = function (f, i, n, v) {
+    let v1 = null, v_1 = null
+    if (v != null) {
+      v1 = v.slice(0); v1[i] += h
+      v_1= v.slice(0); v_1[i]-= h
+    }
+    return (F.pdiffn(f,i,n-1,v1) - F.pdiffn(f,i,n-1,v_1))/(2*h)
   }
-  return (F.pdiffn(f,i,n-1,v2) - F.pdiffn(f,i,n-1,v))/h
+  return (v == null) ? d : d(f, i, n, v)
 }
+
+F.pdiff = function (f, i, x, h=F.h) { return F.pdiffn(f, i, 1, x, h) }
 
 // 梯度 gradient : grad(f,x)=[pdiff(f,x,0), .., pdiff(f,x,n)]
 F.grad = function (f, v, h=F.h) {
@@ -143,38 +92,16 @@ F.jocobian = function (fv, v) {
   return J
 }
 
-/*
-// ===================== 函數陣列的版本 =============================
-
-// 函數版偏微分
-F.fpdiff = function (f, i, h = F.h) {
-  return function pdiff(v) {
-    return F.pdiff(f, v, i)
-  }
-}
-
-// 函數版偏微分
-F.fgrad = function (f, len) {
-  let gf = new Array(len)
-  for (let i=0; i<len; i++) {
-    gf[i] = F.fpdiff(f, i)
-  }
-  return gf
-}
-
-F.fJocobian = function (fv) {
-  let len = v.length
-  let J = M.new(len, len)
-  for (let i=0; i<len; i++) {
-    for (let j=0; j<len; j++) {
-      J[i][j] = F.fpdiff(fv[i], v, j)
-    }
-  }
-  return J
-}
-*/
-
 // ============================ 積分 ================================
+// 積分 integral calculus
+F.i = F.integral = function (f, a, b, h = F.h) {
+  var area = 0.0
+  for (var x = a; x < b; x = x + h) {
+    area = area + f(x) * h
+  }
+  return area
+}
+
 // 線積分： int F●dr = int F(r(t))●r'(t) dt
 F.vintegral = function (F, r, a, b, dt) {
   dt = dt || F.h
@@ -234,3 +161,76 @@ F.theoremDivCurlZero = function (f, v) {
 
 // 史托克定理：  F 在曲面 S 上的旋度總和 = F 沿著邊界曲線 C 的線積分
 // int int_D curl(F)●n dS = int_C j6●dr
+
+
+
+/*
+// 微分 differential calculus
+F.df = F.diff = function (f, x=null, h = F.h) {
+  h = h/2
+  let d = function (x) { return (f(x+h) - f(x-h))/(2*h) }
+  return (x == null) ? d : d(x)
+}
+
+// 二次微分 differential calculus，比連續用兩次一階微分更準確
+F.df2 = F.diff2 = function (f, x=null, h = F.h) {
+  h = h/2
+  let d = function (x) { return ((f(x+h) - 2*f(x) + f(x-h))/h)/h }
+  return (x == null) ? d : d(x)
+}
+*/
+
+/*
+// 偏導數 partial differential calculus
+// f([x1,x2,...])
+F.pdiff = function (f, i, v=null, h = F.h) {
+  let d = function (v) {
+    let v2 = v.slice(0)
+    v2[i] += h
+    return (f(v2)-f(v))/h
+  }
+  return (v==null) ? d : d(v)
+}
+
+// 二階偏導數逼近，比連續使用一階準確
+F.pdiff2 = function (f, i, v=null, h = F.h) {
+  let d = function (v) {
+    let v1 = v.slice(0), v_1 = v.slice(0)
+    v1[i] += h; v_1[i] -= h
+    return ((f(v1)-2*f(v)+f(v_1))/h)/h
+  }
+  return (d==null) ? d : d(v)
+}
+*/
+
+
+/*
+// ===================== 函數陣列的版本 =============================
+
+// 函數版偏微分
+F.fpdiff = function (f, i, h = F.h) {
+  return function pdiff(v) {
+    return F.pdiff(f, v, i)
+  }
+}
+
+// 函數版偏微分
+F.fgrad = function (f, len) {
+  let gf = new Array(len)
+  for (let i=0; i<len; i++) {
+    gf[i] = F.fpdiff(f, i)
+  }
+  return gf
+}
+
+F.fJocobian = function (fv) {
+  let len = v.length
+  let J = M.new(len, len)
+  for (let i=0; i<len; i++) {
+    for (let j=0; j<len; j++) {
+      J[i][j] = F.fpdiff(fv[i], v, j)
+    }
+  }
+  return J
+}
+*/

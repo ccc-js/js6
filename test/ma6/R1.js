@@ -8,14 +8,21 @@ describe('ma6: Probability test', function() {
     expect(ma6.punif({x:0.5, a:0, b:10})).to.near(0.05)
     expect(ma6.qunif({p:0.5, a:0, b:10})).to.near(5)
     let t = ma6.runif({a:0, b:10, n:100})
+    console.log('t=', t)
     console.log('rowSum()=', t.reshape([10,10]).rowSum().toString())
     // console.log('t=', t.toString())
     console.log('hist()=', t.hist())
+    /*
+    t = ma6.runif({a:0, b:10, n:10000}).reshape([100, 100])
+    let r = t.rowMean()
+    console.log('r=', r)
+    */
+    
     // t = ma6.runif({a:0, b:10, n:10000}).reshape([1000, 10])
     // let t = ma6.runif({a:0, b:10, n:100000})
     t = ma6.runif({a:0, b:10, n:1000000}).reshape([10000, 100])
     let r = t.rowMean()
-    // console.log('r=', r)
+    console.log('r.v.shape=', r.v.shape)
     let r2 = r.reshape([100, 100]).rowMean()
     // console.log('r2=', r2.toString())
     let h = r2.hist(3, 7, 0.2)

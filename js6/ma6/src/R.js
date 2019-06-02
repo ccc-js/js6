@@ -1,20 +1,39 @@
 const P = require('./probability')
 const R = module.exports = {}
-const T = require('./tensor')
+// const T = require('./tensor')
 const uu6 = require('../../uu6')
+const {oo} = require('./oo')
 
 R.repeats = function (arg, f) {
   let n = arg.n, v = new Array(n)
   for (let i=0; i<n; i++) {
     v[i] = f(arg)
   }
-  return T.tensor(v)
+  return oo(v)
 }
 
+/*
+function rdist (name) {
+  let f = new Function('arg', `
+  let {n} = arg, v = new Array(n)
+  for (let i=0; i<n; i++) v[i] = P['${name}'].sample(arg)
+  return oo(v)
+  `)
+  return f
+}
+*/
 // Uniform Distribution
 R.dunif = (arg) => P.uniform.pdf(arg)
 R.punif = (arg) => P.uniform.cdf(arg)
 R.qunif = (arg) => P.uniform.inv(arg)
+// R.runif = rdist('uniform')
+/*
+R.runif = function (arg) {
+  let {n} = arg, v = new Array(n)
+  for (let i=0; i<n; i++) v[i] = P.uniform.sample(arg)
+  return oo(v)
+}
+*/
 R.runif = (arg) => R.repeats(arg, (arg)=>P.uniform.sample(arg))
 
 // Exponential Distribution

@@ -44,7 +44,7 @@ class TensorNode extends Node {
 class TensorVariable extends TensorNode {
   constructor(v, shape) {
     super(v, shape)
-    let size = (v) ? v.length : T.size(shape)
+    let size = (v) ? v.length : T.size({shape})
     this.v = v || V.array(size, 0) // 輸出值 (f(x))
     this.g = V.array(size, 0)      // 梯度值 (偏微分)
     this.shape = shape || [size]

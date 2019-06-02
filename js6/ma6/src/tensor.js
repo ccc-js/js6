@@ -2,7 +2,7 @@
 const T = module.exports = {}
 
 const uu6 = require('../../uu6')
-const be = {uu6}
+const {be} = uu6
 const V = require('./vector')
 const M = require('./matrix')
 const C = require('./complex')
@@ -127,7 +127,15 @@ function toComplex(o) {
   return o
 }
 
-// ============================= vector ==================================
+T.op1 = function (a, op) {
+  return {
+    r: V[op](a.r),
+    shape: a.shape,
+  }
+}
+T.neg = (a, b) => T.op1(a, 'neg')
+
+// ============================= op2 ==================================
 T.op2 = function (a, b, op) {
   a = toComplex(a); b = toComplex(b)
   // be(a.r.length === b.r.length && a.i.length === b.i.length)
@@ -188,8 +196,8 @@ T.rowSum = function (o) { beMatrix(o)
 }
 
 T.rowMean = function (o) { beMatrix(o)
-  let cols = T.cols(o);
-  return {r: V.div(T.rowSum(o).r, cols), shape:[cols] }
+  let rows = T.rows(o), cols = T.cols(o);
+  return {r: V.div(T.rowSum(o).r, cols), shape:[rows] }
 }
 
 T.colSum = function (o) { beMatrix(o)
@@ -204,7 +212,8 @@ T.colSum = function (o) { beMatrix(o)
 }
 
 T.colMean = function (o) { beMatrix(o)
-  return V.div(T.colSum(o), T.rows(o))
+  let rows = T.rows(o), cols = T.cols(o);
+  return {r: V.div(T.colSum(o), rows), shape: [cols] }
 }
 
 T.transpose = function (o) { beMatrix(o)
