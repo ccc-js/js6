@@ -29,7 +29,7 @@ T.offset = function (o, idx, lo) {
 
 T.get = function (o, ...idx) {
   let j = T.offset(o, idx)
-  return {r: o.r[j], i: o.i[j]}
+  return {r: o.r[j], i: o.i[j] || 0}
 }
 
 T.set = function (o, ...idx) {
@@ -43,8 +43,10 @@ T.set = function (o, ...idx) {
 }
 
 T.reshape = function (o, shape) {
-  be(T.size(o) === T.size({shape}))
+  console.log('reshape: o.shape=%j shape=%j, o=%j', o.shape, shape, o)
+  be(T.size(o) === T.size({r:0, shape}))
   o.shape = shape
+  return o
 }
 
 function slice1d(v, shape, lo, hi) {
@@ -96,7 +98,7 @@ T.sliceNdarray = function (o, lo, hi) {
   throw Error('sliceNdarray():dim > 3')
 }
 
-T.tensor2ndarray = function (o) {
+T.tensor2ndarray = T.ndarray = function (o) {
   return T.sliceNdarray(o, V.array(o.shape.length), o.shape).r
 }
 
@@ -225,10 +227,6 @@ T.transpose = function (o) { beMatrix(o)
     }
   }
   return t
-  /*
-  let a = T.tensor2ndarray(o)
-  return T.ndarray2tensor(M.transpose(a))
-  */
 }
 
 T.mdot = function (a, b) { beMatrix(a); beMatrix(b)
@@ -242,10 +240,6 @@ T.mdot = function (a, b) { beMatrix(a); beMatrix(b)
     }
   }
   return t
-  /*
-  let ax = T.tensor2ndarray(a), bx = T.tensor2ndarray(b)
-  return T.ndarray2tensor(M.dot(ax, bx))
-  */
 }
 
 T.diag = function (o) { beMatrix(o)

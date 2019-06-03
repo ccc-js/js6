@@ -24,6 +24,14 @@ class Expect {
     }
   }
 
+  any(f) {
+    let o = this.o
+    for (let k in o) {
+      if (f(o[k])) return true
+    }
+    throw Error('Expect.any fail!')
+  }
+
   equal(o) {
     if (this.check(uu6.eq(this.o, o))) return this
     throw Error('Expect.equal fail!')
@@ -86,6 +94,7 @@ p.include = p.contain
 p.包含 = p.include
 p.通過 = p.pass
 p.每個 = p.each
+p.all = p.each
 p.等於 = p.equal
 p.靠近 = p.near
 p.型態 = p.type

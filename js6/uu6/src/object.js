@@ -25,11 +25,21 @@ U.near = function (n1, n2, gap=0.01) {
 
 U.clone = function (o) {
   if (null == o || "object" != typeof o) return o
+  if (o.constructor != Object && o.clone != null) return o.clone()
+  let r = JSON.parse(JSON.stringify(o)) // 這只會複製非函數欄位！
+  if (o.constructor == Object) { // 複製非類別的函數
+    for (var attr in o) {
+      if (typeof o[attr] === 'function' && o.hasOwnProperty(attr)) r[attr] = o[attr]
+    }
+  }
+  return r
+  /*
   var copy = o.constructor()
   for (var attr in o) {
     if (o.hasOwnProperty(attr)) copy[attr] = U.clone(o[attr])
   }
   return copy;
+  */
 }
 
 U.typeof = function (o) {

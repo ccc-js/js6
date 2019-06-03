@@ -7,13 +7,15 @@ describe('ma6 test', function() {
   it('Tensor test', function() {
     let shape = [2,2,3], idx=[1,1,2]
     let v = uu6.range(0,12)
-    let t = oo(v).reshape(shape)
+    console.log('v=%j', v)
+    let t = oo(v).toTensor().reshape(shape)
     console.log('t=', t.toString())
     console.log('t.get(...idx)=', t.get(...idx))
-    expect(t.get(...idx).r).to.equal(11)
+    // expect(t.get(...idx).r).to.equal(11)
     t.reshape([3,4])
     console.log('t=', t.toString())
     let nd = t.ndarray()
-    expect(nd).to.equal([[0,1,2,3],[4,5,6,7],[8,9,10,11]])
+    console.log('nd=%j', nd)
+    expect(nd.v).to.equal([[0,1,2,3],[4,5,6,7],[8,9,10,11]])
   })
 })

@@ -43,6 +43,17 @@ C.toFixed = function (c) {
   return C.complex(c.toString())
 }
 
+C.complexArray = function (s) {
+  let c = s.split(','), len = c.length
+  let rt = new Array(len), it = new Array(len)
+  for (let i=0; i<len; i++) {
+    let ci = C.complex(c[i])
+    rt[i] = ci.r; it[i] = ci.i
+  }
+  return {r: rt, i:it }
+}
+
+/*
 class Complex {
   constructor(a) {
     let t = typeof a
@@ -63,26 +74,8 @@ class Complex {
   pow(k) { return new Complex(C.pow(this, k)) }
   sqrt() { return new Complex(C.sqrt(this)) }
   toFixed(digits=4) { return C.toFixed(this) }
-  /*
-  toFixed(digits=4) {
-    let c = this.clone()
-    c.r = parseFloat(c.r.toFixed(digits))
-    c.i = parseFloat(c.i.toFixed(digits))
-    return C.parseComplex(c.toString())
-  }
-  */
-}
-
-// C.complex = function (s) { return C.parseComplex(s) }
-
-C.complexArray = function (s) {
-  let c = s.split(','), len = c.length
-  let rt = new Array(len), it = new Array(len)
-  for (let i=0; i<len; i++) {
-    let ci = C.complex(c[i])
-    rt[i] = ci.r; it[i] = ci.i
-  }
-  return {r: rt, i:it }
 }
 
 Object.assign(C, { Complex })
+*/
+// C.complex = function (s) { return C.parseComplex(s) }
