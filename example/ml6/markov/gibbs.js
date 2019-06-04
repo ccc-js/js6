@@ -1,7 +1,9 @@
 // Gibbs Algorithm 的範例
 // 問題：機率式有限狀態機，P(a=>b)=0.3, P(b=>a)=0.5 ; P(a=>b)=0.7, P(b=>b)=0.5
 // 目標：尋找該「機率式有限狀態機」的穩態，也就是 P(a) = ?, P(b)=? 時系統會達到平衡。
+const M = require('../../../js6/ml6').markov
 const P = require('./prob')
+
 function gibbs (P) {
   var P0 = {'a': P['a'], 'b': P['b'] }
   do {
