@@ -1,5 +1,5 @@
 const uu6 = require('../../../js6/uu6')
-const Q = require('./qlearning')
+const Q = require('../../../js6/ml6').Q
 
 class QWalk1D extends Q {
   constructor() {

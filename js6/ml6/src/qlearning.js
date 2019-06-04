@@ -36,4 +36,4 @@ class Q {
   dump(q) { throw new Error('not defined!') } // 傳回想印出的狀態字串
 }
 
-module.exports = Q
+module.exports = {Q}
