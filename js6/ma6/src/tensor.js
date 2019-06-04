@@ -43,7 +43,6 @@ T.set = function (o, ...idx) {
 }
 
 T.reshape = function (o, shape) {
-  console.log('reshape: o.shape=%j shape=%j, o=%j', o.shape, shape, o)
   be(T.size(o) === T.size({r:0, shape}))
   o.shape = shape
   return o
@@ -124,11 +123,6 @@ T.str = function (o) {
   return uu6.json(T.tensor2ndarray(o))
 }
 
-function toComplex(o) {
-  if (typeof o === 'number') return {r:o, i:0}
-  return o
-}
-
 T.op1 = function (a, op) {
   return {
     r: V[op](a.r),
@@ -138,9 +132,15 @@ T.op1 = function (a, op) {
 T.neg = (a, b) => T.op1(a, 'neg')
 
 // ============================= op2 ==================================
+function toC(o) {
+  if (o.r != null && o.i != null) return o
+  // if (typeof o === 'number') return {r:o, i:0}
+  if (!Array.isArray(o)) return { r:o, i:0 } // 基本型態
+  return {r:o, i:[]}
+}
+
 T.op2 = function (a, b, op) {
-  a = toComplex(a); b = toComplex(b)
-  // be(a.r.length === b.r.length && a.i.length === b.i.length)
+  a = toC(a); b = toC(b)
   return {
     r: V[op](a.r, b.r),
     i: V[op](a.i, b.i),
@@ -165,15 +165,20 @@ T.leq = (a, b) => T.op2(a, b, 'leq')
 T.geq = (a, b) => T.op2(a, b, 'geq')
 
 T.cOp2 = function (a, b, op) {
-  let aT = (a.shape == null), bT = (b.shape == null)
-  if (!aT && !bT) return C[op](a, b)
+  a = toC(a); b = toC(b)
+  let aT = (a.shape != null), bT = (b.shape != null)
+  let Cop = C[op]
+  if (!aT && !bT) return Cop(a, b)
   if (a.i.length === 0 && b.i.length === 0) return {r:T.op2(a.r, b.r, op), i:[], shape: a.shape}
-  let len = a.r.length, t = T.new({r:new Array(len), i:new Array(len), shape:a.shape || b.shape})
+  let len = a.r.length || b.r.length, t = T.new({r:new Array(len), i:new Array(len), shape:a.shape || b.shape})
+  let tr = t.r, ti = t.i, ar=a.r, ai=a.i, br=b.r, bi=b.i
+  // console.log('a=%j b=%j ar=%j ai=%j br=%j bi=%j', a, b, ar, ai, br, bi)
   for (let j=0; j<len; j++) {
-    let aj = aT ? {r: a.r[j]||0, i: a.i[j]||0} : a
-    let bj = bT ? {r: b.r[j]||0, i: b.i[j]||0} : b
-    let tj = C[op](aj, bj)
-    t.r[j] = tj.r; t.i[j] = tj.i
+    let aj = aT ? {r: ar[j]||0, i: ai[j]||0} : a
+    let bj = bT ? {r: br[j]||0, i: bi[j]||0} : b 
+    let tj = Cop(aj, bj)
+    // console.log('aj=%j bj=%j tj=%j', aj, bj, tj)
+    tr[j] = tj.r; ti[j] = tj.i
   }
   return t
 }
@@ -183,7 +188,11 @@ T.pow = function (a, b) { return T.cOp2(a, b, 'pow') }
 T.div = function (a, b) { return T.cOp2(a, b, 'div') }
 
 // ============================= matrix ==================================
-let beMatrix = T.beMatrix = function (o) { uu6.be(T.dim(o) == 2) }
+let beMatrix = T.beMatrix = function (o) {
+  // let d = T.dim(o)
+  // console.log('beMatrix:d=%d', d)
+  uu6.be(T.dim(o) == 2)
+}
 T.rows = function (o) { beMatrix(o); return o.shape[0] }
 T.cols = function (o) { beMatrix(o); return o.shape[1] }
 T.rowSum = function (o) { beMatrix(o)

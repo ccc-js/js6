@@ -9,7 +9,7 @@ const ma6 = module.exports = {
   S: require('./stat'),
   F: require('./function'),
   C: require('./constant'),
-  OO: require('./oo'),
+  // OO: require('./oo'),
   O: require('./O'),
   RA: require('./ratio')
   // D: require('./calculus'),

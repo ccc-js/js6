@@ -1,4 +1,3 @@
-// const {oo} = require('./oo')
 const uu6 = require('../../../js6/uu6')
 const RA = require('./ratio')
 const C = require('./complex')
@@ -9,6 +8,19 @@ const T = require('./tensor')
 const R = require('./R')
 const F = require('./function')
 const O = module.exports = {}
+
+class OO {
+  constructor(v) {
+    let o = obj(v)
+    this.v = o.v
+    this.type = o.type 
+  }
+}
+
+let oo = O.oo = function (v) {
+  if (v instanceof OO) return v
+  return new OO(v)
+}
 
 V.toTensor = T.ndarray2tensor
 
@@ -42,25 +54,19 @@ let obj = function (o) {
   if (all(o, ['r', 'shape'])) return {type:'tensor', v:T.new(o)}
   if (all(o, ['r', 'i'])) return {type:'complex', v:o}
   return {type:'unknown', v:o}
-  // throw Error('oo: fail! o='+JSON.stringify(o))
 }
-/*
-let type = function (o) {
-  return obj(o).type
-}
-*/
 
 function op2(x, y, op) {
   let {v:xv, type:xt} = obj(x), {v:yv, type:yt} = obj(y)
-  // let {v:xv, type:xt} = O.obj(x), {v:yv, type:yt} = O.obj(y)
   if (xt === 'ratio' && yt === 'ratio') return RA[op](xv,yv) // 兩者均為 ratio, 用 ratio 去運算
   if (xt === 'ratio') xv = RA.number(xv) // ratio 轉換為 number
   if (yt === 'ratio') yv = RA.number(yv) // ratio 轉換為 number
   if (xt==='complex' && yt==='complex') return C[op](xv,yv) // 兩者均為複數，用 complex 去運算
-  if (xt==='number' && yt==='number') return V[op](xv,yv) // 兩者均為 number，用 V.op(x,y) 去運算
-  if (xt==='vector' && yt==='vector') return V[op](xv,yv) // 兩者均為 vector，用 V.op(x,y) 去運算
+  let xnv = (xt ==='number' || xt==='vector'), ynv = (yt === 'number' || yt === 'vector')
+  if (xnv && ynv) return V[op](xv,yv) // 兩者均為 (number or vector)，用 V.op(x,y) 去運算
   if (xt==='ndarray' && yt==='ndarray') return ND[op](xv,yv) // 兩者均為 ndarray，用 ND.op(x,y) 去運算
   if (xt==='tensor' || yt==='tensor') return T[op](xv,yv) // 至少有一個為 tensor, 呼叫 T.op(x,y) 去運算
+  throw Error('Error: op2: xt='+xt+' yt='+yt+' not handled !')
 }
 
 let call = function (o, method, ...args) {
@@ -72,46 +78,15 @@ let call = function (o, method, ...args) {
     oargs[i] = ao
     vargs[i] = ao.v
   }
-  // console.log('vargs=%j', vargs)
   var r = null
   if (['add', 'sub', 'mul', 'div', 'pow'].indexOf(method) >= 0) {
     r = op2(oargs[0], oargs[1], method)
   } else {
-    // console.log('args=%j', args)
     r = o[method](...args)
   }
   if (r == null) return
-  // if (r == null) r = oargs[0] // if no return, return this
   let ro = oo(r)
-  console.log('ro=%j', ro)
   return ro
-}
-
-class OO {
-  constructor(v) {
-    let o = obj(v)
-    this.v = o.v
-    this.type = o.type 
-  }
-
-  // add() { return call(C, 'add', this, ...arguments) }
-
-  toString(digits=4) {
-    var {type, v} = this
-    console.log('v=%j', v)
-    switch (type) {
-      case 'number': return v.toFixed(digits)
-      case 'ratio': return RA.str(v)
-      case 'complex': return C.str(v)
-      case 'tensor': return T.str(v)
-      default: throw Error('str: type='+type+' not found!')
-    }
-  }
-}
-
-let oo = function (v) {
-  if (v instanceof OO) return v
-  return new OO(v)
 }
 
 let ooMix = function (...args) {
@@ -136,47 +111,25 @@ ooMix(C, RA, M, V, ND, T, R, F,
   // pure member
   require('./constant')
 )
-/*
-let callMix = function (source, ...args) {
-  for (let source of args) {
-    Object.getOwnPropertyNames(source).forEach(function(property) {
-      let s = source[property]
-      if (typeof s === 'function') {
-        OO.prototype[property] = function () { return oo(source[property](this.v, ...arguments)) }
-      }
-    })
+
+let OOp = OO.prototype
+
+OOp.reshape = function (shape) {
+  var {type, v} = this
+  switch (type) {
+    case 'vector': this.v=V.toTensor(v); this.type = 'tensor'; break
+  }
+  this.v.shape = shape
+  return this
+}
+
+OOp.toString = function (digits=4) {
+  var {type, v} = this
+  switch (type) {
+    case 'number': return v.toFixed(digits)
+    case 'ratio': return RA.str(v)
+    case 'complex': return C.str(v)
+    case 'tensor': return T.str(v)
+    default: throw Error('str: type='+type+' not found!')
   }
 }
-*/
-/* 其他: 
-
-class
-
-  probability.js <= probFunction.js
-  set.js
-  series.js
-
-得進一步包裝
-
-  transform.js (=> tensor.js)
-
-*/
-
-O.oo = oo
-
-/*
-function op2(x, y, op) {
-  let {v:xv, type:xt} = O.obj(x), {v:yv, type:yt} = O.obj(y)
-  if (xt === 'ratio' && yt === 'ratio') return oo(RA[op](xv,yv)) // 兩者均為 ratio, 用 ratio 去運算
-  if (xt === 'ratio') xv = RA.number(xv) // ratio 轉換為 number
-  if (yt === 'ratio') yv = RA.number(yv) // ratio 轉換為 number
-  if (xt==='complex' && yt==='complex') return oo(C[op](xv,yv)) // 兩者均為複數，用 complex 去運算
-  if (xt==='number' && yt==='number') return oo(V[op](xv,yv)) // 兩者均為 number，用 V.op(x,y) 去運算
-  if (xt==='tensor' || yt==='tensor') return oo(T[op](xv,yv)) // 至少有一個為 tensor, 呼叫 T.op(x,y) 去運算
-}
-
-function op1(o, op) {
-  let r = T[op](o.v)
-  try { return new OO(r) } catch (e) { return r }
-}
-*/

@@ -1,16 +1,5 @@
 const P = require('./probability')
 const R = module.exports = {}
-// const T = require('./tensor')
-const uu6 = require('../../uu6')
-const {oo} = require('./oo')
-
-R.repeats = function (arg, f) {
-  let n = arg.n, v = new Array(n)
-  for (let i=0; i<n; i++) {
-    v[i] = f(arg)
-  }
-  return v // oo(v)
-}
 
 R.rdist = function (name) {
   return eval(`
@@ -97,3 +86,16 @@ R.pweibull = (arg) => P.weibull.cdf(arg)
 R.qweibull = (arg) => P.weibull.inv(arg)
 R.rweibull = R.rdist('weibull')
 // R.rweibull = (arg) => R.repeats(arg, (arg)=>P.weibull.sample(arg))
+
+/*
+// const T = require('./tensor')
+const uu6 = require('../../uu6')
+const {oo} = require('./oo')
+R.repeats = function (arg, f) {
+  let n = arg.n, v = new Array(n)
+  for (let i=0; i<n; i++) {
+    v[i] = f(arg)
+  }
+  return v // oo(v)
+}
+*/
